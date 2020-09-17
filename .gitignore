@@ -1,5 +1,7 @@
-models/vgg16-00b39a1b.pth
+
 data/*
+__pycache__/*
 
 *.txt
 *.pyc
+*.pth
