@@ -18,13 +18,13 @@ class VGG16(nn.Module):
     
     def forward(self, x):
         # layers = {'3': 'relu1_2', '8': 'relu2_2', '15': 'relu3_3', '22': 'relu4_3'}
-        layers = {'1':'relu1_1', '15':'relu3_3', '25':'relu5_1'}
+        layers = {'1':'relu1_1', '15':'relu3_3', '25':'relu5_1','30':'maxpool'}
         features = {}
         for name, layer in self.features._modules.items():
             x = layer(x)
             if name in layers:
                 features[layers[name]] = x
-                if (name=='25'):
+                if (name=='30'):
                     break
 
         return features
