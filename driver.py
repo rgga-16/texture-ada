@@ -32,8 +32,6 @@ if __name__ == "__main__":
     # Setup model. Use pretrained VGG-19
     model = models.vgg19(pretrained=True).features.to(device).eval()
 
-    # print(model)
-
     content_path = './data/images/chairs/generic/armchair.jpeg'
     style_path = './data/images/chairs/cobonpue/chair-2.jpg'
     mask_path = './data/images/masks/segmented_seat.png'
@@ -50,7 +48,9 @@ if __name__ == "__main__":
     ## Or get mask by loading from path
     mask_img = utils.load_image(mask_path)
     mask = utils.image_to_tensor(mask_img).to(device)
+
     style_mask = utils.image_to_tensor(utils.load_image(style_mask_path)).to(device)
+    
     # style_mask,_ = seg.segment_points(style_path,device=device)
     # # Convert mask from Numpy array to Torch tensor
     # style_mask = torch.from_numpy(style_mask)
@@ -58,16 +58,8 @@ if __name__ == "__main__":
     # # Make mask have dimensions b,c,w,h
     # style_mask = style_mask.view(c,w,h).unsqueeze(0).to(device)
 
-    # Add a 3rd dimension to mask
-    # mask = mask[:,:,None]/255
     print("Mask shape: {}".format(mask.shape))
     print("Style mask shape: {}".format(style_mask.shape))
-
-    # probe = torch.zeros((3,) + mask.shape[2:]).unsqueeze(0).to(device)
-    # print("Probe shape: {}".format(probe.shape))
-
-    # for i in range(0, 3):
-    #     probe[0,i,:,:]=mask[0,0,:,:]
 
     content_img = utils.load_image(content_path)
     style_img = utils.load_image(style_path)
@@ -75,8 +67,11 @@ if __name__ == "__main__":
     content = utils.image_to_tensor(content_img).to(device)
     style = utils.image_to_tensor(style_img).to(device)
 
-    content_cropped = content * mask
-    style_cropped = style * style_mask
+    content_clone = content.clone().detach()
+
+    content = content * mask
+
+    style = style * style_mask
     
     print("Mask shape: {}".format(mask.shape))
     print("content shape: {}".format(content.shape))
@@ -88,57 +83,24 @@ if __name__ == "__main__":
 
     initial = content.clone()
 
-    output = st.run_style_transfer(model,normalization_mean,normalization_std,content_cropped,style_cropped,initial,EPOCHS=2000)
-    
-    
+    output = st.run_style_transfer(model,normalization_mean,normalization_std,content,style,initial,EPOCHS=2000)
 
+    save_path = 'outputs/stylized_output.png'
+    final = (output * mask) + (content_clone * (1-mask))
+    final_img = utils.tensor_to_image(final)
+    final_img.save(save_path)
+    # output_np = output.detach().cpu().numpy()
+    # content_np = content.detach().cpu().numpy()
+    # mask_np = mask.detach().cpu().numpy()
 
-    # output_np = np.asarray(utils.tensor_to_image(output))
-    output_np = np.asarray(utils.load_image('./outputs/stylized_output_masked.png'))
-    content_np = np.asarray(content_img)
-    mask_np = np.asarray(mask_img)[:,:,None]/255.0
-
-    final_img = b.blend_images(content_np,output_np,mask_np)
+    # final_img = b.blend_images(content_np,output_np,mask_np)
     
-    imageio.imwrite('outputs/stylized_output.png',final_img)
+    # imageio.imwrite('outputs/stylized_output.png',final_img)
     
     # output_img = utils.tensor_to_image(output)
     # save_path = 'outputs/stylized_output.png'
     # output_img.save(save_path)
     # print('Saved at {}'.format(save_path))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # content = np.array(utils.load_image(content_path),dtype=np.uint8)
-    # stylized = np.array(utils.load_image(stylized_path),dtype=np.uint8)
-    # mask = np.array(utils.load_image(mask_path),dtype=np.uint8)
-    
-
-    # # blended_img = blender.blend_images(content,stylized,mask)
-    # # imageio.imwrite('blended_img.png',blended_img)
-
-    # cropped_img = blender.crop_with_mask(content,mask)
-    # imageio.imwrite('cropped_img.png',cropped_img)
-
 
 
     
