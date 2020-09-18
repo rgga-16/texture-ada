@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     content_path = './data/images/chairs/generic/armchair.jpeg'
     style_path = './data/images/chairs/cobonpue/chair-2.jpg'
-    mask_path = './data/images/masks/segmented_seat.png'
+    mask_path = './data/images/masks/segmented_back.png'
     style_mask_path = './data/images/masks/style_seat_mask.png'
 
     # ## Get mask by segmenting the content image via user input
@@ -89,6 +89,20 @@ if __name__ == "__main__":
     final = (output * mask) + (content_clone * (1-mask))
     final_img = utils.tensor_to_image(final)
     final_img.save(save_path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # output_np = output.detach().cpu().numpy()
     # content_np = content.detach().cpu().numpy()
     # mask_np = mask.detach().cpu().numpy()
