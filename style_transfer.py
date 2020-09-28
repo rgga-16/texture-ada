@@ -12,15 +12,15 @@ def get_optimizer(output_img):
     return optim
 
 
+style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 
-
-def run_style_transfer(cnn,normalization_mean, normalization_std,
+def style_transfer_gatys(cnn,normalization_mean, normalization_std,
                     content_img, style_img, output_img, EPOCHS=500,
-                    style_weight=1e6,content_weight=1,mask=None):
+                    style_weight=1e6,content_weight=1,mask=None,style_layers=style_layers_default):
     
     model, style_losses, content_losses = losses.get_model_and_losses(cnn,normalization_mean,
                                                                     normalization_std,
-                                                                    style_img,content_img,mask=mask)
+                                                                    style_img,content_img,mask=mask,style_layers=style_layers)
 
     optimizer = get_optimizer(output_img)
 
@@ -56,50 +56,4 @@ def run_style_transfer(cnn,normalization_mean, normalization_std,
     output_img.data.clamp_(0,1)
     return output_img
 
-
-# content_file = "./data/images/chairs/generic/armchair.jpeg"
-# style_file = "./data/images/chairs/cobonpue/chair-2.jpg"
-
-content_file = "./data/images/chairs/generic/armchair.jpeg"
-style_file = "./data/images/chairs/cobonpue/chair-2.jpg"
-
-IMSIZE = 256
-
-if __name__ == "__main__":
-    print("Main Driver")
-
-    # Load content image (C)
-    content_img = utils.load_image(content_file)
-    utils.show_image(content_img)
-
-    device = utils.setup_device(use_gpu = True)
-    
-    # Setup model. Use pretrained VGG-19
-    model = models.vgg19(pretrained=True).features.to(device).eval()
-
-    # Preprocess C
-
-    content = utils.image_to_tensor(content_img,IMSIZE,device=device)
-    print("Content img dimensions: ", content.size())
-    
-    # Load style image (S)
-    style_img = utils.load_image(style_file)
-    # utils.show_image(style_img)
-
-    # Preprocess S
-    style = utils.image_to_tensor(style_img,IMSIZE, device=device)
-    print("Style img dimensions: ", style.size())
-
-    # setup normalization mean and std
-    normalization_mean = torch.tensor([0.485,0.456,0.406]).to(device)
-    normalization_std = torch.tensor([0.229,0.224,0.225]).to(device)
-
-    initial = content.clone()
-
-    output = run_style_transfer(model,normalization_mean,normalization_std,
-                                content,style,initial,EPOCHS=2000)
-
-    output_img = utils.tensor_to_image(output)
-    
-    utils.show_image(output_img)
-    output_img.save('outputs/stylized_output.png')
+# def region_style_transfer(content)

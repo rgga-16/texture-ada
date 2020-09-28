@@ -29,15 +29,12 @@ datapath = './data'
 datatype='images'
 furniture='chairs'
 
-generic='generic/sofa-2.jpeg'
+generic='generic/chair-1.jpg'
+# generic ='6.jpg'
 
 style='selected_styles'
 
-des_furn = [
-    'cobonpue/chair-2.jpg',
-    'budji_layug/chair-1.jpg',
-    'vito_selma/chair-3.jpg'
-]
+
 
 if __name__ == "__main__":
     print("Main Driver")
@@ -58,7 +55,8 @@ if __name__ == "__main__":
         _,mask_path = seg.segment_points(save_path,device=device)
         mask_img = utils.load_image(mask_path)
         mask = utils.image_to_tensor(mask_img,image_size=IMSIZE).to(device)
-        
+        # mask = mask.expand(-1,3,-1,-1)
+
         _,style_mask_path = seg.segment_points(style_path,device=device)
         style_mask_img = utils.load_image(style_mask_path)
         style_mask = utils.image_to_tensor(style_mask_img,image_size=IMSIZE).to(device)
@@ -85,10 +83,10 @@ if __name__ == "__main__":
         # setup normalization mean and std
         normalization_mean = torch.tensor([0.485,0.456,0.406]).to(device)
         normalization_std = torch.tensor([0.229,0.224,0.225]).to(device)
-
+        # style_layers = ['conv_1','conv_2','conv_3','conv_4','conv_5']
         initial = content.clone()
 
-        output = st.run_style_transfer(model,normalization_mean,normalization_std,content,style,initial,EPOCHS=1000)
+        output = st.style_transfer_gatys(model,normalization_mean,normalization_std,content,style,initial,EPOCHS=1000)
 
         save_path = 'outputs/stylized_output_{}.png'.format(i+1)
         i+=1

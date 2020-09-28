@@ -83,6 +83,7 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         if isinstance(layer,nn.Conv2d):
             i+=1
             name = 'conv_{}'.format(i)
+
         elif isinstance(layer,nn.ReLU):
             name ='relu_{}'.format(i)
             layer=nn.ReLU(inplace=False)
@@ -100,11 +101,11 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         if name in content_layers:
             output = model(content_img).detach()
             # print("Content features shape: {}".format(output.shape))
-            if(mask is not None):
-                b,c,h,w = output.shape
-                for j in range(c):
-                    output[0,j] = torch.matmul(output[0,j],mask[0])
-                # output = torch.matmul(output,mask_features)
+            # if(mask is not None):
+            #     print("Mask shape: {}".format(mask.shape))
+            #     mask_features = model(mask).detach()
+            #     output = output * mask_features
+
             content_loss = ContentLoss(output)
             model.add_module('content_loss_{}'.format(i),content_loss)
             content_losses.append(content_loss)
@@ -124,6 +125,6 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
     for i in range(len(model)-1,-1,-1):
         if isinstance(model[i],ContentLoss) or isinstance(model[i],StyleLoss):
             break
-    
+    print(model)
     model = model [:(i+1)]
     return model,style_losses,content_losses
