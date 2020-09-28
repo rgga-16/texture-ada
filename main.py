@@ -1,27 +1,14 @@
-
-import utils
-import style_transfer as st
-
-import blender
+import torch
+from torchvision import models
 
 from PIL import Image
-import imageio
-import cv2
-
-import numpy as np
-import torch
+import argparse
+import os
 
 import dextr.segment as seg
 import style_transfer as st
-# import blender as b
+import utils
 
-import argparse
-
-import torch.nn.functional as F
-
-from torchvision import models
-
-import os
 
 IMSIZE=256
 
@@ -35,15 +22,28 @@ generic='generic/chair-1.jpg'
 style='selected_styles'
 
 
+def create_arg_parser():
+
+    default_style_path = os.path.join(datapath,datatype,style)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c','--content_path',type=str,help='Path to content image',required=True)
+    parser.add_argument('-s','--style_path',type=str,help='Path to style image or directory (if using 2+ style images)', default=default_style_path)
+    parser.add_argument('-imsize', '--image_size', type=int,default=256)
+    parser.add_argument('-o','--output_path', type=str,help='Path of output image')
+
+    return parser
+
 
 if __name__ == "__main__":
     print("Main Driver")
 
+    parser = create_arg_parser()
+    args = parser.parse_args()
+
+
     content_path = os.path.join(datapath,datatype,furniture,generic)
-
-    style_dir = os.path.join(datapath,datatype,style)
-
-    style_paths = [os.path.join(style_dir,fil) for fil in os.listdir(style_dir)]
+    style_paths = [os.path.join(args.style_path,fil) for fil in os.listdir(args.style_path)]
     
     device = utils.setup_device(use_gpu = True)
     model = models.vgg19(pretrained=True).features.to(device).eval()
