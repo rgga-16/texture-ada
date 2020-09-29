@@ -125,6 +125,6 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
     for i in range(len(model)-1,-1,-1):
         if isinstance(model[i],ContentLoss) or isinstance(model[i],StyleLoss):
             break
-    print(model)
+
     model = model [:(i+1)]
     return model,style_losses,content_losses

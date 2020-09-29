@@ -6,6 +6,9 @@ from torchvision import transforms
 
 import losses
 import utils
+import dextr.segment as seg
+
+from PIL import Image
 
 def get_optimizer(output_img):
     optim = torch.optim.Adam([output_img.requires_grad_()],lr=1e-2)
@@ -56,4 +59,48 @@ def style_transfer_gatys(cnn,normalization_mean, normalization_std,
     output_img.data.clamp_(0,1)
     return output_img
 
-# def region_style_transfer(content)
+def interactive_style_transfer(model,content_path,style_paths,device,IMSIZE=256,EPOCHS=1000):
+    save_path = content_path
+    i=0
+    for style_path in style_paths:
+
+        _,mask_path = seg.segment_points(save_path,device=device)
+        mask_img = utils.load_image(mask_path)
+        mask = utils.image_to_tensor(mask_img,image_size=IMSIZE).to(device)
+
+        _,style_mask_path = seg.segment_points(style_path,device=device)
+        style_mask_img = utils.load_image(style_mask_path)
+        style_mask = utils.image_to_tensor(style_mask_img,image_size=IMSIZE).to(device)
+
+        print("Mask shape: {}".format(mask.shape))
+        print("Style mask shape: {}".format(style_mask.shape))
+
+        content_img = utils.load_image(save_path)
+        style_img = utils.load_image(style_path)
+
+        content = utils.image_to_tensor(content_img,image_size=IMSIZE).to(device)
+        style = utils.image_to_tensor(style_img,image_size=IMSIZE).to(device)
+
+        content_clone = content.clone().detach()
+
+        content = content * mask
+
+        style = style * style_mask
+        
+        print("Mask shape: {}".format(mask.shape))
+        print("content shape: {}".format(content.shape))
+        print("style shape: {}".format(style.shape))
+
+        # setup normalization mean and std
+        normalization_mean = torch.tensor([0.485,0.456,0.406]).to(device)
+        normalization_std = torch.tensor([0.229,0.224,0.225]).to(device)
+
+        initial = content.clone()
+
+        output = style_transfer_gatys(model,normalization_mean,normalization_std,content,style,initial,EPOCHS=EPOCHS)
+
+        save_path = 'outputs/stylized_output_{}.png'.format(i+1)
+        i+=1
+        final = (output * mask) + (content_clone * (1-mask))
+        final_img = utils.tensor_to_image(final)
+        final_img.save(save_path)
