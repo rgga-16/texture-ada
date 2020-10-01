@@ -8,7 +8,7 @@ from PIL import Image
 
 
 def setup_device(use_gpu):
-    device = torch.device('cuda' if torch.cuda.is_available() and use_gpu else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu')
     return device
 
 def default_preprocessor(image_size):

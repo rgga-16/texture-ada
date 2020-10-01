@@ -1,5 +1,5 @@
 {
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.pythonPath": "/home/rgga16/anaconda3/envs/pytorch3d/bin/python"
+    "python.pythonPath": "/home/rgga16/anaconda3/bin/python"
 }

@@ -72,9 +72,6 @@ def interactive_style_transfer(model,content_path,style_paths,device,IMSIZE=256,
         style_mask_img = utils.load_image(style_mask_path)
         style_mask = utils.image_to_tensor(style_mask_img,image_size=IMSIZE).to(device)
 
-        print("Mask shape: {}".format(mask.shape))
-        print("Style mask shape: {}".format(style_mask.shape))
-
         content_img = utils.load_image(save_path)
         style_img = utils.load_image(style_path)
 

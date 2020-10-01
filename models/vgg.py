@@ -28,8 +28,3 @@ class VGG16(nn.Module):
                     break
 
         return features
-    
-    def show_layer_names(self):
-        print('Layers of VGG16 Model\n')
-        for name, layer in self.features._modules.items():
-            print('%s : %s' % (name,layer))

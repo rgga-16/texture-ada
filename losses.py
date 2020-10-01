@@ -100,12 +100,6 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         # Retrieve content losses for each content layer
         if name in content_layers:
             output = model(content_img).detach()
-            # print("Content features shape: {}".format(output.shape))
-            # if(mask is not None):
-            #     print("Mask shape: {}".format(mask.shape))
-            #     mask_features = model(mask).detach()
-            #     output = output * mask_features
-
             content_loss = ContentLoss(output)
             model.add_module('content_loss_{}'.format(i),content_loss)
             content_losses.append(content_loss)
@@ -113,10 +107,6 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         # Retrieve style losses for each style layer
         if name in style_layers:
             output_features = model(style_img).detach()
-            # print("Style features shape: {}".format(output_features.shape))
-            # if(mask is not None):
-            #     mask_features = model(mask).detach()
-            #     output_features = torch.matmul(output_features,mask_features)
             style_loss = StyleLoss(output_features)
             model.add_module('style_loss_{}'.format(i),style_loss)
             style_losses.append(style_loss)

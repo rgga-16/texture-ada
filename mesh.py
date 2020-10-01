@@ -2,7 +2,10 @@ import sys
 import torch 
 
 import pytorch3d.utils as u
+import pytorch3d.renderer as r
 from pytorch3d.ops import sample_points_from_meshes
+
+
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
