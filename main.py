@@ -55,10 +55,13 @@ if __name__ == "__main__":
     vgg.load_state_dict(state)
     model = vgg.features
 
-    print(model)
-
     # Load Mesh
     # sphere = mesh.create_sphere_mesh(device=device)
+
+    # Setup style layers
+
+    # Setup content layers
+    
 
 
 

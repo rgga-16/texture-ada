@@ -27,7 +27,7 @@ def load_image(filename):
     return img
 
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=225,device=setup_device(True),preprocessor=None):
+def image_to_tensor(image,image_size=256,device=setup_device(True),preprocessor=None):
 
     if preprocessor == None:
         preprocessor=default_preprocessor(image_size)
