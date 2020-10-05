@@ -25,8 +25,6 @@ def gram_matrix(tensor):
 
     return gram.div(n * w * h)
 
-# def gram_matrix_guided()
-
 class ContentLoss(nn.Module): 
 
     def __init__(self,target):
@@ -58,6 +56,8 @@ class StyleLoss(nn.Module):
 
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+normalization_mean_default = [0.485,0.456,0.406]
+normalization_std_default = [0.229,0.224,0.225]
 
 def get_model_and_losses(cnn, normalization_mean, normalization_std, 
                         style_img, content_img, 
@@ -73,7 +73,6 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
     style_losses = []
 
     model = nn.Sequential(normalization)
-    # model = nn.Sequential()
     
     i=0 #Increment everytime we see a conv layer
     
@@ -98,14 +97,14 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         model.add_module(name,layer)
         
         # Retrieve content losses for each content layer
-        if name in content_layers:
+        if name in content_layers and content_img:
             output = model(content_img).detach()
             content_loss = ContentLoss(output)
             model.add_module('content_loss_{}'.format(i),content_loss)
             content_losses.append(content_loss)
 
         # Retrieve style losses for each style layer
-        if name in style_layers:
+        if name in style_layers and style_img:
             output_features = model(style_img).detach()
             style_loss = StyleLoss(output_features)
             model.add_module('style_loss_{}'.format(i),style_loss)
