@@ -7,7 +7,7 @@ import torch
 from PIL import Image
 
 
-def setup_device(use_gpu):
+def setup_device(use_gpu=True):
     device = torch.device('cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu')
     return device
 

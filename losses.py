@@ -3,14 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 
+import utils
+
 class Normalization(nn.Module):
     def __init__(self,mean,std):
         # .view the mean and std to make them [C x 1 x 1] so that they can
         # directly work with image Tensor of shape [B x C x H x W].
         # B is batch size. C is number of channels. H is height and W is width.
         super(Normalization,self).__init__()
-        self.mean = torch.tensor(mean).view(-1,1,1)
-        self.std = torch.tensor(std).view(-1,1,1)
+        device = utils.setup_device()
+        self.mean = torch.tensor(mean).view(-1,1,1).to(device)
+        self.std = torch.tensor(std).view(-1,1,1).to(device)
 
     def forward(self, img):
         return (img-self.mean)/self.std
@@ -59,8 +62,9 @@ style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 normalization_mean_default = [0.485,0.456,0.406]
 normalization_std_default = [0.229,0.224,0.225]
 
-def get_model_and_losses(cnn, normalization_mean, normalization_std, 
-                        style_img, content_img, 
+def get_model_and_losses(cnn, style_img, content_img,
+                        normalization_mean=normalization_mean_default, 
+                        normalization_std=normalization_std_default, 
                         content_layers = content_layers_default,
                         style_layers=style_layers_default, mask=None):
     
@@ -72,7 +76,8 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
     content_losses = []
     style_losses = []
 
-    model = nn.Sequential(normalization)
+    # model = nn.Sequential(normalization)
+    model = nn.Sequential()
     
     i=0 #Increment everytime we see a conv layer
     
@@ -97,14 +102,14 @@ def get_model_and_losses(cnn, normalization_mean, normalization_std,
         model.add_module(name,layer)
         
         # Retrieve content losses for each content layer
-        if name in content_layers and content_img:
+        if name in content_layers and content_img is not None:
             output = model(content_img).detach()
             content_loss = ContentLoss(output)
             model.add_module('content_loss_{}'.format(i),content_loss)
             content_losses.append(content_loss)
 
         # Retrieve style losses for each style layer
-        if name in style_layers and style_img:
+        if name in style_layers and style_img is not None:
             output_features = model(style_img).detach()
             style_loss = StyleLoss(output_features)
             model.add_module('style_loss_{}'.format(i),style_loss)
