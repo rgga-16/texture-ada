@@ -20,13 +20,13 @@ class Normalization(nn.Module):
 
 def gram_matrix(tensor):
     # Get no. of feature maps, feature map width and feature map height
-    _,n,w,h = tensor.size()
+    _,n,w,h = tensor.shape
 
     features = tensor.view(n,w*h)
 
     gram = torch.mm(features,features.t())
 
-    return gram.div(n * w * h)
+    return gram / (h*w)
 
 class ContentLoss(nn.Module): 
 

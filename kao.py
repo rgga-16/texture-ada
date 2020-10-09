@@ -15,6 +15,7 @@ import numpy as np
 import utils
 import losses
 import dextr.segment as s
+import style_transfer as st
 
 import copy
 import os
@@ -27,7 +28,7 @@ MESH_DIR = './data/3d-models/chairs'
 MESH_FILE = 'rocket.obj'
 
 STYLE_DIR = './data/images/selected_styles'
-STYLE_FILE = 'chair-2.jpg'
+STYLE_FILE = 'starry.jpg'
 
 MASK_PATH = './binary_mask.png'
 
@@ -139,6 +140,8 @@ def main():
                         transform=transform)
 
     mesh = next(iter(dataset)).data
+
+    content = utils.image_to_tensor(utils.load_image('./data/images/others/6.jpg')).to(device).detach()
     
 
     # Load style furniture image
@@ -147,63 +150,29 @@ def main():
 
     # Mask out style
     # _,mask_path = s.segment_points(style_path)
-    mask = utils.image_to_tensor(utils.load_image(MASK_PATH)).to(device).detach()
+    mask = utils.image_to_tensor(utils.load_image(MASK_PATH),to_normalize=False).to(device).detach()
 
     # style = style * mask
-    # cropped_style = utils.tensor_to_image(style)
 
     # Create style feature extractor model
     state = load_url('https://download.pytorch.org/models/vgg19-dcbb9e9d.pth',model_dir='./models')
     vgg = models.vgg19(pretrained=False).eval().to(device)
     vgg.load_state_dict(state)
     st_model = vgg.features
-
+    
     # Create model for 3D texture transfer
     render_model = Model(mesh,style,args).to(device)
 
     # Style transfer from style furn to mesh texture
-    loop = tqdm.tqdm(range(args.epochs))
-    optimizer = torch.optim.Adam([
-        p for p in render_model.parameters() if p.requires_grad
-    ],lr=0.1,betas=(0.5,0.999))
-    azimuth = 0.0
 
     rendered_img =  render_model.render_image().detach()
 
-    new_st_model, style_losses,content_losses = losses.get_model_and_losses(
-        st_model,
-        style_img = style,
-        content_img = rendered_img,
-    )
+    # initial_img = rendered_img.clone().detach()
+    initial_img = content.clone().detach().to(device).requires_grad_(True)
 
-    output_img = rendered_img.clone().detach()
-
-    style_weight = 1e6
-    content_weight = 1
-
-    for i in loop:
-        optimizer.zero_grad()
-
-        new_st_model(output_img)
-
-        style_loss = 0
-        content_loss = 0
-
-        for sl in style_losses:
-            style_loss += sl.loss
-        
-        for cl in content_losses:
-            content_loss += cl.loss
-
-        style_loss *= style_weight
-        content_loss *= content_weight
-        loss = style_loss + content_loss
-
-        loss.backward()
-        optimizer.step()
+    final = st.style_transfer_gatys2(st_model,content, style,initial_img)
 
     # Output texture is new texture
-    final = render_model.render_image()
     final_img = utils.tensor_to_image(final).save('final_rendered.png')
 
 

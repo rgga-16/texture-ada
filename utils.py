@@ -18,6 +18,13 @@ def default_preprocessor(image_size):
     ])
     return preprocessor
 
+def default_normalization():
+    mean = [0.485,0.456,0.406]
+    std = [0.229,0.224,0.225]
+    norm = transforms.Normalize(mean,std)
+
+    return norm
+
 
 
 # Loads image
@@ -27,12 +34,18 @@ def load_image(filename):
     return img
 
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=256,device=setup_device(True),preprocessor=None):
+def image_to_tensor(image,image_size=256,device=setup_device(True),preprocessor=None, to_normalize=True):
 
     if preprocessor == None:
         preprocessor=default_preprocessor(image_size)
 
-    tensor = preprocessor(image).unsqueeze(0)
+    tensor = preprocessor(image)
+
+    # if(to_normalize):
+    #     norm = default_normalization()
+    #     tensor = norm(tensor)
+
+    tensor = tensor.unsqueeze(0)
     return tensor.to(device)
 
 
@@ -44,7 +57,11 @@ def show_image(img):
 
 # Converts tensor to an image
 def tensor_to_image(tensor):
-    unloader = transforms.ToPILImage()
+    unloader = transforms.Compose([
+        # transforms.Normalize([-0.485,-0.456,-0.406],[0.229,0.224,0.225]),
+        transforms.ToPILImage(),
+    ])
+    
     image = tensor.cpu().clone()
 
     image = image.squeeze(0)
