@@ -28,3 +28,4 @@ class VGG16(nn.Module):
                     break
 
         return features
+
