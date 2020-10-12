@@ -1,10 +1,11 @@
 # Module to place all default variables in
 import torch   
 import torchvision.transforms as transforms
+import utils
 
 
 from enum import Enum
-import pathlib
+import pathlib as p
 
 
 
@@ -34,11 +35,13 @@ class DEFAULTS(Enum):
         layer: 0.2 for layer in STYLE_LAYERS.values()
     }
 
-    MESH_DIR = './data/3d-models/chairs'
+    MESH_DIR = 'data/3d-models/chairs'
     MESH_FILE = 'rocket.obj'
-    MESH_PATH = 
+    MESH_PATH = p.Path.cwd() / MESH_DIR / MESH_FILE
 
-
+    STYLE_DIR = 'data/images/selected_styles'
+    STYLE_FILE = 'starry.jpg'
+    STYLE_PATH = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
     def get(self):
         return self.value
@@ -46,5 +49,4 @@ class DEFAULTS(Enum):
     @classmethod
     def DEVICE(cls):
         return cls.DEVICE_.value
-
 
