@@ -8,6 +8,7 @@ from torchvision import transforms
 import losses
 import utils
 import dextr.segment as seg
+from defaults import DEFAULTS as D
 
 from PIL import Image
 
@@ -22,7 +23,7 @@ content_layer_weights_default = {
     layer: 1.0 for layer in content_layers_default
 }
 style_layer_weights_default = {
-    layer: 0.2 for layer in style_layers_default
+    layer: 1.0 for layer in style_layers_default
 }
 
 vgg19_style_layers = {
@@ -39,13 +40,12 @@ vgg19_content_layers = {
 }
 
 
-def style_transfer_gatys2(model,content, style, output, EPOCHS=500,
-                        content_layers = content_layers_default,
-                        style_layers = style_layers_default,
+def style_transfer_gatys2(model,content, style, output, EPOCHS=D.EPOCHS(),
+                        content_layers = D.CONTENT_LAYERS.get(),
+                        style_layers = D.STYLE_LAYERS.get(),
                         style_weight=1e6,content_weight=1,
-                        c_layer_weights=content_layer_weights_default, 
-                        s_layer_weights=style_layer_weights_default,
-                        mask=None):
+                        c_layer_weights=D.CL_WEIGHTS.get(), 
+                        s_layer_weights=D.SL_WEIGHTS.get()):
 
     # Am i not supposed to optimize the texture??
     optimizer = get_optimizer(output)
@@ -65,11 +65,11 @@ def style_transfer_gatys2(model,content, style, output, EPOCHS=500,
 
             output_feats = get_features(model,output)
 
-            for c in content_layers:
+            for c in content_layers.values():
                 diff = mse_loss(output_feats[c],content_feats[c])
                 content_loss += c_layer_weights[c] * diff
 
-            for s in style_layers:
+            for s in style_layers.values():
                 c1,c2 = output_feats[s].shape
                 # diff_s = mse_loss(output_feats[s],style_feats[s]) / (c1**2)
                 diff_s = mse_loss(output_feats[s],style_feats[s])
@@ -79,19 +79,18 @@ def style_transfer_gatys2(model,content, style, output, EPOCHS=500,
 
             total_loss.backward(retain_graph=True)
             
-            run[0]+=1
-
-            if(run[0] % 50 == True):
+            if(run[0] % 50 == 0):
                 print('Epoch {} | Style Loss: {} | Content Loss: {} | Total Loss: {}'.format(run[0],style_loss.item(), 
                                                                             content_loss.item(), 
                                                                             total_loss.item()))
+            run[0]+=1
         optimizer.step(closure)
     output.data.clamp_(0,1)
     return output
 
 def get_features(model, tensor, 
-                content_layers = content_layers_default, 
-                style_layers = style_layers_default):
+                content_layers = D.CONTENT_LAYERS.get(), 
+                style_layers = D.STYLE_LAYERS.get()):
 
     features = {}
     x=tensor
@@ -99,11 +98,11 @@ def get_features(model, tensor,
     for name, layer in model._modules.items():
         x=layer(x)
 
-        if name in vgg19_style_layers:
-            features[vgg19_style_layers[name]] = losses.gram_matrix(x)
+        if name in style_layers:
+            features[style_layers[name]] = losses.gram_matrix(x)
         
-        if name in vgg19_content_layers:
-            features[vgg19_content_layers[name]] = x
+        if name in content_layers:
+            features[content_layers[name]] = x
 
 
     return features

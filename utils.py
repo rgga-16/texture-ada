@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from torchvision import transforms
 import torch
 
+from defaults import DEFAULTS as D
 
 from PIL import Image
 
@@ -34,7 +35,7 @@ def load_image(filename):
     return img
 
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=256,device=setup_device(True),preprocessor=None, to_normalize=True):
+def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),preprocessor=None, to_normalize=True):
 
     if preprocessor == None:
         preprocessor=default_preprocessor(image_size)

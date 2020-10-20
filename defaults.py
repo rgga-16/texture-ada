@@ -1,7 +1,6 @@
 # Module to place all default variables in
 import torch   
 import torchvision.transforms as transforms
-import utils
 
 
 from enum import Enum
@@ -10,7 +9,7 @@ import pathlib as p
 
 
 class DEFAULTS(Enum):
-    DEVICE_ID = "cuda"
+    DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
     IMSIZE = 256
 
@@ -32,16 +31,22 @@ class DEFAULTS(Enum):
         '35' : 'relu5_3',
     }
     SL_WEIGHTS = {
-        layer: 0.2 for layer in STYLE_LAYERS.values()
+        layer: 1.0 for layer in STYLE_LAYERS.values()
     }
 
     MESH_DIR = 'data/3d-models/chairs'
     MESH_FILE = 'rocket.obj'
-    MESH_PATH = p.Path.cwd() / MESH_DIR / MESH_FILE
+    MESH_PATH_ = p.Path.cwd() / MESH_DIR / MESH_FILE
+
+    MASK_DIR = 'data/images/masks'
+    MASK_FILE = 'binary_mask.png'
+    MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
     STYLE_DIR = 'data/images/selected_styles'
-    STYLE_FILE = 'starry.jpg'
-    STYLE_PATH = p.Path.cwd() / STYLE_DIR / STYLE_FILE
+    STYLE_FILE = 'chair-2.jpg'
+    STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
+
+    EPOCHS_ = 500
 
     def get(self):
         return self.value
@@ -49,4 +54,19 @@ class DEFAULTS(Enum):
     @classmethod
     def DEVICE(cls):
         return cls.DEVICE_.value
+    
+    @classmethod
+    def MESH_PATH(cls):
+        return cls.MESH_PATH_.value 
 
+    @classmethod 
+    def STYLE_PATH(cls):
+        return cls.STYLE_PATH_.value
+
+    @classmethod
+    def MASK_PATH(cls):
+        return cls.MASK_PATH_.value
+    
+    @classmethod
+    def EPOCHS(cls):
+        return cls.EPOCHS_.value
