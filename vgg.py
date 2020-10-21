@@ -47,10 +47,11 @@ class VGG19(nn.Module):
             x = layer(x)
 
             if name in layers:
+ 
                 extracted_feats[layers[name]]=x
         
         if layers:
-            return x, extracted_feats
+            return extracted_feats
         return x
 
 

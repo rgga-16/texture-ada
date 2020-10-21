@@ -26,9 +26,9 @@ class DEFAULTS(Enum):
     STYLE_LAYERS = {
         '3': 'relu1_2',   # Style layers
         '8': 'relu2_2',
-        '17' : 'relu3_3',
-        '26' : 'relu4_3',
-        '35' : 'relu5_3',
+        '17' : 'relu3_4',
+        '26' : 'relu4_4',
+        '35' : 'relu5_4',
     }
     SL_WEIGHTS = {
         layer: 1.0 for layer in STYLE_LAYERS.values()

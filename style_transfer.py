@@ -16,30 +16,6 @@ def get_optimizer(output_img):
     optim = torch.optim.Adam([output_img.requires_grad_()],lr=1e-2)
     return optim
 
-content_layers_default = ['relu4_2']
-style_layers_default = ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3', 'relu5_3']
-
-content_layer_weights_default = {
-    layer: 1.0 for layer in content_layers_default
-}
-style_layer_weights_default = {
-    layer: 1.0 for layer in style_layers_default
-}
-
-vgg19_style_layers = {
-    '3': 'relu1_2',   # Style layers
-    '8': 'relu2_2',
-    '17' : 'relu3_3',
-    '26' : 'relu4_3',
-    '35' : 'relu5_3',
-}
-
-vgg19_content_layers = {
-    '22' : 'relu4_2', # Content layers
-    #'31' : 'relu5_2'
-}
-
-
 def style_transfer_gatys2(model,content, style, output, EPOCHS=D.EPOCHS(),
                         content_layers = D.CONTENT_LAYERS.get(),
                         style_layers = D.STYLE_LAYERS.get(),
