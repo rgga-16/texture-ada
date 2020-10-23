@@ -8,10 +8,6 @@ from defaults import DEFAULTS as D
 from PIL import Image
 
 
-def setup_device(use_gpu=True):
-    device = torch.device('cuda:0' if torch.cuda.is_available() and use_gpu else 'cpu')
-    return device
-
 def default_preprocessor(image_size):
     preprocessor = transforms.Compose([
         transforms.Resize((image_size,image_size)),
@@ -20,17 +16,15 @@ def default_preprocessor(image_size):
     return preprocessor
 
 def default_normalization():
-    mean = [0.485,0.456,0.406]
-    std = [0.229,0.224,0.225]
+    mean = D.NORM_MEAN.get()
+    std = D.NORM_STD.get()
     norm = transforms.Normalize(mean,std)
 
     return norm
 
-
-
 # Loads image
 def load_image(filename):
-    img = Image.open(filename)
+    img = Image.open(filename).convert("RGB")
 
     return img
 
@@ -60,6 +54,7 @@ def show_image(img):
 def tensor_to_image(tensor):
     unloader = transforms.Compose([
         # transforms.Normalize([-0.485,-0.456,-0.406],[0.229,0.224,0.225]),
+        # denormalization,
         transforms.ToPILImage(),
     ])
     

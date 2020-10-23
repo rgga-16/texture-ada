@@ -11,7 +11,9 @@ import pathlib as p
 class DEFAULTS(Enum):
     DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
+
     IMSIZE = 256
+    EPOCHS_ = 750
 
     NORM_MEAN = [0.485,0.456,0.406]
     NORM_STD = [0.229,0.224,0.225]
@@ -31,7 +33,12 @@ class DEFAULTS(Enum):
         '35' : 'relu5_4',
     }
     SL_WEIGHTS = {
-        layer: 1.0 for layer in STYLE_LAYERS.values()
+        'relu1_2':0.7,
+        'relu2_2':0.2,
+        'relu3_4':0.0,
+        'relu4_4':0.0,
+        'relu5_4':0.2,
+        # layer: 0.2 for layer in STYLE_LAYERS.values()
     }
 
     MESH_DIR = 'data/3d-models/chairs'
@@ -43,10 +50,10 @@ class DEFAULTS(Enum):
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
     STYLE_DIR = 'data/images/selected_styles'
-    STYLE_FILE = 'chair-2.jpg'
+    STYLE_FILE = 'chair-2_st_texture.png'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
-    EPOCHS_ = 500
+    
 
     def get(self):
         return self.value
