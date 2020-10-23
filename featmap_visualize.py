@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     content = utils.image_to_tensor(utils.load_image(D.STYLE_PATH())).detach()
 
-    mask = utils.image_to_tensor(utils.load_image(D.MASK_PATH())).detach()
-    content=content*mask
+    # mask = utils.image_to_tensor(utils.load_image(D.MASK_PATH())).detach()
+    # content=content*mask
     # Create style feature extractor model
     model = VGG19()
 
@@ -83,10 +83,17 @@ if __name__ == '__main__':
     axes = []
     fig=plt.figure(figsize=(8,8))
     plt.axis('off')
+    plt.title('Feature Map Visualizations')
     subplot = 0
     for k,v in feature_maps.items():
         axes.append(fig.add_subplot(8,5,subplot+1))
-        subplot_title = ("Feat Map {}".format(k))
+
+        for n,l in visualize_layers.items():
+            if l == k:
+                layer_num = n
+                break
+
+        subplot_title = ("Layer {}: {}".format(layer_num if layer_num is not None else '?', k))
         axes[-1].set_title(subplot_title,size=6)
         axes[-1].axis('off')
         display_img = np.asarray(utils.tensor_to_image(v))
@@ -94,7 +101,7 @@ if __name__ == '__main__':
         subplot+=1
 
     fig.tight_layout()
-    fig.suptitle('Feature Map Visualizations')
+    # fig.suptitle('Feature Map Visualizations')
     plt.show()
     plt.savefig('Feature Map Visualizations.png')
    
