@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-from vgg import VGG19
+from models import VGG19
 import utils
 from defaults import DEFAULTS as D 
 
