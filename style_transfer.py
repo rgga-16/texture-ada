@@ -6,7 +6,10 @@ from torchvision import models
 from torchvision import transforms
 
 import losses
-from vgg import VGG19
+import models
+from models import VGG19
+
+
 import utils
 import dextr.segment as seg
 from defaults import DEFAULTS as D
@@ -36,11 +39,13 @@ def get_features(model, tensor,
 
     return features
 
+    
 
-def style_transfer_gatys(model,content, style, output, EPOCHS=D.EPOCHS(),
+def style_transfer_gatys(content, style, output, 
+                        model=VGG19(),EPOCHS=D.EPOCHS(),
                         content_layers = D.CONTENT_LAYERS.get(),
                         style_layers = D.STYLE_LAYERS.get(),
-                        style_weight=1e6,content_weight=0,
+                        style_weight=1e6,content_weight=1,
                         c_layer_weights=D.CL_WEIGHTS.get(), 
                         s_layer_weights=D.SL_WEIGHTS.get()):
 
@@ -86,22 +91,67 @@ def style_transfer_gatys(model,content, style, output, EPOCHS=D.EPOCHS(),
     output.data.clamp_(0,1)
     return output
 
+def get_mean_std(feat):
+    eps=1e-5
+
+    N,C,W,H = feat.shape
+
+    variance = feat.view(N,C,-1).var(dim=2) + eps
+    std = variance.sqrt().view(N,C,1,1)
+    mean = feat.view(N,C,-1).mean(dim=2).view(N,C,1,1)
+    return mean,std
+
+def style_transfer_adain(content,style,vgg=models.vgg_normalized(),alpha=1.0):
+
+    vgg.load_state_dict(torch.load('models/vgg_normalised.pth'))
+    vgg = torch.nn.Sequential(*list(vgg.children())[:31])
+    vgg.eval()
+    vgg.to(D.DEVICE())
+
+
+    decoder = models.decoder().eval()
+    decoder.load_state_dict(torch.load('models/decoder.pth'))
+    decoder.to(D.DEVICE())
+
+    with torch.no_grad():
+        content_feats = vgg(content)
+        style_feats = vgg(style)
+
+        content_mean,content_std = get_mean_std(content_feats)
+        style_mean, style_std = get_mean_std(style_feats)
+
+        size = content_feats.size()
+
+        adain_output = style_std.expand(size) * ((content_feats - content_mean.expand(size)) / content_std.expand(size)) + style_mean.expand(size)
+        adain_output = adain_output * alpha + content_feats * (1-alpha)
+        output = decoder(adain_output)
+        
+        return output
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
 
     init = torch.randn(1,3,D.IMSIZE.get(),
                         D.IMSIZE.get(),requires_grad=True,
-                        device=D.DEVICE())
+                        device=D.DEVICE()).detach()
 
     
-    style = utils.image_to_tensor(utils.load_image(D.STYLE_PATH()))
+    style = utils.image_to_tensor(utils.load_image(D.STYLE_PATH())).detach()
 
+    init_clone = init.clone().detach()
 
-    content = init.clone().detach()
-    model = VGG19()
+    # content_path = './data/images/others/6.jpg'
+    # content = utils.image_to_tensor(utils.load_image(content_path))
     
-    output = style_transfer_gatys(model,content,style,init)
+    
+    output = style_transfer_adain(init,style)
     utils.tensor_to_image(output).save('output.png')
     
 
@@ -109,102 +159,3 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# def style_transfer_gatys(cnn,content_img, style_img, output_img, 
-#                     normalization_mean= torch.tensor([0.485,0.456,0.406]).to(utils.setup_device()), 
-#                     normalization_std=torch.tensor([0.229,0.224,0.225]).to(utils.setup_device()),
-#                     EPOCHS=500,style_weight=1e6,content_weight=1,
-#                     mask=None,style_layers=D.STYLE_LAYERS.get().values()):
-    
-
-#     model, style_losses, content_losses = losses.get_model_and_losses(cnn,normalization_mean,
-#                                                                     normalization_std,
-#                                                                     style_img,content_img,mask=mask,style_layers=style_layers)
-
-#     optimizer = get_optimizer(output_img)
-
-#     run = [0] 
-#     while run[0] <= EPOCHS:
-
-#         def closure():
-#             output_img.data.clamp_(0,1)
-#             optimizer.zero_grad()
-
-#             model(output_img)
-
-#             style_loss = 0
-#             content_loss = 0
-
-#             for sl in style_losses:
-#                 style_loss += sl.loss
-            
-#             for cl in content_losses:
-#                 content_loss += cl.loss
-
-#             style_loss *= style_weight
-#             content_loss *= content_weight
-#             loss = style_loss + content_loss
-#             loss.backward()
-
-#             run[0] += 1
-#             if(run[0] % 50 == 0):
-#                 print('Iter {} | Total Loss: {:4f} | Style Loss: {:4f} | Content Loss: {:4f}'.format(run[0],loss.item(),content_loss.item(),style_loss.item()))
-        
-#         optimizer.step(closure)
-    
-#     output_img.data.clamp_(0,1)
-#     return output_img
-
-# def interactive_style_transfer(model,content_path,style_paths,device,IMSIZE=256,EPOCHS=1000):
-#     save_path = content_path
-#     i=0
-#     for style_path in style_paths:
-
-#         _,mask_path = seg.segment_points(save_path,device=device)
-#         mask_img = utils.load_image(mask_path)
-#         mask = utils.image_to_tensor(mask_img,image_size=IMSIZE).to(device)
-
-#         _,style_mask_path = seg.segment_points(style_path,device=device)
-#         style_mask_img = utils.load_image(style_mask_path)
-#         style_mask = utils.image_to_tensor(style_mask_img,image_size=IMSIZE).to(device)
-
-#         content_img = utils.load_image(save_path)
-#         style_img = utils.load_image(style_path)
-
-#         content = utils.image_to_tensor(content_img,image_size=IMSIZE).to(device)
-#         style = utils.image_to_tensor(style_img,image_size=IMSIZE).to(device)
-
-#         content_clone = content.clone().detach()
-
-#         content = content * mask
-
-#         style = style * style_mask
-        
-#         print("Mask shape: {}".format(mask.shape))
-#         print("content shape: {}".format(content.shape))
-#         print("style shape: {}".format(style.shape))
-
-#         # setup normalization mean and std
-#         normalization_mean = torch.tensor([0.485,0.456,0.406]).to(device)
-#         normalization_std = torch.tensor([0.229,0.224,0.225]).to(device)
-
-#         initial = content.clone()
-
-#         output = style_transfer_gatys(model,normalization_mean,normalization_std,content,style,initial,EPOCHS=EPOCHS)
-
-#         save_path = 'outputs/stylized_output_{}.png'.format(i+1)
-#         i+=1
-#         final = (output * mask) + (content_clone * (1-mask))
-#         final_img = utils.tensor_to_image(final)
-#         final_img.save(save_path)

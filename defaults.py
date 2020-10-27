@@ -33,12 +33,7 @@ class DEFAULTS(Enum):
         '35' : 'relu5_4',
     }
     SL_WEIGHTS = {
-        'relu1_2':0.7,
-        'relu2_2':0.2,
-        'relu3_4':0.0,
-        'relu4_4':0.0,
-        'relu5_4':0.2,
-        # layer: 0.2 for layer in STYLE_LAYERS.values()
+        layer: 0.2 for layer in STYLE_LAYERS.values()
     }
 
     MESH_DIR = 'data/3d-models/chairs'
@@ -50,7 +45,7 @@ class DEFAULTS(Enum):
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
     STYLE_DIR = 'data/images/selected_styles'
-    STYLE_FILE = 'chair-2_st_texture.png'
+    STYLE_FILE = 'chair-2_cropped.png'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
     
