@@ -2,10 +2,12 @@
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import torch
+import kaolin as k
 
 from defaults import DEFAULTS as D
 
 from PIL import Image
+import numpy as np
 
 
 def default_preprocessor(image_size):
@@ -28,17 +30,21 @@ def load_image(filename):
 
     return img
 
+# Loads the a mesh from an .OBJ file
+def load_mesh(filename,has_textures=False,device=D.DEVICE()):
+    mesh = k.rep.Mesh.from_obj(filename,with_vt=has_textures)
+    mesh.to(device)
+
+    return mesh
+
+
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),preprocessor=None, to_normalize=True):
+def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),preprocessor=None):
 
     if preprocessor == None:
         preprocessor=default_preprocessor(image_size)
 
     tensor = preprocessor(image)
-
-    # if(to_normalize):
-    #     norm = default_normalization()
-    #     tensor = norm(tensor)
 
     tensor = tensor.unsqueeze(0)
     return tensor.to(device)
@@ -50,11 +56,25 @@ def show_image(img):
     plt.imshow(img)
     plt.show()
 
+def save_gif(images:list,filename='output.gif'):
+    images[0].save(filename,save_all=True,append_images=images[1:],loop=0,optimize=False,duration=75)
+
+
+# Get random samples from an iterables
+def get_random_samples(dataset,size=1):
+    dataset_list = list(dataset)
+    max = len(dataset_list)
+
+    np_arr = np.array(dataset_list)
+
+    random_indices = np.random.randint(low=0,high=max,size=size)
+
+    return list(np_arr[random_indices])
+
+
 # Converts tensor to an image
 def tensor_to_image(tensor):
     unloader = transforms.Compose([
-        # transforms.Normalize([-0.485,-0.456,-0.406],[0.229,0.224,0.225]),
-        # denormalization,
         transforms.ToPILImage(),
     ])
     
