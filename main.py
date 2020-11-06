@@ -1,67 +1,44 @@
 import torch
-from torchvision import models
-from torch.utils.model_zoo import load_url
-
-
-import argparse
-import os
 
 
 import style_transfer as st
 import utils
-# import mesh
+import args
+
+from kao import MeshRendererModel,texture_transfer_gatys
+from args import parse_arguments
+
+from defaults import DEFAULTS as D
 
 
-IMSIZE=256
+def main():
+    print("Main Driver")
 
-datapath = './data'
-datatype='images'
-furniture='chairs'
-
-generic='generic/chair-1.jpg'
-
-style='selected_styles'
-
-
-def create_arg_parser():
-
-    default_style_path = os.path.join(datapath,datatype,style)
-    default_content_path = os.path.join(datapath,datatype,furniture,generic)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c','--content_path',type=str,help='Path to content image',default=default_content_path)
-    parser.add_argument('-cm','--content_model',type=str,help='Path to content model')
-    parser.add_argument('-s','--style_path',type=str,help='Path to style image or directory (if using 2+ style images)', default=default_style_path)
-    parser.add_argument('-imsize', '--image_size', type=int,default=256)
-    parser.add_argument('-o','--output_path', type=str,help='Path of output image')
+    args = parse_arguments()
     
+    # Load style furniture image
+    style = utils.image_to_tensor(utils.load_image(args.style)).detach()
+    
+    mesh = utils.load_mesh(args.mesh,has_textures=True)
+    
+    # Create model for 3D texture transfer
+    render_model = MeshRendererModel(mesh,style,args)
+    
+    texture_transfer_gatys(render_model,style)
 
-    return parser
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
-    print("Main Driver")
-
-    parser = create_arg_parser()
-    args = parser.parse_args()
-
-    style_paths = [os.path.join(args.style_path,fil) for fil in os.listdir(args.style_path)]
-    content_path = args.content_path
-
-    device = utils.setup_device(use_gpu = True)
+    main()
     
-    state = load_url('https://download.pytorch.org/models/vgg19-dcbb9e9d.pth',model_dir='./models')
-    vgg = models.vgg19(pretrained=False).eval().to(device)
-    vgg.load_state_dict(state)
-    model = vgg.features
 
-    # Load Mesh
-    # sphere = mesh.create_sphere_mesh(device=device)
 
-    # Setup style layers
-
-    # Setup content layers
-    
 
 
 
