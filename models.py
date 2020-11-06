@@ -5,8 +5,6 @@ from torchvision import models, transforms
 
 from defaults import DEFAULTS as D
 
-# class Decoder(nn.Module):
-
 def decoder():
     decoder = nn.Sequential(
         nn.ReflectionPad2d((1, 1, 1, 1)),

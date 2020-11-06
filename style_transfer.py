@@ -41,13 +41,15 @@ def get_features(model, tensor,
 
     
 
-def style_transfer_gatys(content, style, output, 
+def style_transfer_gatys(content, style,
                         model=VGG19(),EPOCHS=D.EPOCHS(),
                         content_layers = D.CONTENT_LAYERS.get(),
                         style_layers = D.STYLE_LAYERS.get(),
                         style_weight=1e6,content_weight=1,
                         c_layer_weights=D.CL_WEIGHTS.get(), 
                         s_layer_weights=D.SL_WEIGHTS.get()):
+
+    output = content.clone()
 
     optimizer = torch.optim.Adam([output.requires_grad_()],lr=1e-2)
     content_feats = get_features(model,content)
@@ -137,13 +139,14 @@ def style_transfer_adain(content,style,vgg=models.vgg_normalized(),alpha=1.0):
 
 
 if __name__ == '__main__':
-
+    import os
     init = torch.randn(1,3,D.IMSIZE.get(),
                         D.IMSIZE.get(),requires_grad=True,
                         device=D.DEVICE()).detach()
 
-    
-    style = utils.image_to_tensor(utils.load_image(D.STYLE_PATH())).detach()
+    # style_path = os.path.join(D.STYLE_DIR.get(),'output_gatys.png')
+    style_path = 'output_gatys.png'
+    style = utils.image_to_tensor(utils.load_image(style_path)).detach()
 
     init_clone = init.clone().detach()
 
@@ -151,7 +154,7 @@ if __name__ == '__main__':
     # content = utils.image_to_tensor(utils.load_image(content_path))
     
     
-    output = style_transfer_adain(init,style)
+    output = style_transfer_gatys(init,style,content_weight=0)
     utils.tensor_to_image(output).save('output.png')
     
 

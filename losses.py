@@ -56,9 +56,3 @@ class StyleLoss(nn.Module):
 
         return input
 
-
-content_layers_default = ['conv_4']
-style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
-normalization_mean_default = [0.485,0.456,0.406]
-normalization_std_default = [0.229,0.224,0.225]
-
