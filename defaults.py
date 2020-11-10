@@ -42,7 +42,7 @@ class DEFAULTS(Enum):
     MASK_FILE = 'binary_mask.png'
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
-    STYLE_DIR = 'data/images/selected_styles'
+    STYLE_DIR = 'inputs/style_images'
     STYLE_FILE = 'chair-2_cropped_more.png'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
@@ -59,12 +59,12 @@ class DEFAULTS(Enum):
         'armchair sofa 3', # 9:armchair sofa 3 no texture
     ]
 
-    MESH_DATA_DIR = 'data/3d-models/ShapeNet/samples'
+    MESHES_DIR = 'inputs/shape_samples'
     MESH_DIR = CHAIRS[1]
     MESH_FILE = 'model.obj'
     TEXTURE_FILE = 'model.mtl'
-    MESH_PATH_ = p.Path.cwd() / MESH_DATA_DIR / MESH_DIR / MESH_FILE
-    TEXTURE_PATH_ = p.Path.cwd() / MESH_DATA_DIR / MESH_DIR / TEXTURE_FILE
+    MESH_PATH_ = p.Path.cwd() / MESHES_DIR / MESH_DIR / MESH_FILE
+    TEXTURE_PATH_ = p.Path.cwd() / MESHES_DIR / MESH_DIR / TEXTURE_FILE
     TEXTURE_SIZE_ = 8
     
 
