@@ -19,18 +19,12 @@ def main():
     # Load style furniture image
     style = utils.image_to_tensor(utils.load_image(args.style)).detach()
     
-    mesh = utils.load_mesh(args.mesh,has_textures=True)
+    mesh = utils.load_mesh(args.mesh)
     
     # Create model for 3D texture transfer
-    render_model = MeshRendererModel(mesh,style,args)
+    render_model = MeshRendererModel(mesh,style)
     
     texture_transfer_gatys(render_model,style)
-
-
-
-
-
-
 
 
 
