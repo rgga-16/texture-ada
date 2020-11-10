@@ -30,10 +30,21 @@ def load_image(filename):
 
     return img
 
+def normalize_vertices(vertices):
+        """
+        Normalize mesh vertices into a unit cube centered at zero.
+        """
+        vertices = vertices - vertices.min(0)[0][None, :]
+        vertices /= torch.abs(vertices).max()
+        vertices *= 2
+        vertices -= vertices.max(0)[0][None, :] / 2
+        return vertices
+
 # Loads the a mesh from an .OBJ file
 def load_mesh(filename,has_textures=False,device=D.DEVICE()):
-    mesh = k.rep.Mesh.from_obj(filename,with_vt=has_textures)
+    mesh = k.rep.Mesh.from_obj(filename)
     mesh.to(device)
+    mesh.vertices=normalize_vertices(mesh.vertices)
 
     return mesh
 

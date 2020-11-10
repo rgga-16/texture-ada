@@ -82,15 +82,7 @@ class MeshRendererModel(nn.Module):
         input.to(self.device)
         return input
     
-    def normalize_vertices(self,vertices):
-        """
-        Normalize mesh vertices into a unit cube centered at zero.
-        """
-        vertices = vertices - vertices.min(0)[0][None, :]
-        vertices /= torch.abs(vertices).max()
-        vertices *= 2
-        vertices -= vertices.max(0)[0][None, :] / 2
-        return vertices
+    
 
     def render_image(self, azimuth=None, elevation=None):
 
@@ -176,12 +168,14 @@ def main():
     # Load style furniture image
     style = utils.image_to_tensor(utils.load_image(args.style)).detach()
     
-    mesh = utils.load_mesh(args.mesh,has_textures=True)
+    mesh = utils.load_mesh(args.mesh)
+
+    kal.visualize.show(mesh)
     
-    # Create model for 3D texture transfer
-    render_model = MeshRendererModel(mesh,style,args)
+    # # Create model for 3D texture transfer
+    # render_model = MeshRendererModel(mesh,style)
     
-    texture_transfer_gatys(render_model,style)
+    # texture_transfer_gatys(render_model,style)
 
 
 
