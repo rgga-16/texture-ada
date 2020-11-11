@@ -60,8 +60,8 @@ class DEFAULTS(Enum):
     ]
 
     MESHES_DIR = 'inputs/shape_samples'
-    MESH_DIR = CHAIRS[1]
-    MESH_FILE = 'model.obj'
+    MESH_DIR = CHAIRS[0]
+    MESH_FILE = 'backseat.obj'
     TEXTURE_FILE = 'model.mtl'
     MESH_PATH_ = p.Path.cwd() / MESHES_DIR / MESH_DIR / MESH_FILE
     TEXTURE_PATH_ = p.Path.cwd() / MESHES_DIR / MESH_DIR / TEXTURE_FILE

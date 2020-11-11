@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import torch
-import kaolin as k
+# import kaolin as k
 
 from defaults import DEFAULTS as D
 
