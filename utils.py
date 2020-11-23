@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import torch
-# import kaolin as k
 
 from defaults import DEFAULTS as D
 
@@ -39,14 +38,6 @@ def normalize_vertices(vertices):
         vertices *= 2
         vertices -= vertices.max(0)[0][None, :] / 2
         return vertices
-
-# Loads the a mesh from an .OBJ file
-def load_mesh(filename,has_textures=False,device=D.DEVICE()):
-    mesh = k.rep.Mesh.from_obj(filename)
-    mesh.to(device)
-    mesh.vertices=normalize_vertices(mesh.vertices)
-
-    return mesh
 
 
 # Preprocesses image and converts it to a Tensor
