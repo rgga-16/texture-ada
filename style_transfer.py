@@ -140,21 +140,15 @@ def style_transfer_adain(content,style,vgg=models.vgg_normalized(),alpha=1.0):
 
 if __name__ == '__main__':
     import os
-    init = torch.randn(1,3,D.IMSIZE.get(),
-                        D.IMSIZE.get(),requires_grad=True,
+    init = torch.full([1,3,D.IMSIZE.get(),
+                        D.IMSIZE.get()],1.0,requires_grad=True,
                         device=D.DEVICE()).detach()
 
-    # style_path = os.path.join(D.STYLE_DIR.get(),'output_gatys.png')
-    style_path = 'output_gatys.png'
+    style_path = D.STYLE_PATH()
     style = utils.image_to_tensor(utils.load_image(style_path)).detach()
-
-    init_clone = init.clone().detach()
-
-    # content_path = './data/images/others/6.jpg'
-    # content = utils.image_to_tensor(utils.load_image(content_path))
     
     
-    output = style_transfer_gatys(init,style,content_weight=0)
+    output = style_transfer_gatys(init,style,EPOCHS=1500,content_weight=0)
     utils.tensor_to_image(output).save('output.png')
     
 
