@@ -19,5 +19,7 @@ def parse_arguments():
                         help='Distance from camera to object center')
     parser.add_argument('--texture_size', type=int, default=D.TEXTURE_SIZE(),
                         help='Dimension of texture')
+    parser.add_argument('--imsize', type=float, default=D.IMSIZE.get(),
+                        help='Size to generated image')
 
     return parser.parse_args()

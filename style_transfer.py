@@ -50,8 +50,9 @@ def style_transfer_gatys(content, style,
                         s_layer_weights=D.SL_WEIGHTS.get()):
 
     output = content.clone()
+    output.requires_grad_(True)
 
-    optimizer = torch.optim.Adam([output.requires_grad_()],lr=1e-2)
+    optimizer = torch.optim.Adam([output],lr=1e-2)
     content_feats = get_features(model,content)
     style_feats = get_features(model,style)
 
@@ -103,53 +104,36 @@ def get_mean_std(feat):
     mean = feat.view(N,C,-1).mean(dim=2).view(N,C,1,1)
     return mean,std
 
-def style_transfer_adain(content,style,vgg=models.vgg_normalized(),alpha=1.0):
-
-    vgg.load_state_dict(torch.load('models/vgg_normalised.pth'))
-    vgg = torch.nn.Sequential(*list(vgg.children())[:31])
-    vgg.eval()
-    vgg.to(D.DEVICE())
-
-
-    decoder = models.decoder().eval()
-    decoder.load_state_dict(torch.load('models/decoder.pth'))
-    decoder.to(D.DEVICE())
-
-    with torch.no_grad():
-        content_feats = vgg(content)
-        style_feats = vgg(style)
-
-        content_mean,content_std = get_mean_std(content_feats)
-        style_mean, style_std = get_mean_std(style_feats)
-
-        size = content_feats.size()
-
-        adain_output = style_std.expand(size) * ((content_feats - content_mean.expand(size)) / content_std.expand(size)) + style_mean.expand(size)
-        adain_output = adain_output * alpha + content_feats * (1-alpha)
-        output = decoder(adain_output)
-        
-        return output
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     import os
-    init = torch.full([1,3,D.IMSIZE.get(),
-                        D.IMSIZE.get()],1.0,requires_grad=True,
-                        device=D.DEVICE()).detach()
 
-    style_path = D.STYLE_PATH()
-    style = utils.image_to_tensor(utils.load_image(style_path)).detach()
+    style_files = [
+        'chair-1.jpg_cropped.png',
+        'chair-2_cropped_more.png',
+        'chair-3.jpg_cropped.png',
+        'chair-5.jpg_cropped.png',
+        'chair-5.jpg_cropped.png',
+        'chair-6.jpg_cropped.png',
+        'chair-6.jpg_cropped.png',
+    ]
+
+    for filename in style_files:
+        print('Current Style: {}'.format(filename))
+        style_path = os.path.join(D.STYLE_DIR.get(),filename)
+        style_image = utils.load_image(style_path)
+
+        style = utils.image_to_tensor(style_image).detach()
+
+        init = torch.full([1,3,D.IMSIZE.get(),
+                            D.IMSIZE.get()],1.0,requires_grad=True,
+                            device=D.DEVICE()).detach()
+
+        # style_path = D.STYLE_PATH()
+        # style = utils.image_to_tensor(utils.load_image(style_path)).detach()
     
-    
-    output = style_transfer_gatys(init,style,EPOCHS=1500,content_weight=0)
-    utils.tensor_to_image(output).save('output.png')
+        output = style_transfer_gatys(init,style,EPOCHS=2000,content_weight=0)
+        utils.tensor_to_image(output).save(filename)
     
 
 

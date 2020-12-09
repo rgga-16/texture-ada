@@ -12,8 +12,8 @@ class DEFAULTS(Enum):
     DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
 
-    IMSIZE = 1024
-    EPOCHS_ = 750
+    IMSIZE = 256
+    EPOCHS_ = 3000
 
     NORM_MEAN = [0.485,0.456,0.406]
     NORM_STD = [0.229,0.224,0.225]
@@ -43,7 +43,7 @@ class DEFAULTS(Enum):
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
     STYLE_DIR = 'inputs/style_images'
-    STYLE_FILE = 'chair-2_cropped_more.png'
+    STYLE_FILE = 'chair-1.jpg'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
     CHAIRS = [

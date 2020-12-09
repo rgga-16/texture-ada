@@ -8,20 +8,22 @@ from defaults import DEFAULTS as D
 from PIL import Image
 import numpy as np
 
-
-def default_preprocessor(image_size):
-    preprocessor = transforms.Compose([
-        transforms.Resize((image_size,image_size)),
-        transforms.ToTensor(),
-    ])
-    return preprocessor
-
 def default_normalization():
     mean = D.NORM_MEAN.get()
     std = D.NORM_STD.get()
     norm = transforms.Normalize(mean,std)
 
     return norm
+
+def default_preprocessor(image_size):
+    preprocessor = transforms.Compose([
+        transforms.Resize((image_size,image_size)),
+        transforms.ToTensor(),
+        default_normalization(),
+    ])
+    return preprocessor
+
+
 
 # Loads image
 def load_image(filename):
@@ -60,18 +62,6 @@ def show_image(img):
 
 def save_gif(images:list,filename='output.gif'):
     images[0].save(filename,save_all=True,append_images=images[1:],loop=0,optimize=False,duration=75)
-
-
-# Get random samples from an iterables
-def get_random_samples(dataset,size=1):
-    dataset_list = list(dataset)
-    max = len(dataset_list)
-
-    np_arr = np.array(dataset_list)
-
-    random_indices = np.random.randint(low=0,high=max,size=size)
-
-    return list(np_arr[random_indices])
 
 
 # Converts tensor to an image
