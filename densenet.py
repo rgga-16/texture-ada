@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as cp
 from collections import OrderedDict
+from torchsummary import summary
 
 
 def _bn_function_factory(norm, relu, conv):
@@ -172,13 +173,9 @@ class DenseNet(nn.Module):
         return out
 
 if __name__ == '__main__':
-    # net = DenseNet(small_inputs=False)
-    # print(net)
-    # optimizer = 
-
-
-
+    net = DenseNet(small_inputs=False)
     x = torch.randn(1,3,256,256,device=torch.device('cuda:0'))
 
-    
+    print(summary(net,x.shape[1:]))
+    s
     

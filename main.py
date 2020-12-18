@@ -1,28 +1,28 @@
 import torch
 
+
 import style_transfer as st
 import utils
 import args
 from densenet import DenseNet
-from models import VGG19
+from models import VGG19, ConvAutoencoder,TextureNet
 
 from args import parse_arguments
 import os
+import datetime
 
 # from dextr.segment import segment_points
 
 from defaults import DEFAULTS as D
+from torchsummary import summary
 
 torch.autograd.set_detect_anomaly(True)
 
-def train(args):
-    style = utils.image_to_tensor(utils.load_image(args.style),image_size=args.imsize).detach()
+def train(args,generator,feat_extractor,lr=0.001):
+    style_img = utils.load_image(args.style)
+    style = utils.image_to_tensor(style_img,image_size=args.imsize).detach()
 
     epochs = args.epochs
-    lr=0.1
-    generator = DenseNet(small_inputs=False)
-    feat_extractor = VGG19()
-
     generator.train()
     generator.cuda(device=D.DEVICE())
 
@@ -41,6 +41,7 @@ def train(args):
         optim.zero_grad()
         loss=0
         output = generator(x)
+        output = output.clamp(0,1)
         
         out_feats = st.get_features(feat_extractor,output)
 
@@ -53,24 +54,25 @@ def train(args):
 
         if(i%checkpoint==checkpoint-1):
             print('EPOCH {} | LOSS: {}'.format(i+1,loss.item()))
-    
-    _,style_filename = os.path.split(args.style)
-    model_path = './models/{}.pth'.format(style_filename[:-4])
-    torch.save(generator.state_dict(),model_path)
 
-def test(args):
-    generator = DenseNet(small_inputs=False)
-    feat_extractor = VGG19()
+    today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
+    model_file = '[{}]{}-{} epochs.pth'.format(today,generator.__class__.__name__,epochs)
+    gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
+    print('Model saved in {}'.format(gen_path))
+    torch.save(generator.state_dict(),gen_path)
 
+    return gen_path
+
+def test(args,generator,gen_path):
     generator.eval()
     generator.cuda(device=D.DEVICE())
 
     _,style_filename = os.path.split(args.style)
-    model_path = './models/{}.pth'.format(style_filename[:-4])
-    generator.load_state_dict(torch.load(model_path))
+    generator.load_state_dict(torch.load(gen_path))
     x = torch.rand(1,3,args.imsize,args.imsize,device=D.DEVICE()).detach()
 
     y = generator(x)
+    y = y.clamp(0,1)
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
     utils.tensor_to_image(y).save(output_filename)
@@ -81,8 +83,24 @@ def test(args):
 def main():
     print("Main Driver")
     args = parse_arguments()
-    train(args)
-    test(args)
+
+    device = D.DEVICE()
+    # net = ConvAutoencoder().to(device)
+    net = TextureNet().to(device)
+    # net = DenseNet(small_inputs=False)
+
+    feat_extractor = VGG19()
+    for param in feat_extractor.parameters():
+        param.requires_grad = False
+
+    print(summary(net,(3,D.IMSIZE.get(),D.IMSIZE.get())))
+    
+
+    # print(summary(net,(256)))
+
+
+    gen_path = train(args,net,feat_extractor)
+    test(args,net,gen_path)
     
 
 
