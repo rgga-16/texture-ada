@@ -111,8 +111,6 @@ class TextureNet(nn.Module):
         )
 
     def forward(self,x):
-        # x=self.linears(x)
-        # x=x.view(1,16,4,4)
         x=self.convs(x)
         x=self.upsamplers(x)
         return x

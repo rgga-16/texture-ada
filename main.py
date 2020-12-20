@@ -37,7 +37,7 @@ def train(args,generator,feat_extractor,lr=0.001):
     checkpoint=100
     print('Training for {} epochs'.format(epochs))
     for i in range(epochs):
-        x = torch.rand(1,3,args.imsize,args.imsize,device=D.DEVICE()).detach()
+        x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
         optim.zero_grad()
         loss=0
         output = generator(x)
@@ -69,13 +69,14 @@ def test(args,generator,gen_path):
 
     _,style_filename = os.path.split(args.style)
     generator.load_state_dict(torch.load(gen_path))
-    x = torch.rand(1,3,args.imsize,args.imsize,device=D.DEVICE()).detach()
+    x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
 
     y = generator(x)
     y = y.clamp(0,1)
+    b,c,w,h = y.shape
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
-    utils.tensor_to_image(y).save(output_filename)
+    utils.tensor_to_image(y,image_size=h).save(output_filename)
     print('Image saved in {}'.format(output_filename))
 
     
@@ -93,11 +94,7 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    print(summary(net,(3,D.IMSIZE.get(),D.IMSIZE.get())))
-    
-
-    # print(summary(net,(256)))
-
+    print(summary(net,(3,64,64)))
 
     gen_path = train(args,net,feat_extractor)
     test(args,net,gen_path)
