@@ -76,6 +76,7 @@ def test(args,generator,gen_path):
     b,c,w,h = y.shape
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
+    output_path =os.path.join(args.output,'output_images',output_filename)
     utils.tensor_to_image(y,image_size=h).save(output_filename)
     print('Image saved in {}'.format(output_filename))
 
