@@ -21,8 +21,8 @@ class Renderer():
 
     def create_scene(self):
         self.scene = bpy.context.scene
-        bpy.context.scene.render.resolution_x = 512
-        bpy.context.scene.render.resolution_y = 512
+        bpy.context.scene.render.resolution_x = 1024
+        bpy.context.scene.render.resolution_y = 1024
 
         self.scene.render.image_settings.file_format = 'PNG'
         bpy.context.scene.render.image_settings.quality = 100
@@ -38,7 +38,7 @@ class Renderer():
     def setup_camera(self):
         bpy.ops.object.camera_add()
         self.camera = bpy.data.objects['Camera']
-        self.camera.location=(0.0,0.0,2.0)
+        self.camera.location=(0.0,0.0,1.5)
         # Add camera to scene
         bpy.context.scene.camera = self.camera
     
@@ -56,7 +56,7 @@ class Renderer():
         # self.scene.objects.active = lamp_object
         bpy.context.view_layer.objects.active = lamp_object
     
-    def load_object(self,texture_path='//textmap_1024.png',mesh_path='./inputs/shape_samples/armchair sofa/backseat.obj',):
+    def load_object(self,texture_path='//inputs/style_images/chair-2_texture.png',mesh_path='./inputs/shape_samples/armchair sofa/backseat.obj',):
         bpy.ops.import_scene.obj(filepath=mesh_path)
         obj = bpy.context.selected_objects[0]
 
@@ -77,7 +77,7 @@ class Renderer():
         else:
             obj.data.materials.append(mat)
         
-        self.save_uv_map(obj)
+        # self.save_uv_map(obj)
 
 
         
