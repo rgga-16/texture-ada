@@ -101,8 +101,8 @@ class TextureNet(nn.Module):
             TN_FullConvLayer(3,32),
             TN_FullConvLayer(32,64),
             TN_FullConvLayer(64,128),
-            TN_FullConvLayer(128,128),
-            TN_FullConvLayer(128,128),
+            # TN_FullConvLayer(128,128),
+            # TN_FullConvLayer(128,128),
         )
         self.upsamplers = nn.Sequential(
             TN_UpsampleLayer(128,64),
