@@ -1,7 +1,9 @@
 import bpy
 import math
+import os
 
-
+# import utils  
+# from defaults import DEFAULTS as D 
 
 class Renderer():
     def __init__(self):
@@ -13,11 +15,6 @@ class Renderer():
         # Add lights    
         self.setup_lights()
 
-        # Load objects
-        self.load_object()
-        # Load respective texture images
-        # Add texture to object material
-        # Render
 
     def create_scene(self):
         self.scene = bpy.context.scene
@@ -35,10 +32,12 @@ class Renderer():
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete(use_global=False)
 
-    def setup_camera(self):
+    def setup_camera(self,location=(0.0,0.3,1.3),
+                    rotation=(math.radians(-15),math.radians(0),math.radians(0))):
         bpy.ops.object.camera_add()
         self.camera = bpy.data.objects['Camera']
-        self.camera.location=(0.0,0.0,1.5)
+        self.camera.location=location
+        self.camera.rotation_euler = rotation
         # Add camera to scene
         bpy.context.scene.camera = self.camera
     
@@ -56,12 +55,12 @@ class Renderer():
         # self.scene.objects.active = lamp_object
         bpy.context.view_layer.objects.active = lamp_object
     
-    def load_object(self,texture_path='//inputs/style_images/chair-2_texture.png',mesh_path='./inputs/shape_samples/armchair sofa/backseat.obj',):
+    def load_object(self,mesh_path,texture_path):
         bpy.ops.import_scene.obj(filepath=mesh_path)
         obj = bpy.context.selected_objects[0]
 
         obj.rotation_euler[0]=math.radians(0)
-        obj.rotation_euler[1]=math.radians(90)
+        obj.rotation_euler[1]=math.radians(0)
 
         image = bpy.data.images.load(texture_path)
 
@@ -106,6 +105,27 @@ class Renderer():
 
 if __name__ == '__main__':
     renderer = Renderer()
-    
+
+    # meshes_dir = os.path.join(D.MESHES_DIR.get(), D.MESH_DIR.get())
+    meshes_dir = './inputs/shape_samples/armchair sofa'
+    textures_dir = './inputs/texture_maps/texture_network'
+
+    mesh_texture_file_pairs = {
+        'backseat.obj':'output_chair-2_cropped.png',
+        'base.obj':'output_chair-4_cropped.png',
+        'left_arm.obj':'output_chair-5_cropped.png',
+        'left_foot.obj':'output_chair-3_cropped.png',
+        'right_arm.obj':'output_chair-5_cropped.png',
+        'right_foot.obj':'output_chair-3_cropped.png',
+        'seat.obj':'output_chair-1_cropped.png',
+    }
+
+
+    for mesh_file,texture_file in mesh_texture_file_pairs.items():
+        mesh_path = os.path.join(meshes_dir,mesh_file)
+        # texture_path = textures_dir + '/' + texture_file
+        texture_path = '//' + texture_file
+        renderer.load_object(mesh_path,texture_path)
+        
     renderer.render()
 

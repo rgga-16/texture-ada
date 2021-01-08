@@ -95,7 +95,7 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    print(summary(net,(3,64,64)))
+    # print(summary(net,(3,64,64)))
 
     gen_path = train(args,net,feat_extractor)
     test(args,net,gen_path)
