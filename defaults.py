@@ -43,7 +43,7 @@ class DEFAULTS(Enum):
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
     STYLE_DIR = 'inputs/style_images'
-    STYLE_FILE = 'chair-1.jpg_cropped.png'
+    STYLE_FILE = 'chair-1_cropped.png'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
     MODEL_DIR = './models'

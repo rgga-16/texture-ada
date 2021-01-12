@@ -5,7 +5,7 @@ import style_transfer as st
 import utils
 import args
 from densenet import DenseNet
-from models import VGG19, ConvAutoencoder,TextureNet
+from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import parse_arguments
 import os
@@ -20,7 +20,8 @@ torch.autograd.set_detect_anomaly(True)
 
 def train(args,generator,feat_extractor,lr=0.001):
     style_img = utils.load_image(args.style)
-    style = utils.image_to_tensor(style_img,image_size=args.imsize).detach()
+    imsize=args.imsize
+    style = utils.image_to_tensor(style_img,image_size=imsize).detach()
 
     epochs = args.epochs
     generator.train()
@@ -37,10 +38,15 @@ def train(args,generator,feat_extractor,lr=0.001):
     checkpoint=100
     print('Training for {} epochs'.format(epochs))
     for i in range(epochs):
-        x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
+        sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
+        samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+        # sizes = [imsize/2,imsize]
+        # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()).detach() for sz in sizes]
+
         optim.zero_grad()
         loss=0
-        output = generator(x)
+        output = generator(samples)
+        # sample = batch_sample[0,:,:,:].unsqueeze(0)
         output = output.clamp(0,1)
         
         out_feats = st.get_features(feat_extractor,output)
@@ -88,14 +94,13 @@ def main():
 
     device = D.DEVICE()
     # net = ConvAutoencoder().to(device)
-    net = TextureNet().to(device)
+    # net = TextureNet().to(device)
     # net = DenseNet(small_inputs=False)
+    net = Pyramid2D().to(device)
 
     feat_extractor = VGG19()
     for param in feat_extractor.parameters():
         param.requires_grad = False
-
-    # print(summary(net,(3,64,64)))
 
     gen_path = train(args,net,feat_extractor)
     test(args,net,gen_path)
