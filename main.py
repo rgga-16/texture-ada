@@ -61,8 +61,9 @@ def train(args,generator,feat_extractor,lr=0.001):
         if(i%checkpoint==checkpoint-1):
             print('EPOCH {} | LOSS: {}'.format(i+1,loss.item()))
 
+    _,style_filename = os.path.split(args.style)
     today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
-    model_file = '[{}]{}-{} epochs.pth'.format(today,generator.__class__.__name__,epochs)
+    model_file = '[{}]{}-{}-{}_epochs.pth'.format(today,generator.__class__.__name__,style_filename[:-4],epochs)
     gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
@@ -71,13 +72,16 @@ def train(args,generator,feat_extractor,lr=0.001):
 
 def test(args,generator,gen_path):
     generator.eval()
+    imsize=args.imsize
     generator.cuda(device=D.DEVICE())
 
     _,style_filename = os.path.split(args.style)
     generator.load_state_dict(torch.load(gen_path))
-    x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
+    # x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
+    sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
+    samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
 
-    y = generator(x)
+    y = generator(samples)
     y = y.clamp(0,1)
     b,c,w,h = y.shape
 
@@ -103,6 +107,8 @@ def main():
         param.requires_grad = False
 
     gen_path = train(args,net,feat_extractor)
+    # model_file='[21-01-12 06-13]Pyramid2D-5000 epochs.pth'
+    # gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     test(args,net,gen_path)
     
 
