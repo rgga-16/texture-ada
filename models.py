@@ -163,7 +163,8 @@ class Up_In2D(nn.Module):
         # self.inst_norm = nn.InstanceNorm2d(num_features=n_ch)
 
     def forward(self, x):
-        x = self.inst_norm(self.up(x))
+        # x = self.inst_norm(self.up(x))
+        x = self.up(x)
         return x
 
 class Pyramid2D(nn.Module):
