@@ -49,7 +49,7 @@ def style_transfer_gatys(content, style,
                         c_layer_weights=D.CL_WEIGHTS.get(), 
                         s_layer_weights=D.SL_WEIGHTS.get()):
 
-    output = content.clone()
+    output = content.clone().detach()
     output.requires_grad_(True)
 
     optimizer = torch.optim.Adam([output],lr=1e-2)
@@ -109,31 +109,33 @@ if __name__ == '__main__':
     import os
 
     style_files = [
-        'chair-1.jpg_cropped.png',
-        'chair-2_cropped_more.png',
-        'chair-3.jpg_cropped.png',
-        'chair-5.jpg_cropped.png',
-        'chair-5.jpg_cropped.png',
-        'chair-6.jpg_cropped.png',
-        'chair-6.jpg_cropped.png',
+        # 'chair-1.jpg_cropped.png',
+        'chair-2.png',
+        # 'chair-3.jpg_cropped.png',
+        # 'chair-5.jpg_cropped.png',
+        # 'chair-5.jpg_cropped.png',
+        # 'chair-6.jpg_cropped.png',
+        # 'chair-6.jpg_cropped.png',
     ]
 
     for filename in style_files:
         print('Current Style: {}'.format(filename))
-        style_path = os.path.join(D.STYLE_DIR.get(),filename)
-        style_image = utils.load_image(style_path)
+        # style_path = os.path.join(D.STYLE_DIR.get(),filename)
+        style_path = 'chair-2.png'
+        style_image = utils.load_image(style_path,mode='RGB')
 
-        style = utils.image_to_tensor(style_image).detach()
+        style = utils.image_to_tensor(style_image,normalize=False).detach()
 
         init = torch.full([1,3,D.IMSIZE.get(),
                             D.IMSIZE.get()],1.0,requires_grad=True,
-                            device=D.DEVICE()).detach()
-
-        # style_path = D.STYLE_PATH()
-        # style = utils.image_to_tensor(utils.load_image(style_path)).detach()
+                            device=D.DEVICE())
+        # path = 'uv_map.png'
+        # init = utils.image_to_tensor(utils.load_image(path))
+        # init.requires_grad_(True)
     
         output = style_transfer_gatys(init,style,EPOCHS=2000,content_weight=0)
-        utils.tensor_to_image(output).save(filename)
+        
+        utils.tensor_to_image(output,denorm=False).save(filename+'_final.png')
     
 
 
