@@ -160,11 +160,11 @@ class Up_In2D(nn.Module):
         super(Up_In2D, self).__init__()
 
         self.up = nn.Upsample(scale_factor=2, mode='nearest')
-        # self.inst_norm = nn.InstanceNorm2d(num_features=n_ch)
+        self.inst_norm = nn.InstanceNorm2d(num_features=n_ch)
 
     def forward(self, x):
-        # x = self.inst_norm(self.up(x))
-        x = self.up(x)
+        x = self.inst_norm(self.up(x))
+        # x = self.up(x)
         return x
 
 class Pyramid2D(nn.Module):

@@ -4,7 +4,7 @@ import torch
 import style_transfer as st
 import utils
 import args
-from densenet import DenseNet
+
 from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import parse_arguments
@@ -40,13 +40,10 @@ def train(args,generator,feat_extractor,lr=0.001):
     for i in range(epochs):
         sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
-        # sizes = [imsize/2,imsize]
-        # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()).detach() for sz in sizes]
 
         optim.zero_grad()
         loss=0
         output = generator(samples)
-        # sample = batch_sample[0,:,:,:].unsqueeze(0)
         output = output.clamp(0,1)
         
         out_feats = st.get_features(feat_extractor,output)
@@ -54,6 +51,8 @@ def train(args,generator,feat_extractor,lr=0.001):
         for s in style_layers.values():
             diff = mse_loss(out_feats[s],style_feats[s])
             loss += s_layer_weights[s] * diff
+        style_weight=1e6
+        loss = loss * style_weight
 
         loss.backward()
         optim.step()
@@ -107,9 +106,10 @@ def main():
         param.requires_grad = False
 
     gen_path = train(args,net,feat_extractor)
-    # model_file='[21-01-12 06-13]Pyramid2D-5000 epochs.pth'
-    # gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
+
     test(args,net,gen_path)
+
+    # Algorithm
     
 
 
