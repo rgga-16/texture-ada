@@ -4,31 +4,29 @@ import args as a
 import utils
 from defaults import DEFAULTS as D
 
-path = 'binary_mask.png'
-args = a.parse_arguments()
-# style_image = utils.load_image(args.style)
-# mask = utils.load_image(path)
+import pathlib as p
+import os
 
-# mask_t = utils.image_to_tensor(mask,normalize=False)
+def mask(mask_path, style_path,output_path):
 
-# style = utils.load_image('chair-2.jpg')
-# style_t = utils.image_to_tensor(style)
+    mask = utils.load_image(mask_path,mode="L")
 
-# output_t = style_t * mask_t
+    style = utils.load_image(style_path,mode="RGBA")
 
-# output= utils.tensor_to_image(output_t)
-# output = output.convert('RGBA')
-# output.save('output.png','PNG')
+    output = style.copy()
 
+    output.putalpha(mask)
 
-mask = utils.load_image('uv_map.png',mode="L")
+    output.save(output_path,'PNG')
 
-style = utils.load_image('output_chair-2_cropped.png',mode="RGBA")
-
-output = style.copy()
-output.putalpha(mask)
-output.save('output.png','PNG')
+    return output_path
 
 
-# segment.segment_points(image_path = args.style,device=D.DEVICE())
+if __name__=='__main__':
+    device = D.DEVICE()
+    image_path = './inputs/style_images/chair-6.jpg'
+    mask_path = segment.segment_points(image_path=image_path, device=device)
+    output_filename = '{}_masked.png'.format(os.path.splitext(os.path.basename(image_path))[0])
+    output_path = './inputs/style_images/{}'.format(output_filename)
+    mask(mask_path,image_path,output_path)
 
