@@ -168,8 +168,25 @@ class Up_In2D(nn.Module):
         return x
 
 class Pyramid2D(nn.Module):
-    def __init__(self, ch_in=3, ch_step=8):
+    def __init__(self, ch_in=3, ch_step=8, n_samples=6):
         super(Pyramid2D, self).__init__()
+
+        self.conv_blocks = []
+        self.conv_entries = []
+
+        for i in range(n_samples):
+            running_step = ch_step * (i+1)
+            self.conv_blocks.append(
+                nn.Sequential(
+                    Conv_block2D(ch_in,running_step) if i==0 
+                    else Conv_block2D(running_step,running_step),
+                    Up_In2D(running_step),
+                )
+            )
+            if i > 0:
+                self.conv_entries.append(
+                    Conv_block2D(ch_in,ch_step)
+                )
 
         self.cb1_1 = Conv_block2D(ch_in,ch_step) # ch_step=8
         self.up1 = Up_In2D(ch_step)
@@ -193,6 +210,16 @@ class Pyramid2D(nn.Module):
         self.cb6_1 = Conv_block2D(ch_in,ch_step)
         self.cb6_2 = Conv_block2D(6*ch_step,6*ch_step) # ch_step=48
         self.last_conv = nn.Conv2d(6*ch_step, 3, 1, padding=0, bias=True)
+
+    # def forward(self,z):
+    #     y = None
+    #     # Order of z must start with the smallest samples
+    #     for i in range(len(z)):
+    #         y = self.conv_blocks[i](z[i])
+    #         if i == len(z)-1:
+    #             y = torch.cat((y,self.conv_entries[i](z[i+1])))
+    #     return 
+
 
     def forward(self, z):
         # Assuming image size = 256x256

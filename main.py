@@ -1,5 +1,5 @@
 import torch
-
+from torchvision import transforms
 
 import style_transfer as st
 import utils
@@ -9,6 +9,7 @@ from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import parse_arguments
 import os
+import time
 import datetime
 
 # from dextr.segment import segment_points
@@ -16,13 +17,10 @@ import datetime
 from defaults import DEFAULTS as D
 from torchsummary import summary
 
-torch.autograd.set_detect_anomaly(True)
 
-def train(args,generator,feat_extractor,lr=0.001):
-    style_img = utils.load_image(args.style)
+def train(args,generator,style,feat_extractor,lr=0.001):
+    
     imsize=args.imsize
-    style = utils.image_to_tensor(style_img,image_size=imsize).detach()
-
     epochs = args.epochs
     generator.train()
     generator.cuda(device=D.DEVICE())
@@ -39,7 +37,8 @@ def train(args,generator,feat_extractor,lr=0.001):
     print('Training for {} epochs'.format(epochs))
     for i in range(epochs):
         sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
-        samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+        # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+        samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
 
         optim.zero_grad()
         loss=0
@@ -69,20 +68,22 @@ def train(args,generator,feat_extractor,lr=0.001):
 
     return gen_path
 
-def test(args,generator,gen_path):
+def test(args,generator,style,gen_path):
     generator.eval()
     imsize=args.imsize
     generator.cuda(device=D.DEVICE())
 
     _,style_filename = os.path.split(args.style)
     generator.load_state_dict(torch.load(gen_path))
-    # x = torch.rand(1,3,64,64,device=D.DEVICE()).detach()
     sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
-    samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+    # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+    samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
 
     y = generator(samples)
     y = y.clamp(0,1)
     b,c,w,h = y.shape
+
+    date = time.time
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
     output_path =os.path.join(args.output,'output_images',output_filename)
@@ -99,17 +100,21 @@ def main():
     # net = ConvAutoencoder().to(device)
     # net = TextureNet().to(device)
     # net = DenseNet(small_inputs=False)
+    style_img = utils.load_image(args.style)
+    imsize=args.imsize
+    style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+
     net = Pyramid2D().to(device)
 
     feat_extractor = VGG19()
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    gen_path = train(args,net,feat_extractor)
+    gen_path = train(args,net,style,feat_extractor)
+    # gen_path = './models/[21-02-08 07-22]Pyramid2D-chair-1_masked-2500_epochs.pth'
 
-    test(args,net,gen_path)
+    test(args,net,style,gen_path)
 
-    # Algorithm
     
 
 

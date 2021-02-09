@@ -9,14 +9,6 @@ import pathlib as p
 # import utils  
 # from defaults import DEFAULTS as D 
 
-# Loads image
-def load_image(filename):
-    img = Image.open(filename).convert("RGB")
-    return img
-
-def save_gif(images:list,filename='output.gif'):
-    images[0].save(filename,save_all=True,append_images=images[1:],loop=0,optimize=False,duration=75)
-
 class BlenderRenderer():
 
     def __init__(self):
@@ -72,31 +64,18 @@ class BlenderRenderer():
         bpy.context.view_layer.objects.active = lamp_object
         return
     
-    def load_object(self,mesh_path):
+    def load_object(self,mesh_path,mesh_file):
         bpy.ops.import_scene.obj(filepath=mesh_path)
         obj = bpy.context.selected_objects[0]
 
         obj.rotation_euler = (math.radians(0),
-                            math.radians(90),
+                            math.radians(0),
                             math.radians(0))
 
-        image = bpy.data.images.load(texture_path,check_existing=True)
 
-        mat = bpy.data.materials.new(name='Material')
-        mat.use_nodes=True     
-        bsdf = mat.node_tree.nodes["Principled BSDF"]
-        texture_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
-        texture_image.image = image 
-        mat.node_tree.links.new(bsdf.inputs['Base Color'],texture_image.outputs['Color'])
-        
-        if obj.data.materials:
-            obj.data.materials[0]=mat 
-        else:
-            obj.data.materials.append(mat)
         
         self.objects.append(obj)
-        
-        # self.save_uv_map(obj)
+
 
         return obj
     
@@ -111,9 +90,11 @@ class BlenderRenderer():
         bpy.ops.uv.smart_project()
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',opacity=1.0)
-        
-        bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action='DESELECT')
+        
+        return
+        
     
     def render_gif(self,save_path='render.gif'):
         step=15
@@ -172,23 +153,34 @@ if __name__ == '__main__':
     meshes_dir = './inputs/shape_samples/armchair sofa'
     textures_dir = 'inputs/texture_maps/texture_network/ulyanov_texturenet/instnorm'
 
+    # mesh_texture_file_pairs = {
+    #     # 'backseat.obj':'uv_chair2.png',
+    #     # 'base.obj':'output_chair-4_cropped.png',
+    #     # 'left_arm.obj':'output_chair-5_cropped.png',
+    #     'left_foot.obj':'output_chair-3_cropped.png',
+    #     'right_arm.obj':'output_chair-5_cropped.png',
+    #     'right_foot.obj':'output_chair-3_cropped.png',
+    #     'seat.obj':'output_chair-1_cropped.png',
+    # }
+
     mesh_texture_file_pairs = {
-        'backseat.obj':'uv_chair2.png',
-        # 'backseat.obj':'output_chair-2_cropped.png',
+        'backseat.obj':'uv_map_backseat_colored.png',
         # 'base.obj':'output_chair-4_cropped.png',
-        # 'left_arm.obj':'output_chair-5_cropped.png',
-        # 'left_foot.obj':'output_chair-3_cropped.png',
-        # 'right_arm.obj':'output_chair-5_cropped.png',
-        # 'right_foot.obj':'output_chair-3_cropped.png',
-        # 'seat.obj':'output_chair-1_cropped.png',
+        'left_arm.obj':'uv_map_left_arm_colored.png',
+        'left_foot.obj':'uv_map_left_foot_colored.png',
+        'right_arm.obj':'uv_map_right_arm_colored.png',
+        'right_foot.obj':'uv_map_right_foot_colored.png',
+        'seat.obj':'uv_map_seat_colored.png',
     }
 
     # Add all objects and their textures into scene
     for mesh_file,texture_file in mesh_texture_file_pairs.items():
         mesh_path = os.path.join(meshes_dir,mesh_file)
         texture_path = str(p.Path.cwd() / textures_dir / texture_file)
-        obj = renderer.load_object(mesh_path)
+        obj = renderer.load_object(mesh_path,mesh_file)
         renderer.apply_texture(obj,texture_path)
-    renderer.render()
+        # renderer.save_uv_map(obj,save_file='//uv_map_{}.png'.format(mesh_file[:-4]))
+
+    # renderer.render()
         
-    # renderer.render_gif()
+    renderer.render_gif()

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import copy
 
 import utils
+from defaults import DEFAULTS as D
 
 class Normalization(nn.Module):
     def __init__(self,mean,std):
@@ -11,7 +12,7 @@ class Normalization(nn.Module):
         # directly work with image Tensor of shape [B x C x H x W].
         # B is batch size. C is number of channels. H is height and W is width.
         super(Normalization,self).__init__()
-        device = utils.setup_device()
+        device = D.DEVICE()
         self.mean = torch.tensor(mean).view(-1,1,1).to(device)
         self.std = torch.tensor(std).view(-1,1,1).to(device)
 
