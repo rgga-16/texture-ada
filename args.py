@@ -11,6 +11,8 @@ def parse_arguments():
                         help='Path to the mesh OBJ file')
     parser.add_argument('--style', type=str, default=D.STYLE_PATH(),
                         help='Path to the style image to transfer texture from')
+    parser.add_argument('--texture', type=str,
+                        help='Path to the texture image to transfer texture from')
     parser.add_argument('--output', type=str, default='outputs',
                         help='Path to the output directory')
     parser.add_argument('--epochs', type=int, default=D.EPOCHS(),

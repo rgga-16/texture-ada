@@ -18,7 +18,7 @@ from defaults import DEFAULTS as D
 from torchsummary import summary
 
 
-def train(args,generator,style,feat_extractor,lr=0.001):
+def train(args,generator,style,texture_patch,feat_extractor,lr=0.001):
     
     imsize=args.imsize
     epochs = args.epochs
@@ -27,7 +27,7 @@ def train(args,generator,style,feat_extractor,lr=0.001):
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
 
-    style_feats = st.get_features(feat_extractor,style)
+    style_feats = st.get_features(feat_extractor,texture_patch)
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
 
@@ -100,9 +100,13 @@ def main():
     # net = ConvAutoencoder().to(device)
     # net = TextureNet().to(device)
     # net = DenseNet(small_inputs=False)
-    style_img = utils.load_image(args.style)
+
     imsize=args.imsize
+    style_img = utils.load_image(args.style)
     style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+
+    texture_img = utils.load_image(args.texture)
+    texture = utils.image_to_tensor(texture_img,image_size=imsize,normalize=True).detach()
 
     net = Pyramid2D().to(device)
 
@@ -110,7 +114,7 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    gen_path = train(args,net,style,feat_extractor)
+    gen_path = train(args,net,style,texture,feat_extractor)
     # gen_path = './models/[21-02-08 07-22]Pyramid2D-chair-1_masked-2500_epochs.pth'
 
     test(args,net,style,gen_path)

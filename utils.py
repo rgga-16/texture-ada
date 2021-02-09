@@ -21,8 +21,6 @@ def default_preprocessor(image_size):
     
     return preprocessor
 
-
-
 # Loads image
 def load_image(filename,mode="RGBA",size=D.IMSIZE.get()):
     img = Image.open(filename).convert(mode)
@@ -50,14 +48,13 @@ def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),preprocess
     tensor = preprocessor(image)
 
     if normalize:
-        norm = default_normalization([0.40760392, 0.45795686, 0.48501961],[1,1,1])
+        norm = default_normalization()
         temp = tensor[:3,:,:]
         tensor[:3,:,:] = norm(temp)
 
     c,h,w = tensor.shape
 
     if(c > 3):
-        print('yes more than 3 channels')
         tensor = tensor[:3,:,:]
     tensor = tensor.unsqueeze(0)
     return tensor.to(device)
@@ -76,23 +73,23 @@ def save_gif(images:list,filename='output.gif'):
 # Converts tensor to an image
 def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
 
-    posta = transforms.Compose([
-        default_normalization([-0.40760392, -0.45795686, -0.48501961],[1,1,1]),
-    ])
-
     postb = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((image_size,image_size)),
     ])
     
-    tensor_ = tensor.cpu().clone()
-    tensor_ = tensor_.squeeze(0)
+    tensor_ = tensor.detach().cpu().numpy().squeeze(0)
+    tensor_ = np.transpose(tensor_,(1,2,0))
 
     if denorm:
-        temp = tensor_[:3,:,:]
-        tensor_[:3,:,:] = posta(temp)
+        temp = tensor_[...,:3]
+        tensor_[...,:3] = temp * np.array(D.NORM_STD.get()) + np.array(D.NORM_MEAN.get())
 
-    image = postb(tensor_)
+    image = postb(np.uint8(tensor_*225))
+    # plt.imshow(image)
+    # plt.show()
+    # image=tensor_
+    # image = Image.fromarray()
 
     return image
 
