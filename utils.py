@@ -86,11 +86,6 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
         tensor_[...,:3] = temp * np.array(D.NORM_STD.get()) + np.array(D.NORM_MEAN.get())
 
     image = postb(np.uint8(tensor_*225))
-    # plt.imshow(image)
-    # plt.show()
-    # image=tensor_
-    # image = Image.fromarray()
-
     return image
 
 
