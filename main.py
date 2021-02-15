@@ -19,18 +19,21 @@ from defaults import DEFAULTS as D
 from torchsummary import summary
 
 
-def train(args,generator,style,content,texture_patch,feat_extractor,lr=0.001):
+def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.001):
     
-    imsize=args.imsize
     epochs = args.epochs
     generator.train()
     generator.cuda(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
 
-    style_feats = st.get_features(feat_extractor,texture_patch)
+    style_feats = st.get_features(feat_extractor,style)
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
+
+    # style_feats = st.get_features(feat_extractor,texture_patch)
+    # style_layers = D.STYLE_LAYERS.get()
+    # s_layer_weights = D.SL_WEIGHTS.get()
 
     content_feats = st.get_features(feat_extractor,content)
     content_layers = D.CONTENT_LAYERS.get()
@@ -43,7 +46,7 @@ def train(args,generator,style,content,texture_patch,feat_extractor,lr=0.001):
         # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
         # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-        samples = style.clone().detach()
+        samples = input.clone().detach()
 
         optim.zero_grad()
         style_loss=0
@@ -82,17 +85,17 @@ def train(args,generator,style,content,texture_patch,feat_extractor,lr=0.001):
 
     return gen_path
 
-def test(args,generator,style,content,gen_path):
+def test(args,generator,input,gen_path):
     generator.eval()
     imsize=args.imsize
     generator.cuda(device=D.DEVICE())
 
     _,style_filename = os.path.split(args.style)
     generator.load_state_dict(torch.load(gen_path))
-    sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
+    # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
     # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
     # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-    samples=content.clone().detach()
+    samples=input.clone().detach()
 
     y = generator(samples)
     y = y.clamp(0,1)
@@ -135,10 +138,10 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    gen_path = train(args,net,input,content,texture,feat_extractor)
+    gen_path = train(args,net,input,style,content,texture,feat_extractor)
     # gen_path = './models/[21-02-08 07-22]Pyramid2D-chair-1_masked-2500_epochs.pth'
 
-    test(args,net,style,input,gen_path)
+    test(args,net,input,gen_path)
 
     
 
