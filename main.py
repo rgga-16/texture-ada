@@ -66,7 +66,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
         for c in content_layers.values():
             c_diff = mse_loss(out_feats[c], content_feats[c])
             content_loss += c_layer_weights[c] * c_diff
-        content_weight=1
+        content_weight=1e3
 
 
         loss = (content_loss*content_weight) + (style_loss * style_weight)

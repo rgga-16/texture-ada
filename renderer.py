@@ -69,7 +69,7 @@ class BlenderRenderer():
         obj = bpy.context.selected_objects[0]
 
         obj.rotation_euler = (math.radians(0),
-                            math.radians(0),
+                            math.radians(90),
                             math.radians(0))
 
 
@@ -122,7 +122,7 @@ class BlenderRenderer():
 
     def apply_texture(self,object,texture):
         # Load texture as texture_image node
-        image = bpy.data.images.load(texture_path,check_existing=True)
+        image = bpy.data.images.load(texture,check_existing=True)
 
         # Load object material's Principal BSDF node
         mat = bpy.data.materials.new(name='Material')
@@ -151,26 +151,16 @@ if __name__ == '__main__':
     renderer = BlenderRenderer()
 
     meshes_dir = './inputs/shape_samples/armchair sofa'
-    textures_dir = 'inputs/texture_maps/texture_network/ulyanov_texturenet/instnorm'
-
-    # mesh_texture_file_pairs = {
-    #     # 'backseat.obj':'uv_chair2.png',
-    #     # 'base.obj':'output_chair-4_cropped.png',
-    #     # 'left_arm.obj':'output_chair-5_cropped.png',
-    #     'left_foot.obj':'output_chair-3_cropped.png',
-    #     'right_arm.obj':'output_chair-5_cropped.png',
-    #     'right_foot.obj':'output_chair-3_cropped.png',
-    #     'seat.obj':'output_chair-1_cropped.png',
-    # }
+    textures_dir = ''
+    # textures_dir = 'inputs/texture_maps/texture_network/ulyanov_texturenet/instnorm'
 
     mesh_texture_file_pairs = {
-        'backseat.obj':'uv_map_backseat_colored.png',
-        # 'base.obj':'output_chair-4_cropped.png',
-        'left_arm.obj':'uv_map_left_arm_colored.png',
-        'left_foot.obj':'uv_map_left_foot_colored.png',
-        'right_arm.obj':'uv_map_right_arm_colored.png',
-        'right_foot.obj':'uv_map_right_foot_colored.png',
-        'seat.obj':'uv_map_seat_colored.png',
+        'backseat.obj':'output_chair-2_masked.png',
+        # 'left_arm.obj':'uv_map_left_arm_colored.png',
+        # 'left_foot.obj':'uv_map_left_foot_colored.png',
+        # 'right_arm.obj':'uv_map_right_arm_colored.png',
+        # 'right_foot.obj':'uv_map_right_foot_colored.png',
+        # 'seat.obj':'uv_map_seat_colored.png',
     }
 
     # Add all objects and their textures into scene
@@ -181,6 +171,6 @@ if __name__ == '__main__':
         renderer.apply_texture(obj,texture_path)
         # renderer.save_uv_map(obj,save_file='//uv_map_{}.png'.format(mesh_file[:-4]))
 
-    # renderer.render()
+    renderer.render()
         
-    renderer.render_gif()
+    # renderer.render_gif()
