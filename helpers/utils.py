@@ -12,15 +12,7 @@ def default_normalization(mean = D.NORM_MEAN.get(),std = D.NORM_STD.get()):
     norm = transforms.Normalize(mean,std)
 
     return norm
-
-def default_preprocessor(image_size):
-    preprocessor = transforms.Compose([
-        transforms.Resize((image_size,image_size)),
-        transforms.ToTensor(),
-    ])
     
-    return preprocessor
-
 # Loads image
 def load_image(filename,mode="RGBA",size=D.IMSIZE.get()):
     img = Image.open(filename).convert(mode)
@@ -40,10 +32,12 @@ def normalize_vertices(vertices):
 
 
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),preprocessor=None,normalize=True):
+def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
 
-    if preprocessor == None:
-        preprocessor=default_preprocessor(image_size)
+    preprocessor = transforms.Compose([
+        transforms.Resize((image_size,image_size)),
+        transforms.ToTensor(),
+    ])
 
     tensor = preprocessor(image)
 

@@ -43,7 +43,7 @@ def train(args,generator,style,content,texture_patch,feat_extractor,lr=0.001):
         # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
         # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-        samples = content.clone().detach()
+        samples = style.clone().detach()
 
         optim.zero_grad()
         style_loss=0
@@ -126,6 +126,8 @@ def main():
     content_img =utils.load_image(args.content)
     content = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
 
+    input = utils.image_to_tensor(content_img,image_size=imsize//32,normalize=True).detach()
+
     # net = Pyramid2D().to(device)
     net = Pyramid2D_2().to(device)
 
@@ -133,10 +135,10 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    gen_path = train(args,net,style,content,texture,feat_extractor)
+    gen_path = train(args,net,input,content,texture,feat_extractor)
     # gen_path = './models/[21-02-08 07-22]Pyramid2D-chair-1_masked-2500_epochs.pth'
 
-    test(args,net,style,content,gen_path)
+    test(args,net,style,input,gen_path)
 
     
 

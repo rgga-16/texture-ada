@@ -272,31 +272,29 @@ class Pyramid2D_2(nn.Module):
         self.cb1_1 = Conv_block2D(ch_in,ch_step) # ch_step=8
         self.up1 = Up_In2D(ch_step)
 
-        self.cb2_2 = Conv_block2D(2*ch_step,2*ch_step) # ch_step=16
+        self.cb2_2 = Conv_block2D(ch_step,2*ch_step) # ch_step=16
         self.up2 = Up_In2D(2*ch_step)
 
-        self.cb3_2 = Conv_block2D(3*ch_step,3*ch_step) # ch_step=24
+        self.cb3_2 = Conv_block2D(2*ch_step,3*ch_step) # ch_step=24
         self.up3 = Up_In2D(3*ch_step)
 
-        self.cb4_2 = Conv_block2D(4*ch_step,4*ch_step) # ch_step=32
+        self.cb4_2 = Conv_block2D(3*ch_step,4*ch_step) # ch_step=32
         self.up4 = Up_In2D(4*ch_step)
 
-        self.cb5_2 = Conv_block2D(5*ch_step,5*ch_step) # ch_step=40
+        self.cb5_2 = Conv_block2D(4*ch_step,5*ch_step) # ch_step=40
         self.up5 = Up_In2D(5*ch_step)
 
-        self.cb6_2 = Conv_block2D(6*ch_step,6*ch_step) # ch_step=48
+        self.cb6_2 = Conv_block2D(5*ch_step,6*ch_step) # ch_step=48
         self.last_conv = nn.Conv2d(6*ch_step, 3, 1, padding=0, bias=True)
 
 
     def forward(self, z):
-        # Assuming image size = 256x256
-        #                       z[0]        z[1]        z[2]        z[3]     z[4]       z[5]   
-        # z is list of tensors [(3x256x256),(3x128x128),(3x64x64),(3x32x32),(3x16x16),(3x8x8)]
+        # Assuming image size = 512x512
 
-        y = self.cb1_1(z) # z=(3x8x8) => y=(8x8x8)
-        y = self.up1(y) # y=(8x8x8) => y=(8x16x16)
+        y = self.cb1_1(z) # z=(3x512x512) => y=(8x512x512)
+        y = self.up1(y) # y=(8x512x512) => y=(8x1024x1024)
 
-        y = self.cb2_2(y) # y=(8x16x16) => (16x16x16)
+        y = self.cb2_2(y) # y=(8x1024x1024) => (16x1024x1024)
         y = self.up2(y) # y=(16x32x32)
 
         y = self.cb3_2(y) # y=(16x32x32) => (24x32x32)
