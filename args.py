@@ -13,6 +13,8 @@ def parse_arguments():
                         help='Path to the style image to transfer texture from')
     parser.add_argument('--texture', type=str,
                         help='Path to the texture image to transfer texture from')
+    parser.add_argument('--content', type=str,
+                        help='Path to the content image to transfer texture onto')
     parser.add_argument('--output', type=str, default='outputs',
                         help='Path to the output directory')
     parser.add_argument('--epochs', type=int, default=D.EPOCHS(),

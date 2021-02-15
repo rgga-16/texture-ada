@@ -8,9 +8,10 @@ from torchvision import transforms
 import losses
 import models
 from models import VGG19
+from args import parse_arguments
 
 
-import utils
+import helpers.utils as utils
 # import dextr.segment as seg 
 from defaults import DEFAULTS as D
 
@@ -86,7 +87,7 @@ def style_transfer_gatys(content, style,
             total_loss.backward(retain_graph=True)
             
             if(run[0] % 50 == 0):
-                print('Epoch {} | Style Loss: {} | Content Loss: {} | Total Loss: {}'.format(run[0],style_loss.item(), 
+                print('Epoch {} | Style Loss: {:.4f} | Content Loss: {:.4f} | Total Loss: {:.4f}'.format(run[0],style_loss.item(), 
                                                                             content_loss.item(), 
                                                                             total_loss.item()))
             run[0]+=1
@@ -108,35 +109,31 @@ def get_mean_std(feat):
 if __name__ == '__main__':
     import os
 
-    style_files = [
-        # 'chair-1.jpg_cropped.png',
-        'chair-2.png',
-        # 'chair-3.jpg_cropped.png',
-        # 'chair-5.jpg_cropped.png',
-        # 'chair-5.jpg_cropped.png',
-        # 'chair-6.jpg_cropped.png',
-        # 'chair-6.jpg_cropped.png',
-    ]
+    args = parse_arguments()
+    style_file = 'chair-5_masked.png'
+    content_file = 'uv_map_right_foot.png'
 
-    for filename in style_files:
-        print('Current Style: {}'.format(filename))
-        # style_path = os.path.join(D.STYLE_DIR.get(),filename)
-        style_path = 'chair-2.png'
-        style_image = utils.load_image(style_path,mode='RGB')
+    style_path = os.path.join(D.STYLE_DIR.get(),style_file)
 
-        style = utils.image_to_tensor(style_image,normalize=False).detach()
+    style_name = os.path.splitext(os.path.basename(style_path))[0]
 
-        init = torch.full([1,3,D.IMSIZE.get(),
-                            D.IMSIZE.get()],1.0,requires_grad=True,
-                            device=D.DEVICE())
-        # path = 'uv_map.png'
-        # init = utils.image_to_tensor(utils.load_image(path))
-        # init.requires_grad_(True)
+    style_image = utils.load_image(style_path,mode='RGB')
+
+    style = utils.image_to_tensor(style_image,normalize=True).detach()
+
+    init = torch.full([1,3,D.IMSIZE.get(),
+                        D.IMSIZE.get()],1.0,requires_grad=True,
+                        device=D.DEVICE())
     
-        output = style_transfer_gatys(init,style,EPOCHS=2000,content_weight=0)
-        
-        utils.tensor_to_image(output,denorm=False).save(filename+'_final.png')
+    content_path = os.path.join('inputs/uv_maps',content_file)
+    content_image = utils.load_image(content_path,mode='RGB')
+    content = utils.image_to_tensor(content_image,normalize=True)
+
+    output = style_transfer_gatys(content,style,EPOCHS=2000,content_weight=0)
+    output_dir = 'inputs/texture_maps/gatys/uv_maps'
     
+    utils.tensor_to_image(output,denorm=True).save(os.path.join(output_dir,'{}_texturemap.png'.format(style_name)))
+
 
 
 

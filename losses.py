@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 
-import utils
+import helpers.utils as utils
 from defaults import DEFAULTS as D
 
 class Normalization(nn.Module):
