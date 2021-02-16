@@ -8,17 +8,8 @@ from defaults import DEFAULTS as D
 from PIL import Image
 import numpy as np
 
-def default_normalization(mean = D.NORM_MEAN.get(),std = D.NORM_STD.get()):
-    norm = transforms.Normalize(mean,std)
-
-    return norm
-    
-# Loads image
-def load_image(filename,mode="RGBA",size=D.IMSIZE.get()):
-    img = Image.open(filename).convert(mode)
-    img = img.resize((size,size))
-
-    return img
+import os 
+from args import args
 
 def normalize_vertices(vertices):
         """
@@ -42,7 +33,7 @@ def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=
     tensor = preprocessor(image)
 
     if normalize:
-        norm = default_normalization()
+        norm = transforms.Normalize(D.NORM_MEAN.get(),D.NORM_STD.get())
         temp = tensor[:3,:,:]
         tensor[:3,:,:] = norm(temp)
 
@@ -52,17 +43,6 @@ def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=
         tensor = tensor[:3,:,:]
     tensor = tensor.unsqueeze(0)
     return tensor.to(device)
-
-
-# Show image
-def show_image(img):
-    plt.figure(figsize=(10,10))
-    plt.imshow(img)
-    plt.show()
-
-def save_gif(images:list,filename='output.gif'):
-    images[0].save(filename,save_all=True,append_images=images[1:],loop=0,optimize=False,duration=75)
-
 
 # Converts tensor to an image
 def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
@@ -81,5 +61,25 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
 
     image = postb(np.uint8(tensor_*225))
     return image
+
+
+# Show image
+def show_image(img):
+    plt.figure(figsize=(10,10))
+    plt.imshow(img)
+    plt.axis('off')
+    plt.show()
+
+# Loads a single image or multiple images
+def load_image(filename,mode="RGBA"):
+    img = Image.open(filename).convert(mode)
+    return img
+
+
+def save_gif(images:list,filename='output.gif'):
+    images[0].save(filename,save_all=True,append_images=images[1:],loop=0,optimize=False,duration=75)
+
+
+
 
 

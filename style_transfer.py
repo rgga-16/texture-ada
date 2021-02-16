@@ -8,7 +8,7 @@ from torchvision import transforms
 import losses
 import models
 from models import VGG19
-from args import parse_arguments
+from args import args
 
 
 import helpers.utils as utils
@@ -109,7 +109,6 @@ def get_mean_std(feat):
 if __name__ == '__main__':
     import os
 
-    args = parse_arguments()
     style_file = 'chair-5_masked.png'
     content_file = 'uv_map_right_foot.png'
 

@@ -8,7 +8,7 @@ import args
 
 from models import Pyramid2D_2, VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
-from args import parse_arguments
+from args import args
 import os
 import time
 import datetime
@@ -112,15 +112,16 @@ def test(args,generator,input,gen_path):
 
 def main():
     print("Main Driver")
-    args = parse_arguments()
 
     device = D.DEVICE()
     # net = ConvAutoencoder().to(device)
     # net = TextureNet().to(device)
     # net = DenseNet(small_inputs=False)
 
+    style_path = args.style
+
     imsize=args.imsize
-    style_img = utils.load_image(args.style)
+    style_img = utils.load_image(style_path)
     style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
 
     texture_img = utils.load_image(args.texture)
@@ -129,7 +130,8 @@ def main():
     content_img =utils.load_image(args.content)
     content = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
 
-    input = utils.image_to_tensor(content_img,image_size=imsize//32,normalize=True).detach()
+    # input = utils.image_to_tensor(content_img,image_size=imsize//32,normalize=True).detach()
+    input = torch.rand((1,3,imsize//32,imsize//32),device=device)
 
     # net = Pyramid2D().to(device)
     net = Pyramid2D_2().to(device)
@@ -139,12 +141,8 @@ def main():
         param.requires_grad = False
 
     gen_path = train(args,net,input,style,content,texture,feat_extractor)
-    # gen_path = './models/[21-02-08 07-22]Pyramid2D-chair-1_masked-2500_epochs.pth'
 
     test(args,net,input,gen_path)
-
-    
-
 
 
 if __name__ == "__main__":

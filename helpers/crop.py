@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 import os
-from args import parse_arguments
+from args import args
 
 '''
 Removes blank spaces outside the object in image
@@ -51,7 +51,6 @@ def center_crop(image_arr,n_crop):
                     :]
 
 def main():
-    args = parse_arguments()
 
     input_path = args.style
     im = Image.open(input_path)
