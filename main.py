@@ -26,6 +26,9 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
     generator.train()
     generator.cuda(device=D.DEVICE())
 
+    content_mask = content[:,3,...].unsqueeze(0)
+    content =content[:,:3,...]
+
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
 
     style_feats = st.get_features(feat_extractor,style)
@@ -57,6 +60,9 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
         output = generator(samples)
         output = output.clamp(0,1)
 
+        output_mask = output[:,3,...].unsqueeze(0)
+        output=output[:,:3,...]
+
         style_loss=0
         content_loss=0
         
@@ -72,8 +78,10 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
             content_loss += c_layer_weights[c] * c_diff
         content_weight=1e3
 
+        fg_loss = mse_loss(output_mask,content_mask)
 
-        loss = (content_loss*content_weight) + (style_loss * style_weight)
+
+        loss = (content_loss*content_weight) + (style_loss * style_weight) + fg_loss
         loss.backward()
         
         optim.step()
@@ -131,6 +139,7 @@ def main():
     imsize=args.imsize
     style_img = utils.load_image(style_path)
     style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+    style = style[:,:3,...]
 
     texture_img = utils.load_image(args.texture)
     texture = utils.image_to_tensor(texture_img,image_size=imsize,normalize=True).detach()
@@ -140,7 +149,7 @@ def main():
 
     input = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
     # input = torch.rand((1,3,imsize//32,imsize//32),device=device)
-    inputs = [input]
+    inputs = [input[:,:3,...]]
 
     sizes = [imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
     samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]

@@ -208,7 +208,7 @@ class Pyramid2D(nn.Module):
 
         self.cb6_1 = Conv_block2D(ch_in,ch_step)
         self.cb6_2 = Conv_block2D(6*ch_step,6*ch_step) # ch_step=48
-        self.last_conv = nn.Conv2d(6*ch_step, 3, 1, padding=0, bias=True)
+        self.last_conv = nn.Conv2d(6*ch_step, 4, 1, padding=0, bias=True)
 
     # def forward(self,z):
     #     y = None
