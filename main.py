@@ -44,6 +44,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
 
     checkpoint=100
     loss_history=[]
+    epoch_chkpts=[]
     for i in range(epochs):
         # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
@@ -80,6 +81,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,loss.item()))
             loss_history.append(loss)
+            epoch_chkpts.append(i)
 
     _,style_filename = os.path.split(args.style)
     today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
@@ -87,7 +89,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
     gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
-    vis.display_losses(loss_history,range(epochs),title='Training Loss History')
+    vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
     return gen_path
 
 def test(args,generator,input,gen_path):
