@@ -48,7 +48,8 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
         # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
         # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-        samples = input.clone().detach()
+        # samples = input.clone().detach()
+        samples=input
 
         optim.zero_grad()
         style_loss=0
@@ -99,7 +100,8 @@ def test(args,generator,input,gen_path):
     # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
     # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
     # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-    samples=input.clone().detach()
+    # samples=input.clone().detach()
+    samples=input
 
     y = generator(samples)
     y = y.clamp(0,1)
