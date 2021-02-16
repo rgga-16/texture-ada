@@ -4,6 +4,7 @@ from torchvision import transforms
 import style_transfer as st
 
 import helpers.utils as utils
+from helpers import visualizer as vis
 import args
 
 from models import Pyramid2D_2, VGG19, ConvAutoencoder,TextureNet, Pyramid2D
@@ -42,6 +43,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
     mse_loss = torch.nn.MSELoss()
 
     checkpoint=100
+    loss_history=[]
     for i in range(epochs):
         # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
         # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
@@ -71,10 +73,12 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
 
         loss = (content_loss*content_weight) + (style_loss * style_weight)
         loss.backward()
+        
         optim.step()
 
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,loss.item()))
+            loss_history.append(loss)
 
     _,style_filename = os.path.split(args.style)
     today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
@@ -82,7 +86,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
     gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
-
+    vis.display_losses(loss_history,range(epochs),title='Training Loss History')
     return gen_path
 
 def test(args,generator,input,gen_path):
@@ -130,19 +134,25 @@ def main():
     content_img =utils.load_image(args.content)
     content = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
 
-    # input = utils.image_to_tensor(content_img,image_size=imsize//32,normalize=True).detach()
-    input = torch.rand((1,3,imsize//32,imsize//32),device=device)
+    input = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
+    # input = torch.rand((1,3,imsize//32,imsize//32),device=device)
+    inputs = [input]
 
-    # net = Pyramid2D().to(device)
-    net = Pyramid2D_2().to(device)
+    sizes = [imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
+    samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
+    inputs.extend(samples)
+    # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
+
+    net = Pyramid2D().to(device)
+    # net = Pyramid2D_2().to(device)
 
     feat_extractor = VGG19()
     for param in feat_extractor.parameters():
         param.requires_grad = False
 
-    gen_path = train(args,net,input,style,content,texture,feat_extractor)
+    gen_path = train(args,net,inputs,style,content,texture,feat_extractor)
 
-    test(args,net,input,gen_path)
+    test(args,net,inputs,gen_path)
 
 
 if __name__ == "__main__":
