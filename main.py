@@ -58,7 +58,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
         optim.zero_grad()
         style_loss=0
         output = generator(samples)
-        output = output.clamp(0,1)
+        # output = output.clamp(0,1)
 
         output_mask = output[:,3,...].unsqueeze(0)
         output=output[:,:3,...]
@@ -82,7 +82,7 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
 
 
         # loss = (content_loss*content_weight) + (style_loss * style_weight) + fg_loss
-        loss = (style_loss * style_weight) + (fg_loss * 1e3)
+        loss = (style_loss * style_weight) + (fg_loss * 1)
         loss.backward()
         
         optim.step()
@@ -115,7 +115,7 @@ def test(args,generator,input,gen_path):
     samples=input
 
     y = generator(samples)
-    y = y.clamp(0,1)
+    # y = y.clamp(0,1)
     b,c,w,h = y.shape
 
     date = time.time
