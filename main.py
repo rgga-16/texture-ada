@@ -39,9 +39,9 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
     # style_layers = D.STYLE_LAYERS.get()
     # s_layer_weights = D.SL_WEIGHTS.get()
 
-    content_feats = st.get_features(feat_extractor,content)
-    content_layers = D.CONTENT_LAYERS.get()
-    c_layer_weights = D.CL_WEIGHTS.get()
+    # content_feats = st.get_features(feat_extractor,content)
+    # content_layers = D.CONTENT_LAYERS.get()
+    # c_layer_weights = D.CL_WEIGHTS.get()
 
     mse_loss = torch.nn.MSELoss()
 
@@ -73,15 +73,16 @@ def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.0
             style_loss += s_layer_weights[s] * diff
         style_weight=1e6
 
-        for c in content_layers.values():
-            c_diff = mse_loss(out_feats[c], content_feats[c])
-            content_loss += c_layer_weights[c] * c_diff
-        content_weight=1e3
+        # for c in content_layers.values():
+        #     c_diff = mse_loss(out_feats[c], content_feats[c])
+        #     content_loss += c_layer_weights[c] * c_diff
+        # content_weight=1e3
 
         fg_loss = mse_loss(output_mask,content_mask)
 
 
-        loss = (content_loss*content_weight) + (style_loss * style_weight) + fg_loss
+        # loss = (content_loss*content_weight) + (style_loss * style_weight) + fg_loss
+        loss = (style_loss * style_weight) + (fg_loss * 1e3)
         loss.backward()
         
         optim.step()
