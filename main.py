@@ -161,7 +161,7 @@ def main():
     styles = []
     uv_maps = []
     for uvf,sf in zip(uv_map_files,style_files):
-        style_img = utils.load_image(os.path.join(args.style_dir,sf))
+        style_img = utils.load_image(os.path.join(args.style_dir,'masked',sf))
         # Convert to tensor 
         style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
         style = style[:,:3,...]
