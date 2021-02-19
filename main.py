@@ -119,15 +119,15 @@ def test(args,generator,input,gen_path):
     b,c,w,h = y.shape
 
     output_dir = args.output
-    today = datetime.datetime.today().strftime('%y-%m-%d')
-    folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
+    # today = datetime.datetime.today().strftime('%y-%m-%d')
+    # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
     
-    if not os.path.exists(folder_dir):
-        os.mkdir(folder_dir)
+    # if not os.path.exists(folder_dir):
+    #     os.mkdir(folder_dir)
 
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
-    output_path =os.path.join(folder_dir,output_filename)
+    output_path =os.path.join(output_dir,output_filename)
     utils.tensor_to_image(y,image_size=h).save(output_path)
     print('Image saved in {}'.format(output_path))
 
