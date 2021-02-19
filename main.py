@@ -150,8 +150,8 @@ def main():
     # Retrieve UV maps
 
     # Retrieve style images and UV maps
-    style_files = uv_map_style_pairings.values()
-    uv_map_files = uv_map_style_pairings.keys()
+    style_files = list(uv_map_style_pairings.values())
+    uv_map_files = list(uv_map_style_pairings.keys())
 
     styles = []
     uv_maps = []
