@@ -20,7 +20,7 @@ from defaults import DEFAULTS as D
 from torchsummary import summary
 
 
-def train(args,generator,input,style,content,texture_patch,feat_extractor,lr=0.001):
+def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     
     epochs = args.epochs
     generator.train()
@@ -118,10 +118,16 @@ def test(args,generator,input,gen_path):
     # y = y.clamp(0,1)
     b,c,w,h = y.shape
 
-    date = time.time
+    output_dir = args.output
+    today = datetime.datetime.today().strftime('%y-%m-%d')
+    folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
+    
+    if not os.path.exists(folder_dir):
+        os.mkdir(folder_dir)
+
 
     output_filename = 'output_{}.png'.format(style_filename[:-4])
-    output_path =os.path.join(args.output,'output_images',output_filename)
+    output_path =os.path.join(folder_dir,output_filename)
     utils.tensor_to_image(y,image_size=h).save(output_path)
     print('Image saved in {}'.format(output_path))
 
@@ -131,42 +137,63 @@ def main():
     print("Main Driver")
 
     device = D.DEVICE()
-    # net = ConvAutoencoder().to(device)
-    # net = TextureNet().to(device)
-    # net = DenseNet(small_inputs=False)
+    imsize = args.imsize
+    # Get pairings between UV maps and style images
+    uv_map_style_pairings = {
+        'uv_map_backseat.png':'chair-2_masked.png',
+        'uv_map_left_arm.png':'chair-5_masked.png',
+        'uv_map_right_arm.png':'chair-5_masked.png',
+        'uv_map_left_foot.png':'chair-4_masked.png',
+        'uv_map_right_foot.png':'chair-4_masked.png',
+        'uv_map_base.png':'chair-1_masked.png',
+    }
+    # For each style image:
+        # Use DEXTR to select 1 region only. Retrieve its binary mask.
+        # Mask out image 
+        # Further crop image
 
-    style_path = args.style
+    # Retrieve UV maps
 
-    imsize=args.imsize
-    style_img = utils.load_image(style_path)
-    style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
-    style = style[:,:3,...]
+    # Retrieve style images and UV maps
+    style_files = uv_map_style_pairings.values()
+    uv_map_files = uv_map_style_pairings.keys()
 
-    texture_img = utils.load_image(args.texture)
-    texture = utils.image_to_tensor(texture_img,image_size=imsize,normalize=True).detach()
+    styles = []
+    uv_maps = []
+    for uvf,sf in zip(uv_map_files,style_files):
+        style_img = utils.load_image(os.path.join(args.style_dir,sf))
+        # Convert to tensor 
+        style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+        style = style[:,:3,...]
+        styles.append(style)
 
-    content_img =utils.load_image(args.content)
-    content = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
+        uv_img =utils.load_image(os.path.join(args.content_dir,'lightmap_packed',uvf))
+        uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
+        uv_maps.append(uv)
 
-    input = utils.image_to_tensor(content_img,image_size=imsize,normalize=True).detach()
-    # input = torch.rand((1,3,imsize//32,imsize//32),device=device)
-    inputs = [input[:,:3,...]]
+    assert len(uv_maps) == len(styles)
 
-    sizes = [imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
-    samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
-    inputs.extend(samples)
-    # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
+    sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
+    # For each UV-Style image pair
+    for uv,s in zip(uv_maps,styles):
+        # Setup inputs 
+        inputs = [uv[:,:3,...].clone().detach()]
+        inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
-    net = Pyramid2D().to(device)
-    # net = Pyramid2D_2().to(device)
+        # Setup generator model 
+        net = Pyramid2D().to(device)
 
-    feat_extractor = VGG19()
-    for param in feat_extractor.parameters():
-        param.requires_grad = False
+        # Setup feature extraction model 
+        feat_extractor = VGG19()
+        for param in feat_extractor.parameters():
+            param.requires_grad = False
 
-    gen_path = train(args,net,inputs,style,content,texture,feat_extractor)
+        # train model 
+        gen_path = train(args,net,inputs,s,uv,feat_extractor)
+        # record losses and configurations
 
-    test(args,net,inputs,gen_path)
+        # test model to output texture 
+        test(args,net,inputs,gen_path)
 
 
 if __name__ == "__main__":

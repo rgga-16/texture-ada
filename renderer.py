@@ -9,6 +9,10 @@ import pathlib as p
 # import utils  
 # from defaults import DEFAULTS as D 
 
+
+def unwrap_method():
+    bpy.ops.uv.lightmap_pack(PREF_CONTEXT='SEL_FACES')
+
 class BlenderRenderer():
 
     def __init__(self):
@@ -87,7 +91,10 @@ class BlenderRenderer():
         bpy.context.view_layer.objects.active=obj
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.uv.smart_project()
+        unwrap_method()
+        # bpy.ops.uv.smart_project()
+        # bpy.ops.uv.cube_project(cube_size=1.0,correct_aspect=True,scale_to_bounds=True)
+        # bpy.ops.uv.pack_islands(margin=0.5)
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',opacity=1.0)
         bpy.ops.object.mode_set(mode="OBJECT")
@@ -143,7 +150,8 @@ class BlenderRenderer():
         bpy.context.view_layer.objects.active=object
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.uv.smart_project()
+        unwrap_method()
+        # bpy.ops.uv.cube_project(cube_size=1.0,correct_aspect=True,scale_to_bounds=True)
 
     # Render the image
 
@@ -155,12 +163,13 @@ if __name__ == '__main__':
     # textures_dir = 'inputs/texture_maps/texture_network/ulyanov_texturenet/instnorm'
 
     mesh_texture_file_pairs = {
-        'backseat.obj':'output_chair-2_masked.png',
-        # 'left_arm.obj':'uv_map_left_arm_colored.png',
-        # 'left_foot.obj':'uv_map_left_foot_colored.png',
-        # 'right_arm.obj':'uv_map_right_arm_colored.png',
-        # 'right_foot.obj':'uv_map_right_foot_colored.png',
-        # 'seat.obj':'uv_map_seat_colored.png',
+        'backseat.obj':'uv_map_backseat.png',
+        'base.obj':'uv_map_base.png',
+        'left_arm.obj':'uv_map_left_arm.png',
+        'left_foot.obj':'uv_map_left_foot.png',
+        'right_arm.obj':'uv_map_right_arm.png',
+        'right_foot.obj':'uv_map_right_foot.png',
+        'seat.obj':'uv_map_seat.png',
     }
 
     # Add all objects and their textures into scene
@@ -168,9 +177,7 @@ if __name__ == '__main__':
         mesh_path = os.path.join(meshes_dir,mesh_file)
         texture_path = str(p.Path.cwd() / textures_dir / texture_file)
         obj = renderer.load_object(mesh_path,mesh_file)
-        renderer.apply_texture(obj,texture_path)
-        # renderer.save_uv_map(obj,save_file='//uv_map_{}.png'.format(mesh_file[:-4]))
+        renderer.save_uv_map(obj,save_file='//uv_map_{}.png'.format(mesh_file[:-4]))
+        # renderer.apply_texture(obj,texture_path)
 
-    renderer.render()
-        
-    # renderer.render_gif()
+    # renderer.render()
