@@ -101,12 +101,11 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
     return gen_path
 
-def test(args,generator,input,gen_path):
+def test(args,generator,input,gen_path,output_path):
     generator.eval()
     imsize=args.imsize
     generator.cuda(device=D.DEVICE())
 
-    _,style_filename = os.path.split(args.style)
     generator.load_state_dict(torch.load(gen_path))
     # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
     # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
@@ -118,16 +117,12 @@ def test(args,generator,input,gen_path):
     # y = y.clamp(0,1)
     b,c,w,h = y.shape
 
-    output_dir = args.output
     # today = datetime.datetime.today().strftime('%y-%m-%d')
     # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
     
     # if not os.path.exists(folder_dir):
     #     os.mkdir(folder_dir)
 
-
-    output_filename = 'output_{}.png'.format(style_filename[:-4])
-    output_path =os.path.join(output_dir,output_filename)
     utils.tensor_to_image(y,image_size=h).save(output_path)
     print('Image saved in {}'.format(output_path))
 
@@ -175,7 +170,11 @@ def main():
 
     sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
     # For each UV-Style image pair
-    for uv,s in zip(uv_maps,styles):
+    for i in range(len(uv_maps)):
+
+        uv = uv_maps[i]
+        s = styles[i]
+
         # Setup inputs 
         inputs = [uv[:,:3,...].clone().detach()]
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
@@ -192,8 +191,11 @@ def main():
         gen_path = train(args,net,inputs,s,uv,feat_extractor)
         # record losses and configurations
 
+        output_filename = '{}_{}.png'.format(uv_map_files[i][:-4],style_files[i][:-4])
+        output_path =os.path.join(args.output_dir,'output_images',output_filename)
+
         # test model to output texture 
-        test(args,net,inputs,gen_path)
+        test(args,net,inputs,gen_path,output_path)
 
 
 if __name__ == "__main__":

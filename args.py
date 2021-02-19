@@ -18,7 +18,7 @@ def parse_arguments():
                         help='Path to the texture image to transfer texture from')
     parser.add_argument('--content', type=str, default=None,
                         help='Path to the content image to transfer texture onto')
-    parser.add_argument('--output', type=str, default='outputs',
+    parser.add_argument('--output_dir', type=str, default='outputs',
                         help='Path to the output directory')
     parser.add_argument('--epochs', type=int, default=D.EPOCHS(),
                         help='Number of epochs to optimize')
