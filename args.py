@@ -24,6 +24,10 @@ def parse_arguments():
                         help='Number of epochs to optimize')
     parser.add_argument('--imsize', type=int, default=D.IMSIZE.get(),
                         help='Size to generated image')
+    parser.add_argument('--style_weight', type=float, default=1e6,
+                        help='Style loss weight value')
+    parser.add_argument('--foreground_weight', type=float, default=1e2,
+                        help='Foreground MSE loss weight value')
 
     return parser.parse_args()
 

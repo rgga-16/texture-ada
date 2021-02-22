@@ -35,9 +35,6 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
 
-    # style_feats = st.get_features(feat_extractor,texture_patch)
-    # style_layers = D.STYLE_LAYERS.get()
-    # s_layer_weights = D.SL_WEIGHTS.get()
 
     # content_feats = st.get_features(feat_extractor,content)
     # content_layers = D.CONTENT_LAYERS.get()
@@ -71,7 +68,7 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
         for s in style_layers.values():
             diff = mse_loss(out_feats[s],style_feats[s])
             style_loss += s_layer_weights[s] * diff
-        style_weight=1e6
+        style_weight=args.style_weight
 
         # for c in content_layers.values():
         #     c_diff = mse_loss(out_feats[c], content_feats[c])
@@ -79,10 +76,10 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
         # content_weight=1e3
 
         fg_loss = mse_loss(output_mask,content_mask)
-
+        fg_weight = args.foreground_weight
 
         # loss = (content_loss*content_weight) + (style_loss * style_weight) + fg_loss
-        loss = (style_loss * style_weight) + (fg_loss * 1)
+        loss = (style_loss * style_weight) + (fg_loss * fg_weight)
         loss.backward()
         
         optim.step()
@@ -136,11 +133,12 @@ def main():
     # Get pairings between UV maps and style images
     uv_map_style_pairings = {
         'uv_map_backseat.png':'chair-2_masked.png',
-        'uv_map_left_arm.png':'chair-5_masked.png',
-        'uv_map_right_arm.png':'chair-5_masked.png',
+        'uv_map_left_arm.png':'chair-3_masked.png',
+        'uv_map_right_arm.png':'chair-3_masked.png',
         'uv_map_left_foot.png':'chair-4_masked.png',
         'uv_map_right_foot.png':'chair-4_masked.png',
         'uv_map_base.png':'chair-1_masked.png',
+        'uv_map_seat.png':'chair-6_masked.png'
     }
     # For each style image:
         # Use DEXTR to select 1 region only. Retrieve its binary mask.
