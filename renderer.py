@@ -11,7 +11,9 @@ import pathlib as p
 
 
 def unwrap_method():
-    bpy.ops.uv.lightmap_pack(PREF_CONTEXT='SEL_FACES')
+    # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
+    # bpy.ops.uv.unwrap(method='CONFORMAL')
+    bpy.ops.uv.smart_project()
 
 class BlenderRenderer():
 
@@ -68,16 +70,18 @@ class BlenderRenderer():
         bpy.context.view_layer.objects.active = lamp_object
         return
     
-    def load_object(self,mesh_path,mesh_file):
+    def load_object(self,mesh_path):
         bpy.ops.import_scene.obj(filepath=mesh_path)
-        obj = bpy.context.selected_objects[0]
+        mesh_file = os.path.basename(mesh_path)
+        selected = bpy.context.selected_objects
+
+        # line below is wrong. replace index with finding the mesh file name?
+        obj = bpy.context.selected_objects.pop()
 
         obj.rotation_euler = (math.radians(0),
-                            math.radians(90),
+                            math.radians(270),
                             math.radians(0))
 
-
-        
         self.objects.append(obj)
 
 
@@ -151,7 +155,6 @@ class BlenderRenderer():
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action='SELECT')
         unwrap_method()
-        # bpy.ops.uv.cube_project(cube_size=1.0,correct_aspect=True,scale_to_bounds=True)
 
     # Render the image
 
@@ -159,16 +162,16 @@ if __name__ == '__main__':
     renderer = BlenderRenderer()
 
     meshes_dir = './inputs/shape_samples/armchair sofa'
-    textures_dir = ''
-    # textures_dir = 'inputs/texture_maps/texture_network/ulyanov_texturenet/instnorm'
+    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/[2-19-21 19-00]'
+    uv_maps_dir = 'inputs/uv_maps/smart_project'
 
     mesh_texture_file_pairs = {
-        'backseat.obj':'uv_map_backseat.png',
-        'base.obj':'uv_map_base.png',
-        'left_arm.obj':'uv_map_left_arm.png',
-        'left_foot.obj':'uv_map_left_foot.png',
-        'right_arm.obj':'uv_map_right_arm.png',
-        'right_foot.obj':'uv_map_right_foot.png',
+        'backseat.obj':'uv_map_backseat_chair-2_masked.png',
+        # 'base.obj':'uv_map_base_chair-1_masked.png',
+        'left_arm.obj':'uv_map_left_arm_chair-5_masked.png',
+        'left_foot.obj':'uv_map_left_foot_chair-4_masked.png',
+        'right_arm.obj':'uv_map_right_arm_chair-5_masked.png',
+        'right_foot.obj':'uv_map_right_foot_chair-4_masked.png',
         'seat.obj':'uv_map_seat.png',
     }
 
@@ -176,8 +179,9 @@ if __name__ == '__main__':
     for mesh_file,texture_file in mesh_texture_file_pairs.items():
         mesh_path = os.path.join(meshes_dir,mesh_file)
         texture_path = str(p.Path.cwd() / textures_dir / texture_file)
-        obj = renderer.load_object(mesh_path,mesh_file)
-        renderer.save_uv_map(obj,save_file='//uv_map_{}.png'.format(mesh_file[:-4]))
+        obj = renderer.load_object(mesh_path)
+        uv_path = str(p.Path.cwd() / uv_maps_dir / 'uv_map_{}.png'.format(mesh_file[:-4]))
+        renderer.save_uv_map(obj,save_file=uv_path)
         # renderer.apply_texture(obj,texture_path)
 
     # renderer.render()
