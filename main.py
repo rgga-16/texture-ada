@@ -162,7 +162,7 @@ def main():
         style = style[:,:3,...]
         styles.append(style)
 
-        uv_img =utils.load_image(os.path.join(args.content_dir,'lightmap_packed',uvf))
+        uv_img =utils.load_image(os.path.join(args.content_dir,'selected',uvf))
         uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
         uv_maps.append(uv)
 
