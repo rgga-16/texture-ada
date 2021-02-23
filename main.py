@@ -100,7 +100,7 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
 
     return gen_path
 
-def test(args,generator,input,gen_path,output_path,n_outputs=5):
+def test(args,generator,input,gen_path,output_path):
     generator.eval()
     generator.cuda(device=D.DEVICE())
 
@@ -111,19 +111,18 @@ def test(args,generator,input,gen_path,output_path,n_outputs=5):
     # samples=input.clone().detach()
     samples=input
 
-    for i in range(n_outputs):
-        y = generator(samples)
-        # y = y.clamp(0,1)
-        b,c,w,h = y.shape
+    y = generator(samples)
+    # y = y.clamp(0,1)
+    b,c,w,h = y.shape
 
-        # today = datetime.datetime.today().strftime('%y-%m-%d')
-        # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
-        
-        # if not os.path.exists(folder_dir):
-        #     os.mkdir(folder_dir)
+    # today = datetime.datetime.today().strftime('%y-%m-%d')
+    # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
+    
+    # if not os.path.exists(folder_dir):
+    #     os.mkdir(folder_dir)
 
-        utils.tensor_to_image(y,image_size=h).save('{}_{}.png'.format(output_path[:-4],i+1))
-        print('Saving image as {}'.format(output_path))
+    utils.tensor_to_image(y,image_size=h).save(output_path[:-4])
+    print('Saving image as {}'.format(output_path))
  
 
 def main():
