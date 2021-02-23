@@ -5,6 +5,7 @@ import style_transfer as st
 
 import helpers.utils as utils
 from helpers import visualizer as vis
+from helpers import logger 
 import args
 
 from models import Pyramid2D_2, VGG19, ConvAutoencoder,TextureNet, Pyramid2D
@@ -13,8 +14,6 @@ from args import args
 import os
 import time
 import datetime
-
-# from dextr.segment import segment_points
 
 from defaults import DEFAULTS as D
 from torchsummary import summary
@@ -95,12 +94,14 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
+
     vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
+
+
     return gen_path
 
-def test(args,generator,input,gen_path,output_path):
+def test(args,generator,input,gen_path,output_path,n_outputs=5):
     generator.eval()
-    imsize=args.imsize
     generator.cuda(device=D.DEVICE())
 
     generator.load_state_dict(torch.load(gen_path))
@@ -110,20 +111,20 @@ def test(args,generator,input,gen_path,output_path):
     # samples=input.clone().detach()
     samples=input
 
-    y = generator(samples)
-    # y = y.clamp(0,1)
-    b,c,w,h = y.shape
+    for i in range(n_outputs):
+        y = generator(samples)
+        # y = y.clamp(0,1)
+        b,c,w,h = y.shape
 
-    # today = datetime.datetime.today().strftime('%y-%m-%d')
-    # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
-    
-    # if not os.path.exists(folder_dir):
-    #     os.mkdir(folder_dir)
+        # today = datetime.datetime.today().strftime('%y-%m-%d')
+        # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
+        
+        # if not os.path.exists(folder_dir):
+        #     os.mkdir(folder_dir)
 
-    utils.tensor_to_image(y,image_size=h).save(output_path)
-    print('Image saved in {}'.format(output_path))
-
-    
+        utils.tensor_to_image(y,image_size=h).save('{}_{}.png'.format(output_path[:-4],i+1))
+        print('Saving image as {}'.format(output_path))
+ 
 
 def main():
     print("Main Driver")

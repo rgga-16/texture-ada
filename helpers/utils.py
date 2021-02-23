@@ -82,4 +82,3 @@ def save_gif(images:list,filename='output.gif'):
 
 
 
-
