@@ -131,14 +131,20 @@ def main():
     device = D.DEVICE()
     imsize = args.imsize
     # Get pairings between UV maps and style images
+    # uv_map_style_pairings = {
+    #     'uv_map_backseat.png':'chair-2_masked.png',
+    #     'uv_map_left_arm.png':'chair-3_masked.png',
+    #     'uv_map_right_arm.png':'chair-3_masked.png',
+    #     'uv_map_left_foot.png':'chair-4_masked.png',
+    #     'uv_map_right_foot.png':'chair-4_masked.png',
+    #     'uv_map_base.png':'chair-1_masked.png',
+    #     'uv_map_seat.png':'chair-6_masked.png'
+    # }
     uv_map_style_pairings = {
         'uv_map_backseat.png':'chair-2_masked.png',
-        'uv_map_left_arm.png':'chair-3_masked.png',
-        'uv_map_right_arm.png':'chair-3_masked.png',
-        'uv_map_left_foot.png':'chair-4_masked.png',
-        'uv_map_right_foot.png':'chair-4_masked.png',
-        'uv_map_base.png':'chair-1_masked.png',
-        'uv_map_seat.png':'chair-6_masked.png'
+        'uv_map_arms.png':'chair-3_masked.png',
+        'uv_map_feet.png':'chair-3_masked.png',
+        'uv_map_seat.png':'chair-1_masked.png',
     }
     # For each style image:
         # Use DEXTR to select 1 region only. Retrieve its binary mask.
@@ -160,7 +166,7 @@ def main():
         style = style[:,:3,...]
         styles.append(style)
 
-        uv_img =utils.load_image(os.path.join(args.content_dir,'selected',uvf))
+        uv_img =utils.load_image(os.path.join(args.content_dir,'unwrap',uvf))
         uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
         uv_maps.append(uv)
 

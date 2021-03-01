@@ -12,7 +12,7 @@ def parse_arguments():
                         help='Path to the style image to transfer texture from')
     parser.add_argument('--style_dir', type=str, default='./inputs/style_images',
                         help='Path to the style images dir to transfer textures from')
-    parser.add_argument('--content_dir', type=str, default='./inputs/uv_maps',
+    parser.add_argument('--content_dir', type=str, default='./inputs/uv_maps/office_chair',
                         help='Path to the content images dir to transfer textures onto')                    
     parser.add_argument('--texture', type=str, default=None,
                         help='Path to the texture image to transfer texture from')
