@@ -4,7 +4,7 @@ from torchvision import transforms
 import style_transfer as st
 
 import helpers.utils as utils
-from helpers import visualizer as vis
+# from helpers import visualizer as vis
 from helpers import logger 
 import args
 
