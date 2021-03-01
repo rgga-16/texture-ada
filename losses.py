@@ -29,6 +29,10 @@ def gram_matrix(tensor):
 
     return gram / (h*w)
 
+def sliced_wasserstein_loss():
+
+    pass
+
 class ContentLoss(nn.Module): 
 
     def __init__(self,target):

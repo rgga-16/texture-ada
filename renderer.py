@@ -4,16 +4,10 @@ import math
 import os
 import pathlib as p
 
-# from PIL import Image
+# import argparse
 
-# import utils  
-# from defaults import DEFAULTS as D 
+# from matplotlib import pyplot as plt
 
-
-def unwrap_method():
-    # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
-    # bpy.ops.uv.unwrap(method='CONFORMAL')
-    bpy.ops.uv.smart_project()
 
 class BlenderRenderer():
 
@@ -30,8 +24,8 @@ class BlenderRenderer():
 
     def create_scene(self):
         self.scene = bpy.context.scene
-        bpy.context.scene.render.resolution_x = 1024
-        bpy.context.scene.render.resolution_y = 1024
+        bpy.context.scene.render.resolution_x = 512
+        bpy.context.scene.render.resolution_y = 512
 
         self.scene.render.image_settings.file_format = 'PNG'
         bpy.context.scene.render.image_settings.quality = 100
@@ -75,7 +69,6 @@ class BlenderRenderer():
         mesh_file = os.path.basename(mesh_path)
         selected = bpy.context.selected_objects
 
-        # line below is wrong. replace index with finding the mesh file name?
         obj = bpy.context.selected_objects.pop()
 
         obj.rotation_euler = (math.radians(0),
@@ -92,13 +85,15 @@ class BlenderRenderer():
         return obj
 
     def save_uv_map(self,obj,save_file='//uv_map.png'):
+        # Apply Smart uv project from object
         bpy.context.view_layer.objects.active=obj
+        obj.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.select_all(action='SELECT')
-        unwrap_method()
+
+        # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
         # bpy.ops.uv.smart_project()
-        # bpy.ops.uv.cube_project(cube_size=1.0,correct_aspect=True,scale_to_bounds=True)
-        # bpy.ops.uv.pack_islands(margin=0.5)
+        bpy.ops.uv.unwrap()
+        obj.select_set(False)
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',opacity=1.0)
         bpy.ops.object.mode_set(mode="OBJECT")
@@ -107,8 +102,7 @@ class BlenderRenderer():
         return
         
     
-    def render_gif(self,save_path='render.gif'):
-        step=15
+    def render_gif(self,save_path='render.gif',step=15):
         still_files = []
         for obj_angle in range(0,360+step,step):
             for obj in self.objects:
@@ -152,27 +146,43 @@ class BlenderRenderer():
         
         # Apply Smart uv project from object
         bpy.context.view_layer.objects.active=object
+        object.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.select_all(action='SELECT')
-        unwrap_method()
+
+        if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
+            bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
+            obj.select_set(False)
+            # pass
+        else: 
+            bpy.ops.uv.smart_project()
+            obj.select_set(False)
+
 
     # Render the image
 
 if __name__ == '__main__':
     renderer = BlenderRenderer()
 
-    meshes_dir = './inputs/shape_samples/armchair sofa'
-    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/[2-19-21 19-00]'
-    uv_maps_dir = 'inputs/uv_maps/smart_project'
+    # meshes_dir = './inputs/shape_samples/armchair sofa'
+    meshes_dir = './inputs/shape_samples/office chair'
+    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/[2-23-21 20-00]'
+    uv_maps_dir = 'inputs/uv_maps/office_chair/unwrap'
+
+    # mesh_texture_file_pairs = {
+    #     'backseat.obj':'uv_map_backseat_chair-2_masked.png',
+    #     # 'base.obj':'uv_map_base_chair-1_masked.png',
+    #     # 'left_arm.obj':'uv_map_left_arm_chair-3_masked.png',
+    #     # 'left_foot.obj':'uv_map_left_foot_chair-4_masked.png',
+    #     # 'right_arm.obj':'uv_map_right_arm_chair-3_masked.png',
+    #     # 'right_foot.obj':'uv_map_right_foot_chair-4_masked.png',
+    #     # 'seat.obj':'uv_map_seat_chair-6_masked.png',
+    # }
 
     mesh_texture_file_pairs = {
         'backseat.obj':'uv_map_backseat_chair-2_masked.png',
-        # 'base.obj':'uv_map_base_chair-1_masked.png',
-        'left_arm.obj':'uv_map_left_arm_chair-5_masked.png',
-        'left_foot.obj':'uv_map_left_foot_chair-4_masked.png',
-        'right_arm.obj':'uv_map_right_arm_chair-5_masked.png',
-        'right_foot.obj':'uv_map_right_foot_chair-4_masked.png',
-        'seat.obj':'uv_map_seat.png',
+        'arms.obj':'uv_map_base_chair-1_masked.png',
+        'feet.obj':'uv_map_left_arm_chair-3_masked.png',
+        'seat.obj':'uv_map_left_foot_chair-4_masked.png',
     }
 
     # Add all objects and their textures into scene
@@ -185,3 +195,4 @@ if __name__ == '__main__':
         # renderer.apply_texture(obj,texture_path)
 
     # renderer.render()
+    # renderer.render_gif(step=90)
