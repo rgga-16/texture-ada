@@ -95,7 +95,7 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
 
-    vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
+    # vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
 
 
     return gen_path
