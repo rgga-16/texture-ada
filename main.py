@@ -141,7 +141,7 @@ def main():
     #     'uv_map_seat.png':'chair-6_masked.png'
     # }
     uv_map_style_pairings = {
-        'uv_map_backseat.png':'chair-2_masked.png',
+        # 'uv_map_backseat.png':'chair-2_masked.png',
         'uv_map_arms.png':'chair-3_masked.png',
         'uv_map_feet.png':'chair-3_masked.png',
         'uv_map_seat.png':'chair-1_masked.png',
