@@ -121,7 +121,7 @@ def test(args,generator,input,gen_path,output_path):
     # if not os.path.exists(folder_dir):
     #     os.mkdir(folder_dir)
 
-    utils.tensor_to_image(y,image_size=h).save(output_path[:-4])
+    utils.tensor_to_image(y,image_size=h).save(output_path)
     print('Saving image as {}'.format(output_path))
  
 
