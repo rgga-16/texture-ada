@@ -111,12 +111,11 @@ def test(args,generator,input,gen_path,output_path):
     # sizes = [imsize/1,imsize/2,imsize/4,imsize/8,imsize/16,imsize/32]
     # samples = [torch.rand(1,3,int(sz),int(sz),device=D.DEVICE()) for sz in sizes]
     # samples = [transforms.Resize((int(size),int(size)))(style) for size in sizes ]
-    # samples=input.clone().detach()
     samples=input
 
     y = generator(samples)
     # y = y.clamp(0,1)
-    b,c,w,h = y.shape
+    _,_,_,h = y.shape
 
     # today = datetime.datetime.today().strftime('%y-%m-%d')
     # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
