@@ -88,13 +88,16 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
             loss_history.append(loss)
             epoch_chkpts.append(i)
 
-    _,style_filename = os.path.split(args.style)
     today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
-    model_file = '[{}]{}-{}-{}_iters.pth'.format(today,generator.__class__.__name__,style_filename[:-4],epochs)
+    model_file = '[{}]{}-{}_iters.pth'.format(today,generator.__class__.__name__,epochs)
     gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
 
+    losses_file = '[{}]-losses.png'.format(today)
+    losses_path = os.path.join(args.output_dir,'output_images',losses_file)
+    logger.log_losses(loss_history,epoch_chkpts,losses_path)
+    print('Loss history saved in {}'.format(losses_path))
     # vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
 
 
