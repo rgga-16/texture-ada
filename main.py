@@ -134,27 +134,25 @@ def main():
     device = D.DEVICE()
     imsize = args.imsize
     # Get pairings between UV maps and style images
-    # uv_map_style_pairings = {
-    #     'uv_map_backseat.png':'chair-2_masked.png',
-    #     'uv_map_left_arm.png':'chair-3_masked.png',
-    #     'uv_map_right_arm.png':'chair-3_masked.png',
-    #     'uv_map_left_foot.png':'chair-4_masked.png',
-    #     'uv_map_right_foot.png':'chair-4_masked.png',
-    #     'uv_map_base.png':'chair-1_masked.png',
-    #     'uv_map_seat.png':'chair-6_masked.png'
-    # }
-    uv_map_style_pairings = {
-        # 'uv_map_backseat.png':'chair-2_masked.png',
-        'uv_map_arms.png':'chair-3_masked.png',
-        'uv_map_feet.png':'chair-3_masked.png',
-        'uv_map_seat.png':'chair-1_masked.png',
-    }
-    # For each style image:
-        # Use DEXTR to select 1 region only. Retrieve its binary mask.
-        # Mask out image 
-        # Further crop image
 
-    # Retrieve UV maps
+    # armchair sofa
+    uv_map_style_pairings = {
+        'uv_map_backseat.png':'chair-2_masked.png',
+        'uv_map_left_arm.png':'chair-3_masked.png',
+        'uv_map_right_arm.png':'chair-3_masked.png',
+        'uv_map_left_foot.png':'chair-4_masked.png',
+        'uv_map_right_foot.png':'chair-4_masked.png',
+        'uv_map_base.png':'chair-1_masked.png',
+        'uv_map_seat.png':'chair-6_masked.png'
+    }
+
+    # office chair
+    # uv_map_style_pairings = {
+    #     # 'uv_map_backseat.png':'chair-2_masked.png',
+    #     'uv_map_arms.png':'chair-3_masked.png',
+    #     'uv_map_feet.png':'chair-3_masked.png',
+    #     'uv_map_seat.png':'chair-1_masked.png',
+    # }
 
     # Retrieve style images and UV maps
     style_files = list(uv_map_style_pairings.values())
@@ -162,25 +160,25 @@ def main():
 
     styles = []
     uv_maps = []
+
+    assert len(uv_map_files) == len(style_files)
+
+    sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
+
     for uvf,sf in zip(uv_map_files,style_files):
-        style_img = utils.load_image(os.path.join(args.style_dir,'masked',sf))
+
+        style_img = utils.load_image(os.path.join(args.style_dir,sf))
         # Convert to tensor 
         style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
         style = style[:,:3,...]
-        styles.append(style)
+        # styles.append(style)
 
-        uv_img =utils.load_image(os.path.join(args.content_dir,'unwrap',uvf))
+        uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
         uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
-        uv_maps.append(uv)
+        # uv_maps.append(uv)
 
-    assert len(uv_maps) == len(styles)
-
-    sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
-    # For each UV-Style image pair
-    for i in range(len(uv_maps)):
-
-        uv = uv_maps[i]
-        s = styles[i]
+        # uv = uv_maps[i]
+        # s = styles[i]
 
         # Setup inputs 
         inputs = [uv[:,:3,...].clone().detach()]
@@ -195,10 +193,10 @@ def main():
             param.requires_grad = False
 
         # train model 
-        gen_path = train(args,net,inputs,s,uv,feat_extractor)
+        gen_path = train(args,net,inputs,style,uv,feat_extractor)
         # record losses and configurations
 
-        output_filename = '{}_{}.png'.format(uv_map_files[i][:-4],style_files[i][:-4])
+        output_filename = '{}_{}.png'.format(uvf[:-4],sf[:-4])
         output_path =os.path.join(args.output_dir,'output_images',output_filename)
 
         # test model to output texture 
