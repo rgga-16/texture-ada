@@ -20,14 +20,18 @@ class Normalization(nn.Module):
         return (img-self.mean)/self.std
 
 def gram_matrix(tensor):
-    # Get no. of feature maps, feature map width and feature map height
-    _,n,w,h = tensor.shape
-
-    features = tensor.view(n,w*h)
-
+    b,c,w,h = tensor.shape
+    features = tensor.view(b*c,-1)
     gram = torch.mm(features,features.t())
-
     return gram / (h*w)
+
+def covariance_matrix(tensor):
+    b,c,w,h = tensor.shape
+    feats = tensor.view(b*c,-1)
+    mean=torch.mean(feats)
+    covariance = torch.mm((feats-mean), (feats-mean).t())
+    return covariance / (h*w)
+
 
 def sliced_wasserstein_loss():
 
