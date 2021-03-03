@@ -204,10 +204,10 @@ def main():
         # test model to output texture 
         test(args,net,inputs,gen_path,output_path)
 
-        if i== len(uv_maps)-1:
-            today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
-            log_file = '[{}]_log.txt'.format(today)
-            logger.log_args(os.path.join(args.output_dir,'output_images',log_file))
+
+    today = datetime.datetime.today().strftime('%y-%m-%d %H-%M-%S')
+    log_file = '[{}]_log.txt'.format(today)
+    logger.log_args(os.path.join(args.output_dir,'output_images',log_file))
 
 
 
