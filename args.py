@@ -12,13 +12,13 @@ def parse_arguments():
                         help='Path to the style image to transfer texture from')
     parser.add_argument('--style_dir', type=str, default='./inputs/style_images/masked',
                         help='Path to the style images dir to transfer textures from')
-    parser.add_argument('--content_dir', type=str, default='./inputs/uv_maps/office_chair/unwrap',
+    parser.add_argument('--content_dir', type=str, default='./inputs/uv_maps/office chair/unwrap',
                         help='Path to the content images dir to transfer textures onto')                    
     parser.add_argument('--texture', type=str, default=None,
                         help='Path to the texture image to transfer texture from')
     parser.add_argument('--content', type=str, default=None,
                         help='Path to the content image to transfer texture onto')
-    parser.add_argument('--output_dir', type=str, default='outputs',
+    parser.add_argument('--output_dir', type=str, default='./outputs/output_images',
                         help='Path to the output directory')
     parser.add_argument('--epochs', type=int, default=D.EPOCHS(),
                         help='Number of epochs to optimize')
