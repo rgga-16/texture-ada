@@ -12,7 +12,6 @@ from args import args
 
 
 import helpers.utils as utils
-# import dextr.segment as seg 
 from defaults import DEFAULTS as D
 
 from PIL import Image

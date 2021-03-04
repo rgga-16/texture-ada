@@ -3,9 +3,7 @@ from torchvision import transforms
 
 import style_transfer as st
 
-import helpers.utils as utils
-# from helpers import visualizer as vis
-from helpers import logger 
+from helpers import logger, utils 
 import args
 
 from models import Pyramid2D_2, VGG19, ConvAutoencoder,TextureNet, Pyramid2D
@@ -19,7 +17,7 @@ from defaults import DEFAULTS as D
 from torchsummary import summary
 
 
-def train(args,generator,input,style,content,feat_extractor,lr=0.001):
+def train(generator,input,style,content,feat_extractor,lr=0.001):
     
     epochs = args.epochs
     generator.train()
@@ -94,8 +92,9 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
 
-    losses_file = '[{}]-losses.png'.format(today)
-    losses_path = os.path.join(args.output_dir,'output_images',losses_file)
+    # losses_file = '[{}]-losses.png'.format(today)
+    losses_file = 'losses.png'.format(today)
+    losses_path = os.path.join(args.output_dir,'outputs',losses_file)
     logger.log_losses(loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     # vis.display_losses(loss_history,epoch_chkpts,title='Training Loss History')
@@ -103,7 +102,7 @@ def train(args,generator,input,style,content,feat_extractor,lr=0.001):
 
     return gen_path
 
-def test(args,generator,input,gen_path,output_path):
+def test(generator,input,gen_path,output_path):
     generator.eval()
     generator.cuda(device=D.DEVICE())
 
@@ -116,12 +115,6 @@ def test(args,generator,input,gen_path,output_path):
     y = generator(samples)
     # y = y.clamp(0,1)
     _,_,_,h = y.shape
-
-    # today = datetime.datetime.today().strftime('%y-%m-%d')
-    # folder_dir = os.path.join(output_dir,'output_images/Pyramid2D_with_instnorm','[{}]'.format(today))
-    
-    # if not os.path.exists(folder_dir):
-    #     os.mkdir(folder_dir)
 
     utils.tensor_to_image(y,image_size=h).save(output_path)
     print('Saving image as {}'.format(output_path))
@@ -139,10 +132,10 @@ def main():
         'uv_map_backseat.png':'chair-2_masked.png',
         'uv_map_left_arm.png':'chair-3_masked.png',
         'uv_map_right_arm.png':'chair-3_masked.png',
-        'uv_map_left_foot.png':'chair-4_masked.png',
-        'uv_map_right_foot.png':'chair-4_masked.png',
-        'uv_map_base.png':'chair-1_masked.png',
-        'uv_map_seat.png':'chair-6_masked.png'
+        # 'uv_map_left_foot.png':'chair-4_masked.png',
+        # 'uv_map_right_foot.png':'chair-4_masked.png',
+        # 'uv_map_base.png':'chair-1_masked.png',
+        # 'uv_map_seat.png':'chair-6_masked.png'
     }
 
     # office chair
@@ -157,27 +150,32 @@ def main():
     style_files = list(uv_map_style_pairings.values())
     uv_map_files = list(uv_map_style_pairings.keys())
 
-    styles = []
-    uv_maps = []
-
     assert len(uv_map_files) == len(style_files)
 
     sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
 
-    for uvf,sf in zip(uv_map_files,style_files):
+    start=time.time()
+    date = datetime.datetime.today().strftime('%y-%m-%d %H-%M-%S')
 
+    # output_folder = os.path.join(args.output_dir,"[{}]".format(date))
+    # os.mkdir(output_folder)
+
+    output_folder = os.path.join(args.output_dir,"outputs")
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        pass
+    
+
+    for uvf,sf in zip(uv_map_files,style_files):
+        print("Transferring {} ==> {} ...".format(sf,uvf))
         style_img = utils.load_image(os.path.join(args.style_dir,sf))
         # Convert to tensor 
         style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
         style = style[:,:3,...]
-        # styles.append(style)
 
         uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
         uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
-        # uv_maps.append(uv)
-
-        # uv = uv_maps[i]
-        # s = styles[i]
 
         # Setup inputs 
         inputs = [uv[:,:3,...].clone().detach()]
@@ -192,19 +190,21 @@ def main():
             param.requires_grad = False
 
         # train model 
-        gen_path = train(args,net,inputs,style,uv,feat_extractor)
-        # record losses and configurations
-
+        gen_path = train(net,inputs,style,uv,feat_extractor)
+        
         output_filename = '{}_{}.png'.format(uvf[:-4],sf[:-4])
-        output_path =os.path.join(args.output_dir,'output_images',output_filename)
+        output_path =os.path.join(output_folder,output_filename)
 
         # test model to output texture 
-        test(args,net,inputs,gen_path,output_path)
+        test(net,inputs,gen_path,output_path)
 
-
-    today = datetime.datetime.today().strftime('%y-%m-%d %H-%M-%S')
-    log_file = '[{}]_log.txt'.format(today)
-    logger.log_args(os.path.join(args.output_dir,'output_images',log_file))
+    # record losses and configurations
+    time_elapsed = time.time() - start 
+    
+    log_file = '[{}]_log.txt'.format(date)
+    logger.log_args(os.path.join(output_folder,log_file),
+                    Time_Elapsed=time_elapsed,
+                    Model_Name=Pyramid2D().__class__.__name__)
 
 
 
