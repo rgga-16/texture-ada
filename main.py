@@ -132,10 +132,10 @@ def main():
         'uv_map_backseat.png':'chair-2_masked.png',
         'uv_map_left_arm.png':'chair-3_masked.png',
         'uv_map_right_arm.png':'chair-3_masked.png',
-        # 'uv_map_left_foot.png':'chair-4_masked.png',
-        # 'uv_map_right_foot.png':'chair-4_masked.png',
-        # 'uv_map_base.png':'chair-1_masked.png',
-        # 'uv_map_seat.png':'chair-6_masked.png'
+        'uv_map_left_foot.png':'chair-4_masked.png',
+        'uv_map_right_foot.png':'chair-4_masked.png',
+        'uv_map_base.png':'chair-1_masked.png',
+        'uv_map_seat.png':'chair-6_masked.png'
     }
 
     # office chair
