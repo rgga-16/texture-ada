@@ -27,10 +27,11 @@ def gram_matrix(tensor):
 
 def covariance_matrix(tensor):
     b,c,w,h = tensor.shape
-    feats = tensor.view(b*c,-1)
-    mean=torch.mean(feats)
-    covariance = torch.mm((feats-mean), (feats-mean).t())
-    return covariance / (h*w)
+    feats = tensor.view(b*c,h*w)
+    mean=torch.mean(feats,dim=1,keepdim=True)
+    thing=feats-mean
+    covariance = torch.mm(thing,thing.t())
+    return covariance
 
 
 def sliced_wasserstein_loss():
