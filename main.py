@@ -6,7 +6,7 @@ import style_transfer as st
 from helpers import logger, utils 
 import args
 
-from models import Pyramid2D_2, VGG19, ConvAutoencoder,TextureNet, Pyramid2D
+from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D, Pyramid2D_small
 
 from args import args
 import os
@@ -152,7 +152,8 @@ def main():
 
     assert len(uv_map_files) == len(style_files)
 
-    sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
+    # sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
+    sizes = [imsize//2,imsize//4]
 
     start=time.time()
     date = datetime.datetime.today().strftime('%y-%m-%d %H-%M-%S')
@@ -182,7 +183,8 @@ def main():
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
         # Setup generator model 
-        net = Pyramid2D().to(device)
+        # net = Pyramid2D().to(device)
+        net = Pyramid2D_small().to(device)
 
         # Setup feature extraction model 
         feat_extractor = VGG19()
@@ -204,7 +206,7 @@ def main():
     log_file = '[{}]_log.txt'.format(date)
     logger.log_args(os.path.join(output_folder,log_file),
                     Time_Elapsed=time_elapsed,
-                    Model_Name=Pyramid2D().__class__.__name__)
+                    Model_Name=Pyramid2D_small().__class__.__name__)
 
 
 
