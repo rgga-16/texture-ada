@@ -8,6 +8,7 @@ def log_args(path,**kwargs):
         "="*10,"\n",
         "Iters: {}\n".format(args.epochs),
         "Image size: {}\n".format(args.imsize),
+        "Learning rate: {}\n".format(args.lr),
         "="*10,"\n",
         "Style Loss Weight: {:.4f}\n".format(args.style_weight),
         "Foreground MSELoss Weight: {:.4f}\n".format(args.foreground_weight),
