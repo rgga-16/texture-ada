@@ -22,6 +22,8 @@ def parse_arguments():
                         help='Path to the output directory')
     parser.add_argument('--epochs', type=int, default=D.EPOCHS(),
                         help='Number of epochs to optimize')
+    parser.add_argument('--lr', type=float, default=0.001,
+                        help='Learning rate of texture transfer network')
     parser.add_argument('--imsize', type=int, default=D.IMSIZE.get(),
                         help='Size to generated image')
     parser.add_argument('--style_weight', type=float, default=1e6,

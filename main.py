@@ -17,7 +17,7 @@ from defaults import DEFAULTS as D
 from torchsummary import summary
 
 
-def train(generator,input,style,content,feat_extractor,lr=0.001):
+def train(generator,input,style,content,feat_extractor,lr=args.lr):
     
     epochs = args.epochs
     generator.train()
