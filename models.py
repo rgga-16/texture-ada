@@ -10,8 +10,8 @@ class VGG19(nn.Module):
     def __init__(self,vgg_path='models/vgg19-dcbb9e9d.pth',device=D.DEVICE()):
         super(VGG19,self).__init__()
 
-        _ = models.vgg19(pretrained=False).eval().to(device)
-        _.load_state_dict(torch.load(vgg_path), strict=False)
+        _ = models.vgg19_bn(pretrained=True).eval().to(device)
+        # _.load_state_dict(torch.load(vgg_path), strict=False)
         self.features = _.features
 
         for param in self.features.parameters():
