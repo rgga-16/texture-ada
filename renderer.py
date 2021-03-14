@@ -3,11 +3,26 @@ import math
 import os
 import pathlib as p
 
+from torch.serialization import save
+
 from blender import BlenderRenderer
 
 from PIL import Image
+import os 
 
-def render_gif():
+def render_gif(renderer,save_path='./render.gif'):
+    still_files = renderer.render_multiple()
+    stills = []
+    for sf in still_files:
+        s = Image.open(sf)
+        stills.append(s)
+        
+    
+    stills[0].save(save_path,save_all=True,append_images=stills[1:],duration=100,loop=0)
+
+    for f in still_files:
+        os.remove(f)
+
     return
 
 
@@ -16,16 +31,23 @@ if __name__ == '__main__':
 
     # armchair sofa
     meshes_dir = './inputs/shape_samples/armchair sofa'
-    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/armchair sofa/[2-23-21 20-00]'
+    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/armchair_sofa/[3-11-21 15-00]'
     uv_maps_dir = 'inputs/uv_maps/armchair sofa/unwrap'
+
+    # mesh_texture_file_pairs = {
+    #     'backseat.obj':'uv_map_backseat_chair-2_masked.png',
+    #     'base.obj':'uv_map_base_chair-1_masked.png',
+    #     'left_arm.obj':'uv_map_left_arm_chair-3_masked.png',
+    #     'left_foot.obj':'uv_map_left_foot_chair-4_masked.png',
+    #     'right_arm.obj':'uv_map_right_arm_chair-3_masked.png',
+    #     'right_foot.obj':'uv_map_right_foot_chair-4_masked.png',
+    #     'seat.obj':'uv_map_seat_chair-6_masked.png',
+    # }
+
     mesh_texture_file_pairs = {
-        'backseat.obj':'uv_map_backseat_chair-2_masked.png',
-        'base.obj':'uv_map_base_chair-1_masked.png',
-        'left_arm.obj':'uv_map_left_arm_chair-3_masked.png',
-        'left_foot.obj':'uv_map_left_foot_chair-4_masked.png',
-        'right_arm.obj':'uv_map_right_arm_chair-3_masked.png',
-        'right_foot.obj':'uv_map_right_foot_chair-4_masked.png',
-        'seat.obj':'uv_map_seat_chair-6_masked.png',
+        'backseat.obj':'uv_map_backseat_chair-2_tiled.png',
+        'left_arm.obj':'uv_map_left_arm_chair-3_tiled.png',
+        'right_arm.obj':'uv_map_right_arm_chair-3_tiled.png',
     }
 
     # # office chair
@@ -48,5 +70,5 @@ if __name__ == '__main__':
         # renderer.save_uv_map(obj,save_file=uv_path)
         renderer.apply_texture(obj,texture_path)
 
-    renderer.render()
-    # renderer.render_gif(step=90)
+    # renderer.render()
+    render_gif(renderer)
