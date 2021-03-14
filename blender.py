@@ -97,7 +97,7 @@ class BlenderRenderer():
         return
         
     
-    def render_gif(self,save_path='render.gif',step=15):
+    def render_multiple(self,step=15):
         still_files = []
         for obj_angle in range(0,360+step,step):
             for obj in self.objects:
@@ -106,17 +106,17 @@ class BlenderRenderer():
                                     math.radians(obj_angle),
                                     math.radians(0)
                 ))
-            still_filename = '//render_{}.png'.format(obj_angle)
-            self.render(save_path=still_filename)
+
+            still_filename = 'render_{}.png'.format(obj_angle)
+            save_path = str(p.Path.cwd() / still_filename)
+            self.render(save_path=save_path)
             still_files.append(still_filename)
 
-        # stills = [load_image(sf) for sf in still_files]
-        # save_gif(stills,filename=save_path)
-
-        return
+        return still_files
 
     def render(self,save_path='//render.png'):
         print('Rendering image')
+        bpy.context.scene.render.film_transparent = True
         self.scene.render.filepath = save_path
         bpy.ops.render.render(write_still=True)
 
