@@ -33,6 +33,8 @@ def get_features(model, tensor,
         if name in style_layers.keys():
             # features[style_layers[name]] = losses.gram_matrix(x)
             features[style_layers[name]] = losses.covariance_matrix(x)
+            # losses.covariance_matrix(x)
+            # losses.weighted_style_rep(x)
         
         if name in content_layers.keys():
             features[content_layers[name]] = x
@@ -109,29 +111,30 @@ def get_mean_std(feat):
 if __name__ == '__main__':
     import os
 
-    style_file = 'chair-5_masked.png'
-    content_file = 'uv_map_right_foot.png'
+    # style_file = 'chair-5_masked.png'
+    # content_file = 'uv_map_right_foot.png'
 
-    style_path = os.path.join(D.STYLE_DIR.get(),style_file)
-
+    style_path = args.style
     style_name = os.path.splitext(os.path.basename(style_path))[0]
-
     style_image = utils.load_image(style_path,mode='RGB')
 
-    style = utils.image_to_tensor(style_image,normalize=True).detach()
+    for imsize in [128,256,512,768]:
 
-    init = torch.full([1,3,D.IMSIZE.get(),
-                        D.IMSIZE.get()],1.0,requires_grad=True,
-                        device=D.DEVICE())
-    
-    content_path = os.path.join('inputs/uv_maps',content_file)
-    content_image = utils.load_image(content_path,mode='RGB')
-    content = utils.image_to_tensor(content_image,normalize=True)
+        style = utils.image_to_tensor(style_image,image_size=imsize,normalize=True).detach()
 
-    output = style_transfer_gatys(content,style,EPOCHS=2000,content_weight=0)
-    output_dir = 'inputs/texture_maps/gatys/uv_maps'
-    
-    utils.tensor_to_image(output,denorm=True).save(os.path.join(output_dir,'{}_texturemap.png'.format(style_name)))
+        init = torch.full([1,3,D.IMSIZE.get(),
+                            D.IMSIZE.get()],1.0,requires_grad=True,
+                            device=D.DEVICE())
+        
+        # content_path = os.path.join('inputs/uv_maps',content_file)
+        # content_image = utils.load_image(content_path,mode='RGB')
+        # content = utils.image_to_tensor(content_image,normalize=True)
+
+        output = style_transfer_gatys(init,style,EPOCHS=2000,content_weight=0)
+        # output_dir = 'inputs/texture_maps/gatys/uv_maps'
+        output_dir = './'
+        
+        utils.tensor_to_image(output,denorm=True).save(os.path.join(output_dir,'{}_{}.png'.format(style_name,imsize)))
 
 
 
