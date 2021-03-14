@@ -183,7 +183,7 @@ def main():
         uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
 
         # Setup inputs 
-        inputs = [torch.randn(1,3,imsize,imsize).detach()]
+        inputs = [torch.rand(1,3,imsize,imsize).detach()]
         # inputs = [uv[:,:3,...].clone().detach()]
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
