@@ -30,6 +30,7 @@ def covariance_matrix(tensor):
     feats = tensor.view(b,c,h*w)
     mean=torch.mean(feats,dim=2,keepdim=True)
     feats=feats-mean
+    feats = feats.squeeze()
     covariance = torch.mm(feats,feats.t())
     return covariance / (h*w)
 
