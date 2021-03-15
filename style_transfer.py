@@ -31,8 +31,8 @@ def get_features(model, tensor,
         x=layer(x)
 
         if name in style_layers.keys():
-            # features[style_layers[name]] = losses.gram_matrix(x)
-            features[style_layers[name]] = losses.covariance_matrix(x)
+            features[style_layers[name]] = losses.gram_matrix(x)
+            # features[style_layers[name]] = losses.covariance_matrix(x)
             # losses.covariance_matrix(x)
             # losses.weighted_style_rep(x)
         
