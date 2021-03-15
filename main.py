@@ -170,8 +170,8 @@ def main():
         os.mkdir(output_folder)
     except FileExistsError:
         pass
-    # for style_size in [128,256,512,768]:
-    for style_size in [256]:
+    for style_size in [128,256,512,768]:
+    # for style_size in [256]:
         for uvf,sf in zip(uv_map_files,style_files):
             print("Transferring {} ==> {} ...".format(sf,uvf))
             style_img = utils.load_image(os.path.join(args.style_dir,sf))
