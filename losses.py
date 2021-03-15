@@ -27,11 +27,24 @@ def gram_matrix(tensor):
 
 def covariance_matrix(tensor):
     b,c,w,h = tensor.shape
-    feats = tensor.view(b*c,h*w)
-    mean=torch.mean(feats,dim=1,keepdim=True)
-    thing=feats-mean
-    covariance = torch.mm(thing,thing.t())
-    return covariance
+    feats = tensor.view(b,c,h*w)
+    mean=torch.mean(feats,dim=2,keepdim=True)
+    feats=feats-mean
+    covariance = torch.mm(feats,feats.t())
+    return covariance / (h*w)
+
+def variance_aware_adaptive_weighting(tensor):
+
+    return
+
+
+# def weighted_style_rep(tensor):
+#     b,c,w,h = tensor.shape
+#     feats = tensor.view(b*c,h*w)
+#     var = torch.var(feats,dim=1,keepdim=True)
+    
+#     w_style = (1.0/var.inverse()) * covariance_matrix(tensor)
+#     return w_style
 
 
 def sliced_wasserstein_loss():

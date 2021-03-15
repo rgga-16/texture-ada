@@ -1,8 +1,8 @@
-SEED=0
+# SEED=0
 
 
 import torch
-torch.manual_seed(0)
+# torch.manual_seed(0)
 from torchvision import transforms
 
 import style_transfer as st
@@ -208,9 +208,11 @@ def main():
     time_elapsed = time.time() - start 
     
     log_file = '[{}]_log.txt'.format(date)
+    
     logger.log_args(os.path.join(output_folder,log_file),
                     Time_Elapsed=time_elapsed,
-                    Model_Name=Pyramid2D().__class__.__name__)
+                    Model_Name=Pyramid2D().__class__.__name__,
+                    Seed = torch.seed())
 
 
 
