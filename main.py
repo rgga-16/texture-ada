@@ -180,11 +180,10 @@ def main():
         style = style[:,:3,...]
 
         uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
-        uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
+        uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=False).detach()
 
         # Setup inputs 
-        inputs = [torch.rand(1,3,imsize,imsize,device=D.DEVICE()).detach()]
-        # inputs = [uv[:,:3,...].clone().detach()]
+        inputs = [uv[:,:3,...].clone().detach()]
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
         # Setup generator model 
