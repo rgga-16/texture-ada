@@ -30,6 +30,8 @@ def parse_arguments():
                         help='Style loss weight value')
     parser.add_argument('--foreground_weight', type=float, default=1e2,
                         help='Foreground MSE loss weight value')
+    parser.add_argument('--content_weight', type=float, default=1e2,
+                        help='Content loss weight value')
 
     return parser.parse_args()
 
