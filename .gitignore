@@ -3,6 +3,7 @@ data/*
 __pycache__/*
 .vscode/*
 outputs/*
+archive/*
 
 *.txt
 *.pyc
