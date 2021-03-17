@@ -177,7 +177,7 @@ def main():
     start=time.time()
     date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
 
-    output_folder = os.path.join(args.output_dir,"[{}]".format(start))
+    output_folder = os.path.join(args.output_dir,"[{}]".format(date))
     try:
         os.mkdir(output_folder)
     except FileExistsError:
