@@ -4,6 +4,24 @@ import math
 import os
 import pathlib as p
 
+import argparse
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        description='UV Map Retrieval. Uses Blender API to obtain the UV maps of meshes')
+    parser.add_argument('--mode',type=str,help='Retrieve single UV map (SINGLE) or multiple UV maps (MULTI)',
+                        default='MULTI')
+    parser.add_argument('--mesh', type=str,help='Path to the mesh to obtain UV map from',
+                        default=None)     
+    parser.add_argument('--mesh_dir', type=str,
+                        help='Path to the mesh directory',
+                        default="inputs/shape_samples/lounge_sofa")                 
+    parser.add_argument('--uv', type=str,help='Output path to save the obtained UV map',
+                        default=None)
+    parser.add_argument('--uv_dir', type=str,help='Path of the output directory to save the UVs',
+                        default="inputs/uv_maps/lounge_sofa/unwrap")
+    return parser.parse_args()
+
 class BlenderRenderer():
 
     def __init__(self):
@@ -86,8 +104,8 @@ class BlenderRenderer():
         bpy.ops.object.mode_set(mode="EDIT")
 
         # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
-        # bpy.ops.uv.smart_project()
-        bpy.ops.uv.unwrap()
+        bpy.ops.uv.smart_project()
+        # bpy.ops.uv.unwrap()
         obj.select_set(False)
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(256,256),opacity=1.0)
@@ -157,3 +175,40 @@ class BlenderRenderer():
 
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
+
+if __name__ == '__main__':
+    renderer = BlenderRenderer()
+    # args = parse_arguments()
+
+    # assert args.mode in ['SINGLE', 'MULTI']
+
+    # assert args.mesh is not None or args.mesh_dir is not None 
+
+    # assert args.uv is not None or args.uv_dir is not None 
+
+    # mode = args.mode 
+    # mesh = args.mesh 
+    # uv = args.uv 
+
+    # mesh_dir = args.mesh_dir 
+    # uv_dir = args.uv_dir 
+
+    mesh = "hello"
+    uv = "hello"
+    mode = "MULTI"
+    mesh_dir = "inputs/shape_samples/lounge_sofa"
+    uv_dir = "inputs/uv_maps/lounge_sofa/smart_project"
+
+  
+
+    if mode=='SINGLE':
+        obj = renderer.load_object(mesh)
+        renderer.save_uv_map(obj,save_file=uv)
+    else:
+        for mesh_file in os.listdir(mesh_dir):
+            ext = os.path.splitext(mesh_file)[-1].lower()
+            if ext in ['.obj']:
+                mesh_path = os.path.join(mesh_dir,mesh_file)
+                obj = renderer.load_object(mesh_path)
+                uv_path = str(p.Path.cwd() / uv_dir / '{}_uv.png'.format(mesh_file[:-4]))
+                renderer.save_uv_map(obj,save_file=uv_path)

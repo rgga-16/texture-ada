@@ -10,12 +10,13 @@ import style_transfer as st
 from helpers import logger, utils 
 import args
 
-from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D, Pyramid2D_small
+from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import args
 import os
 import time
 import datetime
+
 
 from defaults import DEFAULTS as D
 from torchsummary import summary
@@ -37,9 +38,9 @@ def train(generator,input,style,content,feat_extractor,lr=args.lr):
     s_layer_weights = D.SL_WEIGHTS.get()
 
 
-    content_feats = st.get_features(feat_extractor,content)
-    content_layers = D.CONTENT_LAYERS.get()
-    c_layer_weights = D.CL_WEIGHTS.get()
+    # content_feats = st.get_features(feat_extractor,content)
+    # content_layers = D.CONTENT_LAYERS.get()
+    # c_layer_weights = D.CL_WEIGHTS.get()
 
     mse_loss = torch.nn.MSELoss()
 
@@ -71,16 +72,16 @@ def train(generator,input,style,content,feat_extractor,lr=args.lr):
             style_loss += s_layer_weights[s] * diff
         style_weight=args.style_weight
 
-        for c in content_layers.values():
-            c_diff = mse_loss(out_feats[c], content_feats[c])
-            content_loss += c_layer_weights[c] * c_diff
-        content_weight=args.content_weight
+        # for c in content_layers.values():
+        #     c_diff = mse_loss(out_feats[c], content_feats[c])
+        #     content_loss += c_layer_weights[c] * c_diff
+        # content_weight=args.content_weight
 
         fg_loss = mse_loss(output_mask,content_mask)
         fg_weight = args.foreground_weight
 
-        loss = (content_loss*content_weight) + (style_loss * style_weight)
-        # loss = (style_loss * style_weight) + (fg_loss * fg_weight)
+        # loss = (content_loss*content_weight) + (style_loss * style_weight)
+        loss = (style_loss * style_weight) + (fg_loss * fg_weight)
         loss.backward()
         
         optim.step()
@@ -125,22 +126,22 @@ def test(generator,input,gen_path,output_path):
  
 
 def main():
-    print("Main Driver")
-
+    print("Starting texture transfer..")
+    print("="*10)
     device = D.DEVICE()
     imsize = args.imsize
     # Get pairings between UV maps and style images
 
     # armchair sofa
-    uv_map_style_pairings = {
-        'uv_map_backseat.png':'chair-2_tiled.png',
-        'uv_map_left_arm.png':'chair-3_tiled.png',
-        'uv_map_right_arm.png':'chair-3_tiled.png',
-        # 'uv_map_left_foot.png':'chair-4_masked.png',
-        # 'uv_map_right_foot.png':'chair-4_masked.png',
-        # 'uv_map_base.png':'chair-1_masked.png',
-        # 'uv_map_seat.png':'chair-6_masked.png'
-    }
+    # uv_map_style_pairings = {
+    #     'uv_map_backseat.png':'chair-2_tiled.png',
+    #     'uv_map_left_arm.png':'chair-3_tiled.png',
+    #     'uv_map_right_arm.png':'chair-3_tiled.png',
+    #     'uv_map_left_foot.png':'chair-4_masked.png',
+    #     'uv_map_right_foot.png':'chair-4_masked.png',
+    #     'uv_map_base.png':'chair-1_masked.png',
+    #     'uv_map_seat.png':'chair-6_masked.png'
+    # }
 
     # office chair
     # uv_map_style_pairings = {
@@ -150,6 +151,20 @@ def main():
     #     'uv_map_seat.png':'chair-1_masked.png',
     # }
 
+    # lounge sofa
+    uv_map_style_pairings = {
+        'left_arm_uv.png':['chair-3_tiled.png',256],
+        'right_arm_uv.png':['chair-3_tiled.png',256],
+        'left_backseat_uv.png':['cobonpue-17_tiled.png',512],
+        'mid_backseat_uv.png':['chair-2_tiled.png',256],
+        'right_backseat_uv.png':['cobonpue-17_tiled.png',512],
+        'left_base_uv.png':['cobonpue-80_tiled.png',512],
+        'right_base_uv.png':['cobonpue-80_tiled.png',512],
+        'left_seat_uv.png':['cobonpue-99_tiled.png',768],
+        'mid_seat_uv.png':['chair-2_tiled.png',256],
+        'right_seat_uv.png':['cobonpue-99_tiled.png',768],
+    }
+
     # Retrieve style images and UV maps
     style_files = list(uv_map_style_pairings.values())
     uv_map_files = list(uv_map_style_pairings.keys())
@@ -157,52 +172,49 @@ def main():
     assert len(uv_map_files) == len(style_files)
 
     sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
-    # sizes = [imsize//2,imsize//4]
 
     start=time.time()
-    date = datetime.datetime.today().strftime('%y-%m-%d %H-%M-%S')
+    date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
 
-    # output_folder = os.path.join(args.output_dir,"[{}]".format(date))
-    # os.mkdir(output_folder)
-
-    output_folder = os.path.join(args.output_dir,"outputs")
+    output_folder = os.path.join(args.output_dir,"[{}]".format(start))
     try:
         os.mkdir(output_folder)
     except FileExistsError:
         pass
-    for style_size in [128,256,512,768]:
-    # for style_size in [256]:
-        for uvf,sf in zip(uv_map_files,style_files):
-            print("Transferring {} ==> {} ...".format(sf,uvf))
-            style_img = utils.load_image(os.path.join(args.style_dir,sf))
-            # Convert to tensor 
-            style = utils.image_to_tensor(style_img,image_size=style_size,normalize=True).detach()
-            style = style[:,:3,...]
+    
+    for uvf,sf_ in zip(uv_map_files,style_files):
+        sf=sf_[0]
+        style_size=sf_[1]
+        print("Transferring {} ==> {} ...".format(sf,uvf))
+        style_img = utils.load_image(os.path.join(args.style_dir,sf))
+        # Convert to tensor 
+        style = utils.image_to_tensor(style_img,image_size=style_size,normalize=True).detach()
+        style = style[:,:3,...]
 
-            uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
-            uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
+        uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
+        uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
 
-            # Setup inputs 
-            inputs = [uv[:,:3,...].clone().detach()]
-            inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
+        # Setup inputs 
+        inputs = [uv[:,:3,...].clone().detach()]
+        inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
-            # Setup generator model 
-            net = Pyramid2D().to(device)
-            # net = Pyramid2D_small().to(device)
+        # Setup generator model 
+        net = Pyramid2D().to(device)
+        # net = Pyramid2D_small().to(device)
 
-            # Setup feature extraction model 
-            feat_extractor = VGG19()
-            for param in feat_extractor.parameters():
-                param.requires_grad = False
+        # Setup feature extraction model 
+        feat_extractor = VGG19()
+        for param in feat_extractor.parameters():
+            param.requires_grad = False
 
-            # train model 
-            gen_path = train(net,inputs,style,uv,feat_extractor)
-            
-            output_filename = '{}_{}_{}.png'.format(uvf[:-4],sf[:-4],style_size)
-            output_path =os.path.join(output_folder,output_filename)
+        # train model 
+        gen_path = train(net,inputs,style,uv,feat_extractor)
+        
+        output_filename = '{}_{}_{}.png'.format(uvf[:-4],sf[:-4],style_size)
+        output_path =os.path.join(output_folder,output_filename)
 
-            # test model to output texture 
-            test(net,inputs,gen_path,output_path)
+        # test model to output texture 
+        test(net,inputs,gen_path,output_path)
 
     # record losses and configurations
     time_elapsed = time.time() - start 
@@ -213,6 +225,8 @@ def main():
                     Time_Elapsed=time_elapsed,
                     Model_Name=Pyramid2D().__class__.__name__,
                     Seed = torch.seed())
+    print("="*10)
+    print("Transfer completed. Outputs saved in {}".format(output_folder))
 
 
 

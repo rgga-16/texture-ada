@@ -42,8 +42,8 @@ class DEFAULTS(Enum):
     MASK_FILE = 'binary_mask.png'
     MASK_PATH_ = p.Path.cwd() / MASK_DIR / MASK_FILE
 
-    STYLE_DIR = 'inputs/style_images'
-    STYLE_FILE = 'chair-1_cropped.png'
+    STYLE_DIR = 'inputs/style_images/tiled'
+    STYLE_FILE = 'chair-3_tiled.png'
     STYLE_PATH_ = p.Path.cwd() / STYLE_DIR / STYLE_FILE
 
     MODEL_DIR = './models'

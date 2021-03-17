@@ -311,48 +311,6 @@ class Pyramid2D(nn.Module):
     #     y = self.last_conv(y) # y=(48x256x256) => (3x256x256)
     #     return y
 
-class Pyramid2D_small(nn.Module):
-    def __init__(self, ch_in=3, ch_step=8, n_samples=6):
-        super(Pyramid2D_small, self).__init__()
-
-        self.cb1_1 = Conv_block2D(ch_in,ch_step) # ch_step=8
-        self.up1 = Up_In2D(ch_step)
-
-        self.cb2_1 = Conv_block2D(ch_in,ch_step)
-        self.cb2_2 = Conv_block2D(2*ch_step,2*ch_step) # ch_step=16
-        self.up2 = Up_In2D(2*ch_step)
-
-        self.cb3_1 = Conv_block2D(ch_in,ch_step)
-        self.cb3_2 = Conv_block2D(3*ch_step,3*ch_step) # ch_step=24
-        self.last_conv = nn.Conv2d(3*ch_step, 4, 1, padding=0, bias=True)
-
-    def forward(self,z):
-
-        assert len(z)==3
-
-        # z[2]=(3x64x64) => (8x64x64)
-        y = self.cb1_1(z[2])
-        # y=(8x64x64) => y=(8x128x128)
-        y = self.up1(y)
-
-        # z[1]=(3x128x128) => (8x128x128)
-        # y cat z[2] => y=(16x128x128)
-        y = torch.cat((y,self.cb2_1(z[1])),1)
-
-        y = self.cb2_2(y) # y=(16x128x128) => (16x128x128)
-        y = self.up2(y) # y=(16x128x128) => (16x256x256)
-
-        # z[0]=(3x256x256) => (8x256x256)
-        # y cat z[0] => (24x256x256)
-        y = torch.cat((y,self.cb3_1(z[0])),1)
-        
-        y = self.cb3_2(y) # y=(24x256x256) => (24x256x256)
-        y = self.last_conv(y) # y=(24x256x256) => (3x256x256)
-
-        return y
-
-
-
 
 
 

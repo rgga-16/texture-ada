@@ -1,14 +1,9 @@
-
-import math
 import os
 import pathlib as p
-
-from torch.serialization import save
-
 from blender import BlenderRenderer
 
 from PIL import Image
-import os 
+
 
 def render_gif(renderer,save_path='./render.gif'):
     still_files = renderer.render_multiple()

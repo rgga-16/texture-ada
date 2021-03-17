@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 import os
-from args import args
+
 
 '''
 Removes blank spaces outside the object in image
@@ -61,7 +61,7 @@ def main():
 
     im_c = Image.fromarray(np.uint8(arr))
 
-    output_dir = args.output
+    output_dir = args.output_dir
     output_file = '{}.png'.format(os.path.splitext(os.path.basename(input_path))[0])
     output_path = os.path.join(output_dir,output_file)
 
