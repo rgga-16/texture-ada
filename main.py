@@ -161,9 +161,9 @@ def main():
         'right_backseat_uv.png':['cobonpue-17_tiled.png',512],
         'left_base_uv.png':['cobonpue-80_tiled.png',512],
         'right_base_uv.png':['cobonpue-80_tiled.png',512],
-        'left_seat_uv.png':['cobonpue-99_tiled.png',768],
+        'left_seat_uv.png':['cobonpue-99_tiled.png',512],
         'mid_seat_uv.png':['chair-2_tiled.png',256],
-        'right_seat_uv.png':['cobonpue-99_tiled.png',768],
+        'right_seat_uv.png':['cobonpue-99_tiled.png',512],
     }
 
     # Retrieve style images and UV maps
