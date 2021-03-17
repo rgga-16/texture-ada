@@ -2,7 +2,7 @@
 
 
 import torch
-# torch.manual_seed(0)
+# torch.manual_seed(SEED)
 from torchvision import transforms
 
 import style_transfer as st
@@ -59,7 +59,8 @@ def train(generator,input,style,content,feat_extractor,lr=args.lr):
         output = generator(samples)
         # output = output.clamp(0,1)
 
-        output_mask = output[:,3,...].unsqueeze(0)
+        output_mask = output[:,3,...].unsqueeze(0).clamp(0,1)
+        output_mask = torch.round(output_mask)
         output=output[:,:3,...]
 
         style_loss=0
