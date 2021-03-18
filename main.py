@@ -122,7 +122,7 @@ def test(generator,input,gen_path,output_path):
     # y = y.clamp(0,1)
     _,_,_,h = y.shape
 
-    utils.tensor_to_image(y,image_size=h).save(output_path)
+    utils.tensor_to_image(y,image_size=args.imsize).save(output_path)
     print('Saving image as {}'.format(output_path))
  
 
