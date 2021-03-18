@@ -172,7 +172,7 @@ def main():
 
     assert len(uv_map_files) == len(style_files)
 
-    sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
+    # sizes = [imsize//2,imsize//4,imsize//8,imsize//16,imsize//32]
 
     start=time.time()
     date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
@@ -184,6 +184,7 @@ def main():
         pass
     
     for uv_size in [128,256,512,768]:
+        sizes = [uv_size//2,uv_size//4,uv_size//8,uv_size//16,uv_size//32]
         for uvf,sf_ in zip(uv_map_files,style_files):
             sf=sf_[0]
             style_size=sf_[1]
