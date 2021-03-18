@@ -60,7 +60,7 @@ def train(generator,input,style,content,feat_extractor,lr=args.lr):
         # output = output.clamp(0,1)
 
         output_mask = output[:,3,...].unsqueeze(0).clamp(0,1)
-        output_mask = torch.round(output_mask)
+        # output_mask = torch.round(output_mask)
         output=output[:,:3,...]
 
         style_loss=0
@@ -183,39 +183,40 @@ def main():
     except FileExistsError:
         pass
     
-    for uvf,sf_ in zip(uv_map_files,style_files):
-        sf=sf_[0]
-        style_size=sf_[1]
-        print("Transferring {} ==> {} ...".format(sf,uvf))
-        style_img = utils.load_image(os.path.join(args.style_dir,sf))
-        # Convert to tensor 
-        style = utils.image_to_tensor(style_img,image_size=style_size,normalize=True).detach()
-        style = style[:,:3,...]
+    for uv_size in [128,256,512,768]:
+        for uvf,sf_ in zip(uv_map_files,style_files):
+            sf=sf_[0]
+            style_size=sf_[1]
+            print("Transferring {} ==> {} ...".format(sf,uvf))
+            style_img = utils.load_image(os.path.join(args.style_dir,sf))
+            # Convert to tensor 
+            style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+            style = style[:,:3,...]
 
-        uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
-        uv = utils.image_to_tensor(uv_img,image_size=imsize,normalize=True).detach()
+            uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
+            uv = utils.image_to_tensor(uv_img,image_size=uv_size,normalize=True).detach()
 
-        # Setup inputs 
-        inputs = [uv[:,:3,...].clone().detach()]
-        inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
+            # Setup inputs 
+            inputs = [uv[:,:3,...].clone().detach()]
+            inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
 
-        # Setup generator model 
-        net = Pyramid2D().to(device)
-        # net = Pyramid2D_small().to(device)
+            # Setup generator model 
+            net = Pyramid2D().to(device)
+            # net = Pyramid2D_small().to(device)
 
-        # Setup feature extraction model 
-        feat_extractor = VGG19()
-        for param in feat_extractor.parameters():
-            param.requires_grad = False
+            # Setup feature extraction model 
+            feat_extractor = VGG19()
+            for param in feat_extractor.parameters():
+                param.requires_grad = False
 
-        # train model 
-        gen_path = train(net,inputs,style,uv,feat_extractor)
-        
-        output_filename = '{}_{}_{}.png'.format(uvf[:-4],sf[:-4],style_size)
-        output_path =os.path.join(output_folder,output_filename)
+            # train model 
+            gen_path = train(net,inputs,style,uv,feat_extractor)
+            
+            output_filename = '{}_{}_{}.png'.format(uvf[:-4],sf[:-4],uv_size)
+            output_path =os.path.join(output_folder,output_filename)
 
-        # test model to output texture 
-        test(net,inputs,gen_path,output_path)
+            # test model to output texture 
+            test(net,inputs,gen_path,output_path)
 
     # record losses and configurations
     time_elapsed = time.time() - start 
