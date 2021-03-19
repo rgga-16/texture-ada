@@ -155,15 +155,15 @@ def main():
     # lounge sofa
     uv_map_style_pairings = {
         'left_arm_uv.png':['chair-3_tiled.png',256],
-        'right_arm_uv.png':['chair-3_tiled.png',256],
-        'left_backseat_uv.png':['cobonpue-17_tiled.png',512],
-        'mid_backseat_uv.png':['chair-2_tiled.png',256],
-        'right_backseat_uv.png':['cobonpue-17_tiled.png',512],
-        'left_base_uv.png':['cobonpue-80_tiled.png',512],
-        'right_base_uv.png':['cobonpue-80_tiled.png',512],
-        'left_seat_uv.png':['cobonpue-99_tiled.png',512],
-        'mid_seat_uv.png':['chair-2_tiled.png',256],
-        'right_seat_uv.png':['cobonpue-99_tiled.png',512],
+        # 'right_arm_uv.png':['chair-3_tiled.png',256],
+        # 'left_backseat_uv.png':['cobonpue-17_tiled.png',512],
+        # 'mid_backseat_uv.png':['chair-2_tiled.png',256],
+        # 'right_backseat_uv.png':['cobonpue-17_tiled.png',512],
+        # 'left_base_uv.png':['cobonpue-80_tiled.png',512],
+        # 'right_base_uv.png':['cobonpue-80_tiled.png',512],
+        # 'left_seat_uv.png':['cobonpue-99_tiled.png',512],
+        # 'mid_seat_uv.png':['chair-2_tiled.png',256],
+        # 'right_seat_uv.png':['cobonpue-99_tiled.png',512],
     }
 
     # Retrieve style images and UV maps
