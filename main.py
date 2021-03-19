@@ -201,7 +201,7 @@ def main():
             inputs = [uv[:,:3,...].clone().detach()]
             # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
             for sz in sizes:
-                inputs.append(utils.image_to_tensor(uv_img,image_size=sz,normalize=True).detach())
+                inputs.append(utils.image_to_tensor(uv_img,image_size=sz,normalize=True).detach()[:,:3,...])
 
             # Setup generator model 
             net = Pyramid2D().to(device)
