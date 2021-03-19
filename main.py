@@ -183,7 +183,8 @@ def main():
     except FileExistsError:
         pass
     
-    for uv_size in [128,256,512,768]:
+    # for uv_size in [128,256,512,768]:
+    for uv_size in [512,768]:
         sizes = [uv_size//2,uv_size//4,uv_size//8,uv_size//16,uv_size//32]
         for uvf,sf_ in zip(uv_map_files,style_files):
             sf=sf_[0]
