@@ -128,8 +128,9 @@ def test(generator,input,gen_path,output_dir):
         _,_,_,h = y.shape
 
         output_file = '{}.png'.format(w)
-        utils.tensor_to_image(y,image_size=args.imsize).save(os.path.join(output_dir,output_file))
-        print('Saving image as {}'.format(output_dir))
+        output_path = os.path.join(output_dir,output_file)
+        utils.tensor_to_image(y,image_size=args.imsize).save(output_path)
+        print('Saving image as {}'.format(output_path))
  
 
 def main():
@@ -179,7 +180,7 @@ def main():
     log_file = '[{}]_log.txt'.format(date)
     
     logger.log_args(os.path.join(output_folder,log_file),
-                    Time_Elapsed=time_elapsed,
+                    Time_Elapsed='{:.2f}s'.format(time_elapsed),
                     Model_Name=net.__class__.__name__,
                     Seed = torch.seed())
     print("="*10)
