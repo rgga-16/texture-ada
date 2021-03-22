@@ -125,7 +125,6 @@ def test(generator,input,gen_path,output_dir):
 
         y = generator(inputs)
         # y = y.clamp(0,1)
-        _,_,_,h = y.shape
 
         output_file = '{}.png'.format(w)
         output_path = os.path.join(output_dir,output_file)
@@ -154,7 +153,7 @@ def main():
     dataset = UV_Style_Paired_Dataset(
         uv_dir=args.content_dir,
         style_dir=args.style_dir,
-        uv_sizes=[128,256],
+        uv_sizes=[128],
         style_size=imsize,
     )
 
@@ -169,10 +168,13 @@ def main():
     except FileExistsError:
         pass
     
+    test_uvs = []
     uv_file = 'right_arm_uv.png'
-    uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=512)
+    for test_size in [256,512,768,1024]:
+        uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
+        test_uvs.append(uv)
 
-    test(net,[uv],gen_path,output_folder)
+    test(net,test_uvs,gen_path,output_folder)
     
     # record losses and configurations
     time_elapsed = time.time() - start 
