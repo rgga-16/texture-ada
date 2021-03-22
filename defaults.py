@@ -12,7 +12,7 @@ class DEFAULTS(Enum):
     DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
 
-    IMSIZE = 512
+    IMSIZE = 256
     EPOCHS_ = 5000
 
     NORM_MEAN = [0.485,0.456,0.406]

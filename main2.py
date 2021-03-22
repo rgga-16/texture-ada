@@ -103,8 +103,7 @@ def train(generator,feat_extractor,dataloader):
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
 
-    # losses_file = '[{}]-losses.png'.format(today)
-    losses_file = 'losses.png'.format(today)
+    losses_file = '[{}]-losses.png'.format(today)
     losses_path = os.path.join(args.output_dir,'outputs',losses_file)
     logger.log_losses(loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
@@ -128,7 +127,7 @@ def test(generator,input,gen_path,output_dir):
 
         output_file = '{}.png'.format(w)
         output_path = os.path.join(output_dir,output_file)
-        utils.tensor_to_image(y,image_size=args.imsize).save(output_path)
+        utils.tensor_to_image(y,image_size=args.output_size).save(output_path)
         print('Saving image as {}'.format(output_path))
  
 
@@ -136,8 +135,6 @@ def main():
     print("Starting texture transfer..")
     print("="*10)
     device = D.DEVICE()
-
-    imsize = args.imsize
 
     start=time.time()
 
@@ -149,18 +146,21 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
     
-    # Initialize dataset for training
+    # Setup dataset for training
     dataset = UV_Style_Paired_Dataset(
         uv_dir=args.content_dir,
         style_dir=args.style_dir,
-        uv_sizes=[128],
-        style_size=imsize,
+        uv_sizes=args.uv_train_sizes,
+        style_size=args.style_size,
     )
 
+    # Setup dataloader for training
     dataloader = DataLoader(dataset,num_workers=0,)
 
+    # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
 
+    # Create output folder named date today and time (ex. [3-12-21 17-00-04])
     date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
     output_folder = os.path.join(args.output_dir,"[{}]".format(date))
     try:
@@ -170,7 +170,7 @@ def main():
     
     test_uvs = []
     uv_file = 'right_arm_uv.png'
-    for test_size in [256,512,768,1024]:
+    for test_size in args.uv_test_sizes:
         uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
         test_uvs.append(uv)
 

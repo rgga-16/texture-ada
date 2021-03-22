@@ -24,8 +24,14 @@ def parse_arguments():
                         help='Number of epochs to optimize')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate of texture transfer network')
-    parser.add_argument('--imsize', type=int, default=D.IMSIZE.get(),
-                        help='Size to generated image')
+    parser.add_argument('--style_size', type=int, default=D.IMSIZE.get(),
+                        help='Size of input style images')
+    parser.add_argument('--uv_train_sizes', type=int, nargs="*",default=[64,128,254],
+                        help='Sizes of input uv map images during training')
+    parser.add_argument('--uv_test_sizes', type=int, nargs="*",default=[512,768,1024],
+                        help='Sizes of input uv maps images during testing')
+    parser.add_argument('--output_size', type=int, default=D.IMSIZE.get(),
+                        help='Size of output textured uv map')
     parser.add_argument('--style_weight', type=float, default=1e6,
                         help='Style loss weight value')
     parser.add_argument('--foreground_weight', type=float, default=1e2,
