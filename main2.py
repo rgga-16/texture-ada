@@ -155,7 +155,7 @@ def main():
         uv_dir=args.content_dir,
         style_dir=args.style_dir,
         uv_sizes=[128,256],
-        style_size=512,
+        style_size=imsize,
     )
 
     dataloader = DataLoader(dataset,num_workers=0,)
