@@ -116,7 +116,7 @@ def test(generator,input,gen_path,output_dir):
 
     generator.load_state_dict(torch.load(gen_path))
     
-    uvs = input['uvs']
+    uvs = input
     for uv in uvs:
         _,_,w = uv.shape
         input_sizes = [w//2,w//4,w//8,w//16,w//32]
@@ -141,7 +141,6 @@ def main():
     imsize = args.imsize
 
     start=time.time()
-    
 
     # Setup generator model 
     net = Pyramid2D().to(device)
@@ -155,7 +154,7 @@ def main():
     dataset = UV_Style_Paired_Dataset(
         uv_dir=args.content_dir,
         style_dir=args.style_dir,
-        uv_sizes=[128,256,512],
+        uv_sizes=[128,256],
         style_size=imsize,
     )
 
@@ -170,9 +169,10 @@ def main():
     except FileExistsError:
         pass
     
-    test_inputs = dataset.__getitem__(0)
+    uv_file = 'right_arm_uv.png'
+    uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=512)
 
-    test(net,test_inputs,gen_path,output_folder)
+    test(net,[uv],gen_path,output_folder)
     
     # record losses and configurations
     time_elapsed = time.time() - start 

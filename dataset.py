@@ -21,12 +21,12 @@ class UV_Style_Paired_Dataset(Dataset):
         self.style_files = []
 
         # Temporary code. for testing purposes
-        #######
+        ######
         self.uv_file = 'right_arm_uv.png'
         self.style_file = 'chair-3_tiled.png'
         self.uv_files.append(os.path.join(self.uv_dir,self.uv_file))
         self.style_files.append(os.path.join(self.style_dir,self.style_file))
-        #######
+        ######
 
         # for file in os.listdir(self.uv_dir):
         #     self.uv_files.append(os.path.join(self.uv_dir,file))
