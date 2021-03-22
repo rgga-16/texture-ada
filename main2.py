@@ -155,7 +155,7 @@ def main():
     dataset = UV_Style_Paired_Dataset(
         uv_dir=args.content_dir,
         style_dir=args.style_dir,
-        uv_sizes=[128,256],
+        uv_sizes=[128,256,512],
         style_size=imsize,
     )
 
