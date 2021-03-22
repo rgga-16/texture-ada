@@ -41,7 +41,7 @@ def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=
 
     # if(c > 3):
     #     tensor = tensor[:3,:,:]
-    tensor = tensor.unsqueeze(0)
+    # tensor = tensor.unsqueeze(0)
     return tensor.to(device)
 
 # Converts tensor to an image

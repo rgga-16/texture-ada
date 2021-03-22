@@ -183,8 +183,7 @@ def main():
     except FileExistsError:
         pass
     
-    # for uv_size in [128,256,512,768]:
-    for uv_size in [512,768]:
+    for uv_size in [128,256,512,768]:
         sizes = [uv_size//2,uv_size//4,uv_size//8,uv_size//16,uv_size//32]
         for uvf,sf_ in zip(uv_map_files,style_files):
             sf=sf_[0]
@@ -192,18 +191,16 @@ def main():
             print("Transferring {} ==> {} ...".format(sf,uvf))
             style_img = utils.load_image(os.path.join(args.style_dir,sf))
             # Convert to tensor 
-            style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).detach()
+            style = utils.image_to_tensor(style_img,image_size=imsize,normalize=True).unsqueeze(0).detach()
             style = style[:,:3,...]
 
             uv_img =utils.load_image(os.path.join(args.content_dir,uvf))
-            uv = utils.image_to_tensor(uv_img,image_size=uv_size,normalize=True).detach()
+            uv = utils.image_to_tensor(uv_img,image_size=uv_size,normalize=True).unsqueeze(0).detach()
 
             # Setup inputs 
             inputs = [uv[:,:3,...].clone().detach()]
-            # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
-            for sz in sizes:
-                inputs.append(utils.image_to_tensor(uv_img,image_size=sz,normalize=True).detach()[:,:3,...])
-
+            inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in sizes])
+           
             # Setup generator model 
             net = Pyramid2D().to(device)
             # net = Pyramid2D_small().to(device)
