@@ -97,19 +97,21 @@ def train(generator,feat_extractor,dataloader):
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
 
-    today = datetime.datetime.today().strftime('%y-%m-%d %H-%M')
-    model_file = '[{}]{}-{}_iters.pth'.format(today,generator.__class__.__name__,iters)
-    gen_path = os.path.join(D.MODEL_DIR.get(),model_file)
+    # today = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
+    # model_file = '[{}]{}.pth'.format(today,generator.__class__.__name__)
+    model_file = '{}.pth'.format(generator.__class__.__name__)
+    gen_path = os.path.join(args.output_dir,model_file)
     print('Model saved in {}'.format(gen_path))
     torch.save(generator.state_dict(),gen_path)
 
-    losses_file = '[{}]-losses.png'.format(today)
-    losses_path = os.path.join(args.output_dir,'outputs',losses_file)
+    # losses_file = '[{}]-losses.png'.format(today)
+    losses_file = 'losses.png'
+    losses_path = os.path.join(args.output_dir,losses_file)
     logger.log_losses(loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     return gen_path
 
-def test(generator,input,gen_path,output_dir):
+def test(generator,input,gen_path,output_path):
     generator.eval()
     generator.cuda(device=D.DEVICE())
 
@@ -123,12 +125,10 @@ def test(generator,input,gen_path,output_dir):
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
 
         y = generator(inputs)
-        # y = y.clamp(0,1)
 
-        output_file = '{}.png'.format(w)
-        output_path = os.path.join(output_dir,output_file)
-        utils.tensor_to_image(y,image_size=args.output_size).save(output_path)
-        print('Saving image as {}'.format(output_path))
+        output_path_ = '{}_{}.png'.format(output_path,w)
+        utils.tensor_to_image(y,image_size=args.output_size).save(output_path_)
+        print('Saving image as {}'.format(output_path_))
  
 
 def main():
@@ -146,6 +146,16 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
     
+    # Create output folder named date today and time (ex. [3-12-21 17-00-04])
+    # This will store the model, output images, loss history chart and configurations log
+    date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
+    output_folder = os.path.join(args.output_dir,"[{}]".format(date))
+    try:
+        os.mkdir(output_folder)
+    except FileExistsError:
+        pass
+    args.output_dir = output_folder
+    
     # Setup dataset for training
     dataset = UV_Style_Paired_Dataset(
         uv_dir=args.content_dir,
@@ -160,21 +170,27 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
 
-    # Create output folder named date today and time (ex. [3-12-21 17-00-04])
-    date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
-    output_folder = os.path.join(args.output_dir,"[{}]".format(date))
-    try:
-        os.mkdir(output_folder)
-    except FileExistsError:
-        pass
+   
     
-    test_uvs = []
-    uv_file = 'right_arm_uv.png'
-    for test_size in args.uv_test_sizes:
-        uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
-        test_uvs.append(uv)
+    test_uv_files = ['left_arm_uv.png',
+        'right_arm_uv.png',
+        'left_backseat_uv.png',
+        'mid_backseat_uv.png',
+        'right_backseat_uv.png',
+        'left_base_uv.png',
+        'right_base_uv.png',
+        'left_seat_uv.png',
+        'mid_seat_uv.png',
+        'right_seat_uv.png',]
 
-    test(net,test_uvs,gen_path,output_folder)
+    for uv_file in test_uv_files:
+        test_uvs = []
+        for test_size in args.uv_test_sizes:
+            uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
+            test_uvs.append(uv)
+        output_path = os.path.join(output_folder,uv_file)
+
+        test(net,test_uvs,gen_path,output_path)
     
     # record losses and configurations
     time_elapsed = time.time() - start 
