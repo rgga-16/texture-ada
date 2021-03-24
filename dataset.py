@@ -30,8 +30,8 @@ class UV_Style_Paired_Dataset(Dataset):
 
         # lounge sofa
         uv_map_style_pairings = {
-            'tabletop_uv.png':'chair-3_tiled.png',
-            # 'botleft_leg_uv.png':'chair-2_tiled.png',
+            # 'tabletop_uv.png':'chair-3_tiled.png',
+            'botleft_leg_uv.png':'chair-2_tiled.png',
             # 'botright_leg_uv.png':'cobonpue-80_tiled.png',
             # 'topleft_leg_uv.png':'chair-2_tiled.png',
             # 'topright_leg_uv.png':'cobonpue-80_tiled.png',
