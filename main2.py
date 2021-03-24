@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 # torch.manual_seed(SEED)
 from torchvision import transforms
+import numpy as np
 
 import style_transfer as st
 
@@ -14,9 +15,9 @@ import args
 from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import args
-import os
-import time
-import datetime
+import os, copy
+import time, datetime
+
 
 from dataset import UV_Style_Paired_Dataset
 
@@ -38,6 +39,10 @@ def train(generator,feat_extractor,dataloader):
     checkpoint=100
     loss_history=[]
     epoch_chkpts=[]
+
+    lowest_loss = np.inf
+    best_model = generator.state_dict()
+
     for i in range(iters):
         for _, sample in enumerate(dataloader):
             optim.zero_grad()
@@ -92,19 +97,21 @@ def train(generator,feat_extractor,dataloader):
             avg_loss.backward()
             optim.step()
 
+            if avg_loss < lowest_loss:
+                lowest_loss = avg_loss.item() 
+                best_model = copy.deepcopy(generator.state_dict())
+                best_iter = i
+
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
 
-    # today = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
-    # model_file = '[{}]{}.pth'.format(today,generator.__class__.__name__)
-    model_file = '{}.pth'.format(generator.__class__.__name__)
+    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
     gen_path = os.path.join(args.output_dir,model_file)
+    torch.save(best_model,gen_path)
     print('Model saved in {}'.format(gen_path))
-    torch.save(generator.state_dict(),gen_path)
 
-    # losses_file = '[{}]-losses.png'.format(today)
     losses_file = 'losses.png'
     losses_path = os.path.join(args.output_dir,losses_file)
     logger.log_losses(loss_history,epoch_chkpts,losses_path)
