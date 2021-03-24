@@ -171,10 +171,11 @@ def main():
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
     test_uv_files = ['tabletop_uv.png',
-        'botleft_leg_uv.png',
-        'botright_leg_uv.png',
-        'topleft_leg_uv.png',
-        'topright_leg_uv.png',]
+        # 'botleft_leg_uv.png',
+        # 'botright_leg_uv.png',
+        # 'topleft_leg_uv.png',
+        # 'topright_leg_uv.png',
+        ]
 
     for uv_file in test_uv_files:
         test_uvs = []
