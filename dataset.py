@@ -10,7 +10,7 @@ from defaults import DEFAULTS as D
 
 class UV_Style_Paired_Dataset(Dataset):
 
-    def __init__(self, uv_dir,style_dir, uv_sizes, style_size) -> None:
+    def __init__(self, uv_dir,style_dir, uv_sizes, style_size, uv_file, style_file) -> None:
         super().__init__()
         
         self.uv_dir = uv_dir
@@ -22,25 +22,25 @@ class UV_Style_Paired_Dataset(Dataset):
 
         # Temporary code. for testing purposes
         ######
-        # self.uv_file = 'right_arm_uv.png'
-        # self.style_file = 'chair-3_tiled.png'
-        # self.uv_files.append(os.path.join(self.uv_dir,self.uv_file))
-        # self.style_files.append(os.path.join(self.style_dir,self.style_file))
+        self.uv_file = 'right_arm_uv.png'
+        self.style_file = 'chair-3_tiled.png'
+        self.uv_files.append(os.path.join(self.uv_dir,uv_file))
+        self.style_files.append(os.path.join(self.style_dir,style_file))
         ######
 
         # lounge sofa
-        uv_map_style_pairings = {
-            # 'tabletop_uv.png':'chair-3_tiled.png',
-            'botleft_leg_uv.png':'chair-2_tiled.png',
-            # 'botright_leg_uv.png':'cobonpue-80_tiled.png',
-            # 'topleft_leg_uv.png':'chair-2_tiled.png',
-            # 'topright_leg_uv.png':'cobonpue-80_tiled.png',
-        }
+        # uv_map_style_pairings = {
+        #     # 'tabletop_uv.png':'chair-3_tiled.png',
+        #     # 'botleft_leg_uv.png':'chair-2_tiled.png',
+        #     # 'botright_leg_uv.png':'cobonpue-80_tiled.png',
+        #     # 'topleft_leg_uv.png':'chair-2_tiled.png',
+        #     # 'topright_leg_uv.png':'cobonpue-80_tiled.png',
+        # }
 
 
-        for k,v in uv_map_style_pairings.items():
-            self.uv_files.append(os.path.join(self.uv_dir,k))
-            self.style_files.append(os.path.join(self.style_dir,v))
+        # for k,v in uv_map_style_pairings.items():
+        #     self.uv_files.append(os.path.join(self.uv_dir,k))
+        #     self.style_files.append(os.path.join(self.style_dir,v))
 
         # for file in os.listdir(self.uv_dir):
         #     self.uv_files.append(os.path.join(self.uv_dir,file))
