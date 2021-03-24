@@ -93,7 +93,7 @@ def train(generator,feat_extractor,dataloader):
                 loss = (style_loss * style_weight) + (fg_loss * fg_weight)
                 avg_loss+=loss
             
-            # avg_loss/= len(uvs)
+            avg_loss/= len(uvs)
             avg_loss.backward()
             optim.step()
 
