@@ -169,19 +169,12 @@ def main():
 
     # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
-
-   
     
-    test_uv_files = ['left_arm_uv.png',
-        'right_arm_uv.png',
-        'left_backseat_uv.png',
-        'mid_backseat_uv.png',
-        'right_backseat_uv.png',
-        'left_base_uv.png',
-        'right_base_uv.png',
-        'left_seat_uv.png',
-        'mid_seat_uv.png',
-        'right_seat_uv.png',]
+    test_uv_files = ['tabletop_uv.png',
+        'botleft_leg_uv.png',
+        'botright_leg_uv.png',
+        'topleft_leg_uv.png',
+        'topright_leg_uv.png',]
 
     for uv_file in test_uv_files:
         test_uvs = []

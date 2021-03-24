@@ -37,12 +37,12 @@ class BlenderRenderer():
 
     def create_scene(self):
         self.scene = bpy.context.scene
-        bpy.context.scene.render.resolution_x = 512
-        bpy.context.scene.render.resolution_y = 512
+        self.scene.render.resolution_x = 512
+        self.scene.render.resolution_y = 512
 
         self.scene.render.image_settings.file_format = 'PNG'
-        bpy.context.scene.render.image_settings.quality = 100
-        bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+        self.scene.render.image_settings.quality = 100
+        self.scene.render.image_settings.color_mode = 'RGBA'
 
         self.scene.render.resolution_percentage = 100
         self.scene.render.use_border = False
@@ -101,11 +101,19 @@ class BlenderRenderer():
         # Apply Smart uv project from object
         bpy.context.view_layer.objects.active=obj
         obj.select_set(True)
+        selected = bpy.context.selected_objects
         bpy.ops.object.mode_set(mode="EDIT")
 
         # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
-        bpy.ops.uv.smart_project()
+        # bpy.ops.uv.smart_project()
         # bpy.ops.uv.unwrap()
+        bpy.ops.uv.cube_project(cube_size=100.0, 
+                                correct_aspect=True, 
+                                clip_to_bounds=True, 
+                                scale_to_bounds=True)
+        # bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
+        #                             align='POLAR_ZY', radius=1.0, correct_aspect=True, 
+        #                             clip_to_bounds=True, scale_to_bounds=True)
         obj.select_set(False)
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(256,256),opacity=1.0)
@@ -151,11 +159,16 @@ class BlenderRenderer():
         texture_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
         texture_image.image = image 
         mat.node_tree.links.new(bsdf.inputs['Base Color'],texture_image.outputs['Color'])
+        object.data.materials.clear()
+        for m in object.data.materials:
+            print(m)
         
-        if object.data.materials:
-            object.data.materials[0]=mat 
-        else:
-            object.data.materials.append(mat)
+        # object.data.materials[0]=mat
+        # thing = object.data.materials
+        # if object.data.materials:
+        #     object.data.materials[0]=mat 
+        # else:
+        object.data.materials.append(mat)
         
         bpy.context.view_layer.objects.active=object
         object.select_set(True)
@@ -163,15 +176,16 @@ class BlenderRenderer():
 
         # bpy.ops.uv.unwrap()
         # object.select_set(False)
+        bpy.ops.uv.smart_project()
+        object.select_set(False)
 
-
-        if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
-            bpy.ops.uv.unwrap()
-            object.select_set(False)
-        else: 
-            bpy.ops.uv.smart_project()
-            # bpy.ops.uv.unwrap()
-            object.select_set(False)
+        # if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
+        #     bpy.ops.uv.unwrap()
+        #     object.select_set(False)
+        # else: 
+        #     bpy.ops.uv.smart_project()
+        #     # bpy.ops.uv.unwrap()
+        #     object.select_set(False)
 
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
@@ -193,17 +207,32 @@ if __name__ == '__main__':
     # mesh_dir = args.mesh_dir 
     # uv_dir = args.uv_dir 
 
-    mesh = "hello"
+    mesh = "model_modified.obj"
     uv = "hello"
     mode = "MULTI"
-    mesh_dir = "inputs/shape_samples/lounge_sofa"
-    uv_dir = "inputs/uv_maps/lounge_sofa/smart_project"
+    mesh_dir = "inputs/shape_samples/round_table/models"
+    uv_dir = "inputs/uv_maps/round_table/cube_project"
 
   
 
     if mode=='SINGLE':
-        obj = renderer.load_object(mesh)
-        renderer.save_uv_map(obj,save_file=uv)
+        mesh_path =os.path.join(mesh_dir,mesh)
+        
+        renderer.load_object(mesh_path)
+        selected = [obj_ for obj_ in bpy.context.selected_objects if obj_.type=='MESH']
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action='DESELECT')
+
+        try:
+            os.mkdir(uv_dir)
+        except FileExistsError:
+            pass
+
+        for obj in selected:
+            name = obj.name
+            uv_path = os.path.join(uv_dir,'{}_uv.png'.format(name))
+            renderer.save_uv_map(obj,save_file=uv_path)
     else:
         for mesh_file in os.listdir(mesh_dir):
             ext = os.path.splitext(mesh_file)[-1].lower()

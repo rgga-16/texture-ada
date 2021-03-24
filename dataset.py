@@ -30,17 +30,13 @@ class UV_Style_Paired_Dataset(Dataset):
 
         # lounge sofa
         uv_map_style_pairings = {
-            'left_arm_uv.png':'chair-3_tiled.png',
-            'right_arm_uv.png':'chair-3_tiled.png',
-            'left_backseat_uv.png':'cobonpue-17_tiled.png',
-            'mid_backseat_uv.png':'chair-2_tiled.png',
-            'right_backseat_uv.png':'cobonpue-17_tiled.png',
-            'left_base_uv.png':'cobonpue-80_tiled.png',
-            'right_base_uv.png':'cobonpue-80_tiled.png',
-            'left_seat_uv.png':'cobonpue-99_tiled.png',
-            'mid_seat_uv.png':'chair-2_tiled.png',
-            'right_seat_uv.png':'cobonpue-99_tiled.png',
+            'tabletop_uv.png':'chair-3_tiled.png',
+            'botleft_leg_uv.png':'chair-2_tiled.png',
+            'botright_leg_uv.png':'cobonpue-80_tiled.png',
+            'topleft_leg_uv.png':'chair-2_tiled.png',
+            'topright_leg_uv.png':'cobonpue-80_tiled.png',
         }
+
 
         for k,v in uv_map_style_pairings.items():
             self.uv_files.append(os.path.join(self.uv_dir,k))
