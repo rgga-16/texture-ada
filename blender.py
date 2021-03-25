@@ -5,6 +5,7 @@ import os
 import pathlib as p
 
 import argparse
+import logging 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -21,6 +22,28 @@ def parse_arguments():
     parser.add_argument('--uv_dir', type=str,help='Path of the output directory to save the UVs',
                         default="inputs/uv_maps/lounge_sofa/unwrap")
     return parser.parse_args()
+
+
+def unwrap_method(method:str):
+        if method=='SMART_PROJECT':
+            bpy.ops.uv.smart_project()
+        elif method=='UNWRAP':
+            bpy.ops.uv.unwrap()
+        elif method=='CUBE_PROJECT':
+            bpy.ops.uv.cube_project(cube_size=1.0, 
+                        correct_aspect=True, 
+                        clip_to_bounds=True, 
+                        scale_to_bounds=True) 
+        elif method=='CYLINDER_PROJECT':
+            bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
+                            align='POLAR_ZX', radius=1.0, correct_aspect=True, 
+                            clip_to_bounds=True, scale_to_bounds=True)
+        elif method=='LIGHTMAP_PACK':
+            bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
+        else: 
+            logging.exception('ERROR: Invalid unwrapping method.')
+        
+
 
 class BlenderRenderer():
 
@@ -96,6 +119,8 @@ class BlenderRenderer():
     def rotate_object(self,obj,rotation):
         obj.rotation_euler = rotation
         return obj
+    
+    
 
     def save_uv_map(self,obj,save_file='//uv_map.png'):
         # Apply Smart uv project from object
@@ -104,16 +129,8 @@ class BlenderRenderer():
         selected = bpy.context.selected_objects
         bpy.ops.object.mode_set(mode="EDIT")
 
-        # bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
-        # bpy.ops.uv.smart_project()
-        # bpy.ops.uv.unwrap()
-        bpy.ops.uv.cube_project(cube_size=100.0, 
-                                correct_aspect=True, 
-                                clip_to_bounds=True, 
-                                scale_to_bounds=True)
-        # bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
-        #                             align='POLAR_ZY', radius=1.0, correct_aspect=True, 
-        #                             clip_to_bounds=True, scale_to_bounds=True)
+        unwrap_method('SMART_PROJECT')
+
         obj.select_set(False)
 
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(256,256),opacity=1.0)
@@ -128,7 +145,7 @@ class BlenderRenderer():
         for obj_angle in range(0,360+step,step):
             for obj in self.objects:
                 self.rotate_object(obj,rotation=(
-                                    math.radians(0), 
+                                    math.radians(15), 
                                     math.radians(obj_angle),
                                     math.radians(0)
                 ))
@@ -160,23 +177,14 @@ class BlenderRenderer():
         texture_image.image = image 
         mat.node_tree.links.new(bsdf.inputs['Base Color'],texture_image.outputs['Color'])
         object.data.materials.clear()
-        for m in object.data.materials:
-            print(m)
-        
-        # object.data.materials[0]=mat
-        # thing = object.data.materials
-        # if object.data.materials:
-        #     object.data.materials[0]=mat 
-        # else:
+
         object.data.materials.append(mat)
         
         bpy.context.view_layer.objects.active=object
         object.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
 
-        # bpy.ops.uv.unwrap()
-        # object.select_set(False)
-        bpy.ops.uv.smart_project()
+        unwrap_method('CUBE_PROJECT')
         object.select_set(False)
 
         # if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
@@ -210,10 +218,8 @@ if __name__ == '__main__':
     mesh = "model_modified.obj"
     uv = "hello"
     mode = "MULTI"
-    mesh_dir = "inputs/shape_samples/round_table/models"
-    uv_dir = "inputs/uv_maps/round_table/cube_project"
-
-  
+    mesh_dir = "inputs/shape_samples/office_chair"
+    uv_dir = "inputs/uv_maps/office_table/cube_project"
 
     if mode=='SINGLE':
         mesh_path =os.path.join(mesh_dir,mesh)
@@ -232,6 +238,7 @@ if __name__ == '__main__':
         for obj in selected:
             name = obj.name
             uv_path = os.path.join(uv_dir,'{}_uv.png'.format(name))
+            
             renderer.save_uv_map(obj,save_file=uv_path)
     else:
         for mesh_file in os.listdir(mesh_dir):
