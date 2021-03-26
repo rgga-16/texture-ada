@@ -25,20 +25,20 @@ def parse_arguments():
 
 
 def unwrap_method(method:str):
-        if method=='SMART_PROJECT':
+        if method.lower()=='SMART_PROJECT'.lower():
             bpy.ops.uv.smart_project()
-        elif method=='UNWRAP':
+        elif method.lower()=='UNWRAP'.lower():
             bpy.ops.uv.unwrap()
-        elif method=='CUBE_PROJECT':
+        elif method.lower()=='CUBE_PROJECT'.lower():
             bpy.ops.uv.cube_project(cube_size=1.0, 
                         correct_aspect=True, 
                         clip_to_bounds=True, 
                         scale_to_bounds=True) 
-        elif method=='CYLINDER_PROJECT':
+        elif method.lower()=='CYLINDER_PROJECT'.lower():
             bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
                             align='POLAR_ZX', radius=1.0, correct_aspect=True, 
                             clip_to_bounds=True, scale_to_bounds=True)
-        elif method=='LIGHTMAP_PACK':
+        elif method.lower()=='LIGHTMAP_PACK'.lower():
             bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
         else: 
             logging.exception('ERROR: Invalid unwrapping method.')
@@ -122,14 +122,14 @@ class BlenderRenderer():
     
     
 
-    def save_uv_map(self,obj,save_file='//uv_map.png'):
+    def save_uv_map(self,obj,unwrap_method_,save_file='//uv_map.png'):
         # Apply Smart uv project from object
         bpy.context.view_layer.objects.active=obj
         obj.select_set(True)
         selected = bpy.context.selected_objects
         bpy.ops.object.mode_set(mode="EDIT")
 
-        unwrap_method('SMART_PROJECT')
+        unwrap_method(unwrap_method_)
 
         obj.select_set(False)
 
@@ -144,11 +144,7 @@ class BlenderRenderer():
         still_files = []
         for obj_angle in range(0,360+step,step):
             for obj in self.objects:
-                self.rotate_object(obj,rotation=(
-                                    math.radians(15), 
-                                    math.radians(obj_angle),
-                                    math.radians(0)
-                ))
+                self.rotate_object(obj,rotation=(math.radians(0), math.radians(obj_angle),math.radians(0)))
 
             still_filename = 'render_{}.png'.format(obj_angle)
             save_path = str(p.Path.cwd() / still_filename)
@@ -163,7 +159,7 @@ class BlenderRenderer():
         self.scene.render.filepath = save_path
         bpy.ops.render.render(write_still=True)
 
-    def apply_texture(self,object,texture):
+    def apply_texture(self,object,unwrap_method_,texture):
         # Load texture as texture_image node
         image = bpy.data.images.load(texture,check_existing=True)
 
@@ -184,7 +180,7 @@ class BlenderRenderer():
         object.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
 
-        unwrap_method('CUBE_PROJECT')
+        unwrap_method(unwrap_method_)
         object.select_set(False)
 
         # if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
@@ -200,26 +196,13 @@ class BlenderRenderer():
 
 if __name__ == '__main__':
     renderer = BlenderRenderer()
-    # args = parse_arguments()
-
-    # assert args.mode in ['SINGLE', 'MULTI']
-
-    # assert args.mesh is not None or args.mesh_dir is not None 
-
-    # assert args.uv is not None or args.uv_dir is not None 
-
-    # mode = args.mode 
-    # mesh = args.mesh 
-    # uv = args.uv 
-
-    # mesh_dir = args.mesh_dir 
-    # uv_dir = args.uv_dir 
 
     mesh = "model_modified.obj"
     uv = "hello"
     mode = "MULTI"
+    unwrap_method_='smart_project'
     mesh_dir = "inputs/shape_samples/office_chair"
-    uv_dir = "inputs/uv_maps/office_table/cube_project"
+    uv_dir = "inputs/uv_maps/office_chair/{}".format(unwrap_method_)
 
     if mode=='SINGLE':
         mesh_path =os.path.join(mesh_dir,mesh)
@@ -239,7 +222,7 @@ if __name__ == '__main__':
             name = obj.name
             uv_path = os.path.join(uv_dir,'{}_uv.png'.format(name))
             
-            renderer.save_uv_map(obj,save_file=uv_path)
+            renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
     else:
         for mesh_file in os.listdir(mesh_dir):
             ext = os.path.splitext(mesh_file)[-1].lower()
@@ -247,4 +230,4 @@ if __name__ == '__main__':
                 mesh_path = os.path.join(mesh_dir,mesh_file)
                 obj = renderer.load_object(mesh_path)
                 uv_path = str(p.Path.cwd() / uv_dir / '{}_uv.png'.format(mesh_file[:-4]))
-                renderer.save_uv_map(obj,save_file=uv_path)
+                renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
