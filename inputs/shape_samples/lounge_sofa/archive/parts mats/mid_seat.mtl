@@ -1,20 +1,12 @@
 # Blender MTL File: 'model_simplified.blend'
-# Material Count: 2
+# Material Count: 1
 
-newmtl material_0_24
+
+newmtl Material
+map_Kd mid_seat.png
 Ns 96.078443
 Ka 1.000000 1.000000 1.000000
-Kd 0.702745 0.630588 0.520784
-Ks 0.500000 0.500000 0.500000
-Ke 0.000000 0.000000 0.000000
-Ni 0.000000
-d 1.000000
-illum 2
-
-newmtl material_1_24
-Ns 96.078443
-Ka 1.000000 1.000000 1.000000
-Kd 0.800000 0.800000 0.800000
+Kd 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 0.000000
