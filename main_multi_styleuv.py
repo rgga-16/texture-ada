@@ -1,29 +1,18 @@
-# SEED=0
-
-
-import torch
-from torch.utils.data import DataLoader
-# torch.manual_seed(SEED)
-from torchvision import transforms
-import numpy as np
-
-import style_transfer as st
-
-from helpers import logger, utils 
-import args
-
-from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import args
-import os, copy
-import time, datetime
-
-
 from dataset import UV_Style_Paired_Dataset
-
-
 from defaults import DEFAULTS as D
-from torchsummary import summary
+from helpers import logger, utils 
+from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
+import style_transfer as st
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms
+
+
+import os, copy, time, datetime ,json,logging
 
 
 def train(generator,feat_extractor,dataloader):
@@ -153,22 +142,24 @@ def main():
     for param in feat_extractor.parameters():
         param.requires_grad = False
     
-    # Create output folder named date today and time (ex. [3-12-21 17-00-04])
+    # Create output folder
     # This will store the model, output images, loss history chart and configurations log
-    date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
-    output_folder = os.path.join(args.output_dir,"[{}]".format(date))
+    output_folder = args.output_dir
     try:
         os.mkdir(output_folder)
     except FileExistsError:
         pass
-    args.output_dir = output_folder
+
+    data = json.load(open(args.uv_style_pairs))
+    uv_style_pairs = data['uv_style_pairs']
     
     # Setup dataset for training
     dataset = UV_Style_Paired_Dataset(
-        uv_dir=args.content_dir,
+        uv_dir=args.uv_dir,
         style_dir=args.style_dir,
         uv_sizes=args.uv_train_sizes,
         style_size=args.style_size,
+        uv_style_pairs=uv_style_pairs
     )
 
     # Setup dataloader for training
@@ -177,27 +168,20 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
-    test_uv_files = [
-        # 'tabletop_uv.png',
-        'botleft_leg_uv.png',
-        # 'botright_leg_uv.png',
-        # 'topleft_leg_uv.png',
-        # 'topright_leg_uv.png',
-        ]
+    test_uv_files = uv_style_pairs.keys()
 
     for uv_file in test_uv_files:
         test_uvs = []
         for test_size in args.uv_test_sizes:
-            uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
+            uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
             test_uvs.append(uv)
         output_path = os.path.join(output_folder,uv_file)
 
         test(net,test_uvs,gen_path,output_path)
     
-    # record losses and configurations
+    # record time elapsed and configurations
     time_elapsed = time.time() - start 
-    
-    log_file = '[{}]_log.txt'.format(date)
+    log_file = 'configs.txt'
     
     logger.log_args(os.path.join(output_folder,log_file),
                     Time_Elapsed='{:.2f}s'.format(time_elapsed),

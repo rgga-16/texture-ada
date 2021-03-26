@@ -1,29 +1,23 @@
-# SEED=0
+
 
 
 import torch
 from torch.utils.data import DataLoader
-# torch.manual_seed(SEED)
-from torchvision import transforms
-import numpy as np
-
-import style_transfer as st
-
-from helpers import logger, utils 
-import args
-
-from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
 
 from args import args
-import os, copy
-import time, datetime
-
-
 from dataset import UV_Style_Paired_Dataset
-
-
 from defaults import DEFAULTS as D
-from torchsummary import summary
+from helpers import logger, utils 
+from models import VGG19, ConvAutoencoder,TextureNet, Pyramid2D
+import style_transfer as st
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms
+
+
+import os, copy, time, datetime ,json
 
 
 def train(generator,feat_extractor,dataloader):
@@ -155,32 +149,23 @@ def main():
     
     # Create output folder named date today and time (ex. [3-12-21 17-00-04])
     # This will store the model, output images, loss history chart and configurations log
-    date = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
-    output_folder = os.path.join(args.output_dir,"[{}]".format(date))
+    output_folder = args.output_dir
     try:
         os.mkdir(output_folder)
     except FileExistsError:
         pass
-    args.output_dir = output_folder
 
-    # table top
-    uv_map_style_pairings = {
-        'tabletop_uv.png':'chair-3_tiled.png',
-        'botleft_leg_uv.png':'chair-2_tiled.png',
-        'botright_leg_uv.png':'cobonpue-80_tiled.png',
-        'topleft_leg_uv.png':'chair-2_tiled.png',
-        'topright_leg_uv.png':'cobonpue-80_tiled.png',
-    }
+    data = json.load(open(args.uv_style_pairs))
+    uv_style_pairs = data['uv_style_pairs']
 
-    for k,v in uv_map_style_pairings.items():
+    for k,v in uv_style_pairs.items():
         # Setup dataset for training
         dataset = UV_Style_Paired_Dataset(
             uv_dir=args.content_dir,
             style_dir=args.style_dir,
             uv_sizes=args.uv_train_sizes,
             style_size=args.style_size,
-            uv_file = k,
-            style_file = v,
+            uv_style_pairs={k:v}
         )
 
         # Setup dataloader for training
@@ -203,7 +188,7 @@ def main():
     # record losses and configurations
     time_elapsed = time.time() - start 
         
-    log_file = '[{}]_log.txt'.format(date)
+    log_file = 'configs.txt'
     
     logger.log_args(os.path.join(output_folder,log_file),
                     Time_Elapsed='{:.2f}s'.format(time_elapsed),
