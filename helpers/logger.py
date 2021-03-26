@@ -16,7 +16,7 @@ def log_args(path,**kwargs):
         "Style Loss Weight: {:.4f}\n".format(args.style_weight),
         "Foreground MSELoss Weight: {:.4f}\n".format(args.foreground_weight),
         "="*10,"\n",
-        "Input Texture Maps Directory: {}\n".format(args.content_dir),
+        "Input Texture Maps Directory: {}\n".format(args.uv_dir),
         "Style Images Directory: {}\n".format(args.style_dir),
         "Outputs Directory: {}\n".format(args.output_dir),
         "="*10,"\n\n",
