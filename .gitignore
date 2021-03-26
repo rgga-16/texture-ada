@@ -5,8 +5,13 @@ __pycache__
 .vscode/*
 outputs/*
 archive/*
+dextr/*
 
 *.txt
 *.pyc
 *.pth
 .vscode/settings.json
+
+toy.py 
+yes.py 
+
