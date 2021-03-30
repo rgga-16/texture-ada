@@ -36,11 +36,11 @@ def filter_k_feature_maps(raw_feature_maps,k):
     for i in range(feature_maps_total_num):
         if i not in ids:
             feature_maps[i, :, :] = 0
-        else:
-            max_map = feature_maps[i, :, :].clone().detach()
-            activation = np.array(activation_list)[i]
-            max_map = torch.where(max_map == activation.item(),max_map,torch.zeros(max_map.shape).to(D.DEVICE()))
-            feature_maps[i,:,:]=max_map
+        # else:
+        #     max_map = feature_maps[i, :, :].clone().detach()
+        #     activation = np.array(activation_list)[i]
+        #     max_map = torch.where(max_map == activation.item(),max_map,torch.zeros(max_map.shape).to(D.DEVICE()))
+        #     feature_maps[i,:,:]=max_map
 
     thing = feature_maps.view(feature_maps.shape[0],-1)
     return feature_maps.unsqueeze_(0)
@@ -63,7 +63,7 @@ def get_features(model, tensor, is_style,
             # features[style_layers[name]] = losses.gram_matrix(x)
             if is_style:
                 _,c,_,_ = x.shape
-                k = round(0.25 * c) 
+                k = round(0.1 * c) 
                 x = filter_k_feature_maps(x,c)
             features[style_layers[name]] = losses.covariance_matrix(x)
             # losses.covariance_matrix(x)
