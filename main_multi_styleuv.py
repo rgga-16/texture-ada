@@ -39,7 +39,7 @@ def train(generator,feat_extractor,dataloader):
             uvs = sample['uvs']
             style = sample['style']
             
-            style_feats = st.get_features(feat_extractor,style)
+            style_feats = st.get_features(feat_extractor,style,is_style=True)
             style_layers = D.STYLE_LAYERS.get()
             s_layer_weights = D.SL_WEIGHTS.get()
 
@@ -62,7 +62,7 @@ def train(generator,feat_extractor,dataloader):
 
                 # Get output features
                 output=output[:,:3,...]
-                out_feats = st.get_features(feat_extractor,output)
+                out_feats = st.get_features(feat_extractor,output,is_style=False)
 
                 # Get style loss
                 style_loss=0
