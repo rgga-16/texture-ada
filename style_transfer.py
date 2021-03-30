@@ -64,7 +64,7 @@ def get_features(model, tensor, is_style,
             if is_style:
                 _,c,_,_ = x.shape
                 k = round(0.25 * c) 
-                x = filter_k_feature_maps(x,k)
+                x = filter_k_feature_maps(x,c)
             features[style_layers[name]] = losses.covariance_matrix(x)
             # losses.covariance_matrix(x)
             # losses.weighted_style_rep(x)
