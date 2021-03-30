@@ -161,7 +161,7 @@ def main():
     for k,v in uv_style_pairs.items():
         # Setup dataset for training
         dataset = UV_Style_Paired_Dataset(
-            uv_dir=args.content_dir,
+            uv_dir=args.uv_dir,
             style_dir=args.style_dir,
             uv_sizes=args.uv_train_sizes,
             style_size=args.style_size,
@@ -179,7 +179,7 @@ def main():
         for uv_file in test_uv_files:
             test_uvs = []
             for test_size in args.uv_test_sizes:
-                uv = utils.image_to_tensor(utils.load_image(os.path.join(args.content_dir,uv_file)),image_size=test_size)
+                uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
                 test_uvs.append(uv)
             output_path = os.path.join(output_folder,uv_file)
 
