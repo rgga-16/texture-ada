@@ -28,6 +28,7 @@ def filter_k_feature_maps(raw_feature_maps,k):
     for i in range(feature_maps_total_num):
         feat_map = feature_maps[i, :, :]
         activation_val = torch.max(feat_map)
+        # activation_val = torch.mean(feat_map)
         activation_list.append(activation_val.item())
 
     # Get k indices of k highest activation values in the list
@@ -61,10 +62,10 @@ def get_features(model, tensor, is_style,
 
         if name in style_layers.keys():
             # features[style_layers[name]] = losses.gram_matrix(x)
-            # if is_style:
-            #     _,c,_,_ = x.shape
-            #     k = round(0.1 * c) 
-            #     x = filter_k_feature_maps(x,c)
+            if is_style:
+                _,c,_,_ = x.shape
+                k = round(0.1 * c) 
+                x = filter_k_feature_maps(x,c)
             features[style_layers[name]] = losses.covariance_matrix(x)
             # losses.covariance_matrix(x)
             # losses.weighted_style_rep(x)
