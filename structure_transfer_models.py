@@ -40,6 +40,8 @@ class Pixel2MeshModel(nn.Module):
 
         # self.img_encoder = VGG16_Encoder(3)
         self.img_encoder = VGG16P2M(3).to(D.DEVICE()).eval()
+
+        # gcn1_out_dim = 
         self.gcn_1 = GraphConvBottleneck(6,self.features_dim,self.hidden_dim,
                                         self.coord_dim,init_shape.adj_mat[0])
         
@@ -49,8 +51,11 @@ class Pixel2MeshModel(nn.Module):
         self.gcn_3 = GraphConvBottleneck(6,self.features_dim+self.hidden_dim,self.hidden_dim,
                                         self.last_hidden_dim,init_shape.adj_mat[2])
         
-        self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.unpool_idx[0])
-        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.unpool_idx[1])
+        # self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.unpool_idx[0])
+        # self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.unpool_idx[1])
+        self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.edges[0])
+        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.edges[1])
+        
 
         self.projection = GraphProjection(mesh_pos=mesh_pos,
                                         camera_f=camera_f,
@@ -70,7 +75,7 @@ class Pixel2MeshModel(nn.Module):
         image_feats = self.img_encoder(image)
         init_verts = self.init_verts.data.unsqueeze(0).expand(batch_size,-1,-1)
 
-        # Graph Conv Block 1 
+        # Deform Block 1 
         # projection
         x = self.projection(image_shape,image_feats,init_verts)
         # graph convolution
@@ -79,7 +84,7 @@ class Pixel2MeshModel(nn.Module):
         # Graph Unpooling 1
         x1_unpooled = self.g_unpooling_1(x1)
 
-        # Graph Conv Block 2
+        # Deform Block 2
         # projection
         x = self.projection(image_shape,image_feats,x1)
         # graph convolution
@@ -89,7 +94,7 @@ class Pixel2MeshModel(nn.Module):
         # Graph Unpooling 2
         x2_unpooled = self.g_unpooling_2(x2)
 
-        # Graph Conv Block 3
+        # Deform Block 3
         # projection
         x = self.projection(image_shape,image_feats,x2)
         # graph convolution
@@ -356,9 +361,10 @@ class GraphUnpoolingLayer(nn.Module):
         super(GraphUnpoolingLayer,self).__init__()
         self.unpool_idx = unpool_idx
 
-        # input num verts is current number of unpool verts
+        # input num verts is highest vertex idx
         self.in_n_verts = torch.max(unpool_idx).item()
         self.out_n_verts = self.in_n_verts + len(unpool_idx)
+        print()
     
     def forward(self,vertices):
         """

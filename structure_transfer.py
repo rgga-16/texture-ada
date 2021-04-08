@@ -6,7 +6,7 @@ import losses
 import os 
 from args import args
 from helpers import utils
-import models, structure_models
+import models, structure_transfer_models
 from defaults import DEFAULTS as D
 import pickle
 

@@ -7,7 +7,7 @@ from defaults import DEFAULTS as D
 
 class VGG19(nn.Module):
 
-    def __init__(self,vgg_path='models/vgg19-dcbb9e9d.pth',device=D.DEVICE()):
+    def __init__(self,vgg_path='models/weights/vgg19-dcbb9e9d.pth',device=D.DEVICE()):
         super(VGG19,self).__init__()
 
         _ = models.vgg19(pretrained=True).eval().to(device)
@@ -168,6 +168,3 @@ class Pyramid2D(nn.Module):
         y = self.last_conv(y) # y=(48x256x256) => (3x256x256)
         return y
 
-
-
-    
