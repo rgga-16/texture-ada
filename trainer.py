@@ -61,7 +61,7 @@ def train(generator,feat_extractor,dataloader):
                 output = generator(inputs)
 
                 # Get output FG
-                output_mask = output[:,2,...].unsqueeze(0)
+                output_mask = output[:,3,...].unsqueeze(0)
 
                 # Get output features
                 output=output[:,:3,...]
@@ -75,7 +75,7 @@ def train(generator,feat_extractor,dataloader):
                     style_weight=args.style_weight
 
                 # Get uv FG
-                uv_mask = uv[:,2,...].unsqueeze(0)
+                uv_mask = uv[:,3,...].unsqueeze(0)
 
                 # Get FG MSE Loss
                 fg_loss = mse_loss(output_mask,uv_mask)
