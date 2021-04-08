@@ -52,9 +52,10 @@ def train(generator,feat_extractor,dataloader):
                 # Setup inputs 
                 _,_,_,w = uv.shape
                 input_sizes = [w//2,w//4,w//8,w//16,w//32]
-                inputs = [uv[:,:3,...].clone().detach()]
+                # inputs = [uv[:,:3,...].clone().detach()]
                 # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
-                inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
+                # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
+                inputs = uv.clone().detach()
 
                 # Get output
                 output = generator(inputs)

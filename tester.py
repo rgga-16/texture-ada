@@ -5,7 +5,7 @@ from args import args
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, utils 
-from models import VGG19, Pyramid2D
+from texture_transfer_models import VGG19, Pyramid2D
 import style_transfer as st
 
 import numpy as np
@@ -23,14 +23,16 @@ def test(generator,input,gen_path,output_path):
 
     generator.load_state_dict(torch.load(gen_path))
     
-    uvs = input[:-1]
-    style=input[-1][:3,...].unsqueeze(0).detach()
+    # uvs = input[:-1]
+    # style=input[-1][:3,...].unsqueeze(0).detach()
+    uvs=input
     for uv in uvs:
         _,_,w = uv.shape
         input_sizes = [w//2,w//4,w//8,w//16,w//32]
-        inputs = [uv[:3,...].unsqueeze(0).detach()]
+        # inputs = [uv[:3,...].unsqueeze(0).detach()]
         # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
-        inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
+        # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
+        inputs = uv.clone().detach().unsqueeze(0)
 
         with torch.no_grad():
             y = generator(inputs)

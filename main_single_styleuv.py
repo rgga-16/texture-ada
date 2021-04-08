@@ -5,7 +5,8 @@ from args import args
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, utils 
-from models import VGG19, Pyramid2D
+from texture_transfer_models import VGG19, Pyramid2D
+from models.fast_feedforward import FeedForwardNetwork
 import style_transfer as st
 from trainer import train
 from tester import test
@@ -27,7 +28,8 @@ def main():
     start=time.time()
 
     # Setup generator model 
-    net = Pyramid2D().to(device)
+    # net = Pyramid2D().to(device)
+    net = FeedForwardNetwork(in_channels=4,out_channels=4).to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
@@ -61,6 +63,7 @@ def main():
         # Training. Returns path of the generator weights.
         gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
         
+        # uv map as test input only (uses rand input tensors)
         # test_uv_files = [k]
         # for uv_file in test_uv_files:
         #     test_uvs = []
@@ -71,12 +74,19 @@ def main():
 
         #     test(net,test_uvs,gen_path,output_path)
         
+        # uv map and style as test input (replace rand inplut tensors with small style imges)
+        # test_= []
+        # style = utils.image_to_tensor(utils.load_image(os.path.join(args.style_dir,v)),image_size=args.style_size)
+        # for test_size in args.uv_test_sizes:
+        #     uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,k)),image_size=test_size)
+        #     test_.append(uv)
+        # test_.append(style)
+
         test_= []
-        style = utils.image_to_tensor(utils.load_image(os.path.join(args.style_dir,v)),image_size=args.style_size)
         for test_size in args.uv_test_sizes:
             uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,k)),image_size=test_size)
             test_.append(uv)
-        test_.append(style)
+
         output_path = os.path.join(output_folder,k)
 
         test(net,test_,gen_path,output_path)
