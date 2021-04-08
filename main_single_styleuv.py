@@ -61,16 +61,25 @@ def main():
         # Training. Returns path of the generator weights.
         gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
         
-        test_uv_files = [k]
+        # test_uv_files = [k]
+        # for uv_file in test_uv_files:
+        #     test_uvs = []
+        #     for test_size in args.uv_test_sizes:
+        #         uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
+        #         test_uvs.append(uv)
+        #     output_path = os.path.join(output_folder,uv_file)
 
-        for uv_file in test_uv_files:
-            test_uvs = []
-            for test_size in args.uv_test_sizes:
-                uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
-                test_uvs.append(uv)
-            output_path = os.path.join(output_folder,uv_file)
+        #     test(net,test_uvs,gen_path,output_path)
+        
+        test_= []
+        style = utils.image_to_tensor(utils.load_image(os.path.join(args.style_dir,v)),image_size=args.style_size)
+        for test_size in args.uv_test_sizes:
+            uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,k)),image_size=test_size)
+            test_.append(uv)
+        test_.append(style)
+        output_path = os.path.join(output_folder,k)
 
-            test(net,test_uvs,gen_path,output_path)
+        test(net,test_,gen_path,output_path)
         
     # record losses and configurations
     time_elapsed = time.time() - start 
