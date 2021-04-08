@@ -60,16 +60,29 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
-    test_uv_files = uv_style_pairs.keys()
+    # test_uv_files = uv_style_pairs.keys()
 
-    for uv_file in test_uv_files:
-        test_uvs = []
+    # for uv_file in test_uv_files:
+    #     test_uvs = []
+    #     for test_size in args.uv_test_sizes:
+    #         uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
+    #         test_uvs.append(uv)
+    #     output_path = os.path.join(output_folder,uv_file)
+
+    #     test(net,test_uvs,gen_path,output_path)
+    
+    test_files = uv_style_pairs
+
+    for uv_file,style_file in test_files.items():
+        test_ = []
+        style = utils.image_to_tensor(utils.load_image(os.path.join(args.style_dir,style_file)),image_size=args.style_size)
         for test_size in args.uv_test_sizes:
             uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
-            test_uvs.append(uv)
+            test_.append(uv)
+        test_.append(style)
         output_path = os.path.join(output_folder,uv_file)
 
-        test(net,test_uvs,gen_path,output_path)
+        test(net,test_,gen_path,output_path)
     
     # record time elapsed and configurations
     time_elapsed = time.time() - start 
