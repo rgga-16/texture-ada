@@ -61,7 +61,7 @@ def train(generator,feat_extractor,dataloader):
                 output = generator(inputs)
 
                 # Get output FG
-                output_mask = output[:,3,...].unsqueeze(0)
+                output_mask = output[:,2,...].unsqueeze(0)
 
                 # Get output features
                 output=output[:,:3,...]

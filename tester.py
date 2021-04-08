@@ -32,7 +32,7 @@ def test(generator,input,gen_path,output_path):
         # inputs = [uv[:3,...].unsqueeze(0).detach()]
         # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
         # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
-        inputs = uv[:,:3,...].clone().detach().unsqueeze(0)
+        inputs = uv[:3,...].unsqueeze(0).clone().detach()
 
         with torch.no_grad():
             y = generator(inputs)
