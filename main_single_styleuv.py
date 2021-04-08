@@ -29,7 +29,7 @@ def main():
 
     # Setup generator model 
     # net = Pyramid2D().to(device)
-    net = FeedForwardNetwork(in_channels=4,out_channels=4).to(device)
+    net = FeedForwardNetwork(in_channels=3,out_channels=3).to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
