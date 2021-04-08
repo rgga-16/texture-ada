@@ -1,6 +1,6 @@
 {
-    "uv_dir": "",
-    "style_dir": "",
+    "uv_dir": "./inputs/uv_maps/lounge_sofa/smart_project",
+    "style_dir": "./inputs/style_images/tiled",
     "uv_style_pairs" : {
         "left_arm_uv.png":"chair-2_tiled.png",
         "right_arm_uv.png":"chair-2_tiled.png",
