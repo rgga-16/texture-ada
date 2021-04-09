@@ -43,6 +43,28 @@ class AdaIN(nn.Module):
         output = output_feats.view(b_x,c_x,w_x,h_x)
         return output
 
+
+"""
+Original implementation (in Pytorch) of AdaIN Network
+
+Based on the paper titled,
+"Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization"
+
+Code borrowed from: https://github.com/naoto0804/pytorch-AdaIN 
+"""
+class Network_AdaIN(nn.Module):
+    def __init__(self):
+        super(Network_AdaIN,self).__init__()
+
+
+"""
+Extended version of Feedforward Style Transfer Network with AdaIN layers added.
+
+Based on the paper titled,
+"Perceptual Losses for Real-Time Style Transfer and Super-Resolution" (2016) by Johnson et al.
+
+Code borrowed from: https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/transformer_net.py
+"""
 class FeedForwardNetwork_AdaIN(FeedForwardNetwork):
 
     def __init__(self,in_channels=3,out_channels=3,n_resblocks = 5) -> None:
@@ -51,20 +73,15 @@ class FeedForwardNetwork_AdaIN(FeedForwardNetwork):
         self.adain_layer = AdaIN()
     
     def forward(self,X,style):
-        X_feats = self.conv1(X)
-        style_feats = self.conv1(style)
-        X_feats = self.relu(self.adain_layer(X_feats,style_feats))
-        # y = self.relu(self.conv1(X))
+        y = self.relu(self.conv1(X))
+        y = self.relu(self.conv2(y))
+        y = self.relu(self.conv3(y))
 
-        X_feats = self.conv2(X_feats)
-        style_feats = self.conv2(style_feats)
-        X_feats = self.relu(self.adain_layer(X_feats,style_feats))  
-        # y = self.relu(self.conv2(y))
+        style_y = self.relu(self.conv1(style))
+        style_y = self.relu(self.conv2(style_y))
+        style_y = self.relu(self.conv3(style_y))
 
-        X_feats = self.conv3(X_feats)
-        style_feats = self.conv3(style_feats)
-        y = self.relu(self.adain_layer(X_feats,style_feats))  
-        # y = self.relu(self.conv3(y))
+        y = self.adain_layer(y,style_y)
 
         y = self.res1(y)
         y = self.res2(y)
