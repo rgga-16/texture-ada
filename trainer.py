@@ -55,8 +55,8 @@ def train(generator,feat_extractor,dataloader):
                 # inputs = [uv[:,:3,...].clone().detach()]
                 # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
                 # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
-                input_uv = uv[:,:3,...].clone().detach()
-                input_style = style[:,:3,...].clone().detach()
+                input_uv = uv[:,:3,...]
+                input_style = style[:,:3,...]
 
                 # Get output
                 output = generator(input_uv,input_style)

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from models.feedforward import FeedForwardNetwork
+from models.texture_transfer_models import VGG19
 
 
 class AdaIN(nn.Module):
@@ -29,11 +30,11 @@ class AdaIN(nn.Module):
 
         assert b_x*c_x == b_y*c_y
 
-        x_feats = x.clone().view(b_x,c_x,w_x*h_x)
+        x_feats = x.view(b_x,c_x,w_x*h_x)
         x_mean = torch.mean(x_feats,dim=2,keepdim=True)
         x_std = torch.std(x_feats,dim=2,keepdim=True)
 
-        y_feats = y.clone().view(b_y,c_y,w_y*h_y)
+        y_feats = y.view(b_y,c_y,w_y*h_y)
         y_mean = torch.mean(y_feats,dim=2,keepdim=True)
         y_std = torch.std(y_feats,dim=2,keepdim=True)
 
@@ -42,6 +43,46 @@ class AdaIN(nn.Module):
 
         output = output_feats.view(b_x,c_x,w_x,h_x)
         return output
+
+def adain(x,y):
+        b_x,c_x,w_x,h_x = x.shape
+        b_y,c_y,w_y,h_y = y.shape
+        assert b_x*c_x == b_y*c_y
+
+        x_feats = x.view(b_x,c_x,w_x*h_x)
+        x_mean = torch.mean(x_feats,dim=2,keepdim=True)
+        x_std = torch.std(x_feats,dim=2,keepdim=True)
+
+        y_feats = y.view(b_y,c_y,w_y*h_y)
+        y_mean = torch.mean(y_feats,dim=2,keepdim=True)
+        y_std = torch.std(y_feats,dim=2,keepdim=True)
+
+        normalized_x = (x_feats - x_mean) / x_std
+        output_feats = (normalized_x * y_std) + y_mean
+
+        output = output_feats.view(b_x,c_x,w_x,h_x)
+        return output
+
+def calc_mean_std(feat, eps=1e-5):
+    # eps is a small value added to the variance to avoid divide-by-zero.
+    size = feat.size()
+    assert (len(size) == 4)
+    N, C = size[:2]
+    feat_var = feat.view(N, C, -1).var(dim=2) + eps
+    feat_std = feat_var.sqrt().view(N, C, 1, 1)
+    feat_mean = feat.view(N, C, -1).mean(dim=2).view(N, C, 1, 1)
+    return feat_mean, feat_std
+
+
+def adaptive_instance_normalization(content_feat, style_feat):
+    assert (content_feat.size()[:2] == style_feat.size()[:2])
+    size = content_feat.size()
+    style_mean, style_std = calc_mean_std(style_feat)
+    content_mean, content_std = calc_mean_std(content_feat)
+
+    normalized_feat = (content_feat - content_mean.expand(
+        size)) / content_std.expand(size)
+    return normalized_feat * style_std.expand(size) + style_mean.expand(size)
 
 
 """
@@ -55,6 +96,56 @@ Code borrowed from: https://github.com/naoto0804/pytorch-AdaIN
 class Network_AdaIN(nn.Module):
     def __init__(self):
         super(Network_AdaIN,self).__init__()
+        self.encoder = nn.Sequential(*list(VGG19().features.children())[:21])
+
+        # Download VGG19 normalized.
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+
+        # self.adain_layer = AdaIN()
+
+        self.decoder = nn.Sequential(
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(512, 256, (3, 3)),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2, mode='nearest'),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(256, 256, (3, 3)),
+            nn.ReLU(),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(256, 256, (3, 3)),
+            nn.ReLU(),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(256, 256, (3, 3)),
+            nn.ReLU(),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(256, 128, (3, 3)),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2, mode='nearest'),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(128, 128, (3, 3)),
+            nn.ReLU(),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(128, 64, (3, 3)),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2, mode='nearest'),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(64, 64, (3, 3)),
+            nn.ReLU(),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(64, 3, (3, 3)),
+        )
+
+        
+    
+    def forward(self,X,style):
+        x_feats = self.encoder(X)
+        style_feats = self.encoder(style)
+
+        x_aligned = adaptive_instance_normalization(x_feats,style_feats)
+        output = self.decoder(x_aligned)
+
+        return output
 
 
 """
@@ -73,15 +164,13 @@ class FeedForwardNetwork_AdaIN(FeedForwardNetwork):
         self.adain_layer = AdaIN()
     
     def forward(self,X,style):
-        y = self.relu(self.conv1(X))
-        y = self.relu(self.conv2(y))
-        y = self.relu(self.conv3(y))
+        y = self.relu(self.in1(self.conv1(X)))
+        y = self.relu(self.in2(self.conv2(y)))
+        y = self.relu(self.in3(self.conv3(y)))
 
         style_y = self.relu(self.conv1(style))
         style_y = self.relu(self.conv2(style_y))
         style_y = self.relu(self.conv3(style_y))
-
-        y = self.adain_layer(y,style_y)
 
         y = self.res1(y)
         y = self.res2(y)

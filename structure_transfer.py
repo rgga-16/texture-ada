@@ -6,7 +6,8 @@ import losses
 import os 
 from args import args
 from helpers import utils
-import models, structure_transfer_models
+from models import structure_transfer_models
+from models import texture_transfer_models
 from defaults import DEFAULTS as D
 import pickle
 
