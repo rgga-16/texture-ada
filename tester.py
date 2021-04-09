@@ -25,7 +25,8 @@ def test(generator,input,gen_path,output_path):
     
     # uvs = input[:-1]
     # style=input[-1][:3,...].unsqueeze(0).detach()
-    uvs=input
+    uvs=input[:-1]
+    style=input[-1]
     for uv in uvs:
         _,_,w = uv.shape
         input_sizes = [w//2,w//4,w//8,w//16,w//32]
@@ -33,9 +34,10 @@ def test(generator,input,gen_path,output_path):
         # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
         # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
         inputs = uv[:3,...].unsqueeze(0).clone().detach()
+        input_style = style[:3,...].unsqueeze(0).clone().detach()
 
         with torch.no_grad():
-            y = generator(inputs)
+            y = generator(inputs,input_style)
 
         output_path_ = '{}_{}.png'.format(output_path,w)
         utils.tensor_to_image(y,image_size=args.output_size).save(output_path_)

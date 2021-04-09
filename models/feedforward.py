@@ -10,9 +10,10 @@ Code borrowed from: https://github.com/pytorch/examples/blob/master/fast_neural_
 """
 class FeedForwardNetwork(nn.Module):
     
-    def __init__(self,in_channels=3,out_channels=3):
-    
-        super(FeedForwardNetwork,self).__init__()
+    def __init__(self,in_channels=3,out_channels=3,n_resblocks = 5):
+        super(FeedForwardNetwork, self).__init__()
+        
+
         # Initial convolution layers
         self.conv1 = ConvLayer(in_channels, 32, kernel_size=9, stride=1)
         self.in1 = torch.nn.InstanceNorm2d(32, affine=True)
@@ -34,6 +35,8 @@ class FeedForwardNetwork(nn.Module):
         self.deconv3 = ConvLayer(32, out_channels, kernel_size=9, stride=1)
         # Non-linearities
         self.relu = torch.nn.ReLU()
+
+
     
     def forward(self, X):
         y = self.relu(self.in1(self.conv1(X)))

@@ -55,13 +55,15 @@ def train(generator,feat_extractor,dataloader):
                 # inputs = [uv[:,:3,...].clone().detach()]
                 # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
                 # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
-                inputs = uv[:,:3,...].clone().detach()
+                input_uv = uv[:,:3,...].clone().detach()
+                input_style = style[:,:3,...].clone().detach()
 
                 # Get output
-                output = generator(inputs)
+                output = generator(input_uv,input_style)
+                # output = generator(inputs)
 
                 # Get output FG
-                output_mask = output[:,3,...].unsqueeze(0)
+                # output_mask = output[:,3,...].unsqueeze(0)
 
                 # Get output features
                 output=output[:,:3,...]
@@ -78,11 +80,12 @@ def train(generator,feat_extractor,dataloader):
                 uv_mask = uv[:,3,...].unsqueeze(0)
 
                 # Get FG MSE Loss
-                fg_loss = mse_loss(output_mask,uv_mask)
-                fg_weight = args.foreground_weight
+                # fg_loss = mse_loss(output_mask,uv_mask)
+                # fg_weight = args.foreground_weight
                 
                 # Get loss
-                loss = (style_loss * style_weight) + (fg_loss * fg_weight)
+                # loss = (style_loss * style_weight) + (fg_loss * fg_weight)
+                loss = (style_loss * style_weight)
                 avg_loss+=loss
             
             avg_loss/= len(uvs)
