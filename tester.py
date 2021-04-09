@@ -5,7 +5,7 @@ from args import args
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, utils 
-from texture_transfer_models import VGG19, Pyramid2D
+from models.texture_transfer_models import VGG19, Pyramid2D
 import style_transfer as st
 
 import numpy as np

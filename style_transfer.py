@@ -7,7 +7,7 @@ from torchvision import transforms
 
 import losses
 import models
-from texture_transfer_models import VGG19
+from models.texture_transfer_models import VGG19
 from args import args
 
 
