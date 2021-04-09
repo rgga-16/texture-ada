@@ -142,8 +142,8 @@ class Network_AdaIN(nn.Module):
         x_feats = self.encoder(X)
         style_feats = self.encoder(style)
 
-        x_aligned = adaptive_instance_normalization(x_feats,style_feats)
-        output = self.decoder(x_aligned)
+        # x_feats = adaptive_instance_normalization(x_feats,style_feats)
+        output = self.decoder(x_feats)
 
         return output
 
