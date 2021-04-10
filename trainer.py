@@ -49,8 +49,17 @@ def train(generator,feat_extractor,dataloader):
 
 
             
-            style_layers = D.STYLE_LAYERS.get()
-            s_layer_weights = D.SL_WEIGHTS.get()
+            # style_layers = D.STYLE_LAYERS.get()
+            style_layers = {
+                                                '1': 'relu1_1',   # Style layers
+                                                '6': 'relu2_1',
+                                                '11' : 'relu3_1',
+                                                '20' : 'relu4_1',
+                                            }
+            # s_layer_weights = D.SL_WEIGHTS.get()
+            s_layer_weights = {
+                                    layer: 0.2 for layer in style_layers.values()
+                                }
 
             mse_loss = torch.nn.MSELoss()
 
@@ -75,12 +84,7 @@ def train(generator,feat_extractor,dataloader):
 
                 # Get output features
                 output=output[:,:3,...]
-                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers={
-                                                '1': 'relu1_1',   # Style layers
-                                                '6': 'relu2_1',
-                                                '11' : 'relu3_1',
-                                                '20' : 'relu4_1',
-                                            })
+                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
 
                 # Get style loss
                 style_loss=0
