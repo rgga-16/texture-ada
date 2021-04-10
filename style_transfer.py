@@ -90,19 +90,10 @@ def style_transfer_gatys(content, style,
     output.requires_grad_(True)
 
     optimizer = torch.optim.Adam([output],lr=1e-2)
-    content_feats = get_features(model,content,is_style=False,
-                                content_layers={
-                                    '20' : 'relu4_1',
-                                })
+    content_feats = get_features(model,content,is_style=False)
 
-                                # relu1_1, relu2_1, relu3_1, relu4_1
-    style_feats = get_features(model,style,is_style=True,
-                                style_layers={
-                                    '1': 'relu1_1',   # Style layers
-                                    '6': 'relu2_1',
-                                    '11' : 'relu3_1',
-                                    '20' : 'relu4_1',
-                                })
+                                
+    style_feats = get_features(model,style,is_style=True)
 
     mse_loss = MSELoss()
 

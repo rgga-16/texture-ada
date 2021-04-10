@@ -40,7 +40,15 @@ def train(generator,feat_extractor,dataloader):
             uvs = sample['uvs']
             style = sample['style']
             
-            style_feats = st.get_features(feat_extractor,style,is_style=True)
+            style_feats = st.get_features(feat_extractor,style,is_style=True,style_layers={
+                '1': 'relu1_1',   # Style layers
+                '6': 'relu2_1',
+                '11' : 'relu3_1',
+                '20' : 'relu4_1',
+            })
+
+
+            
             style_layers = D.STYLE_LAYERS.get()
             s_layer_weights = D.SL_WEIGHTS.get()
 
@@ -67,7 +75,12 @@ def train(generator,feat_extractor,dataloader):
 
                 # Get output features
                 output=output[:,:3,...]
-                out_feats = st.get_features(feat_extractor,output,is_style=False)
+                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers={
+                                                '1': 'relu1_1',   # Style layers
+                                                '6': 'relu2_1',
+                                                '11' : 'relu3_1',
+                                                '20' : 'relu4_1',
+                                            })
 
                 # Get style loss
                 style_loss=0
