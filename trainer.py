@@ -25,7 +25,7 @@ def train(generator,feat_extractor,dataloader):
     checkpoint=5
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=checkpoint,gamma=0.1)
+    # scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=checkpoint,gamma=0.1)
 
     mse_loss = torch.nn.MSELoss()
 
@@ -110,7 +110,7 @@ def train(generator,feat_extractor,dataloader):
             #     lowest_loss = avg_loss.item() 
             #     best_model = copy.deepcopy(generator.state_dict())
             #     best_iter = i
-        scheduler.step()
+        # scheduler.step()
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
