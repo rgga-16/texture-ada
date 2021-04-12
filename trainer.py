@@ -36,17 +36,17 @@ def train(generator,feat_extractor,dataloader):
     lowest_loss = np.inf
     best_model = generator.state_dict()
 
-     # style_layers = D.STYLE_LAYERS.get()
-    style_layers = {
-                                        '1': 'relu1_1',   # Style layers
-                                        '6': 'relu2_1',
-                                        '11' : 'relu3_1',
-                                        '20' : 'relu4_1',
-                                    }
-    # s_layer_weights = D.SL_WEIGHTS.get()
-    s_layer_weights = {
-                            layer: 0.25 for layer in style_layers.values()
-                        }
+    style_layers = D.STYLE_LAYERS.get()
+    # style_layers = {
+    #                                     '1': 'relu1_1',   # Style layers
+    #                                     '6': 'relu2_1',
+    #                                     '11' : 'relu3_1',
+    #                                     '20' : 'relu4_1',
+    #                                 }
+    s_layer_weights = D.SL_WEIGHTS.get()
+    # s_layer_weights = {
+    #                         layer: 0.25 for layer in style_layers.values()
+    #                     }
 
     for i in range(iters):
         for _, sample in enumerate(dataloader):
@@ -88,7 +88,6 @@ def train(generator,feat_extractor,dataloader):
                 for s in style_layers.values():
                     diff = mse_loss(out_feats[s],style_feats[s])
                     style_loss += s_layer_weights[s] * diff
-                    style_weight=args.style_weight
 
                 # Get uv FG
                 # uv_mask = uv[:,3,...].unsqueeze(0)
@@ -99,7 +98,7 @@ def train(generator,feat_extractor,dataloader):
                 
                 # Get loss
                 # loss = (style_loss * style_weight) + (fg_loss * fg_weight)
-                loss = (style_loss * style_weight)
+                loss = (style_loss * args.style_weight)
                 avg_loss+=loss
             
             avg_loss/= len(uvs)
@@ -116,7 +115,8 @@ def train(generator,feat_extractor,dataloader):
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
         
-    print("Lowest Loss: {}".format(lowest_loss))
+    print("Lowest Loss at epoch {}: {}".format(best_iter,lowest_loss))
+
     model_file = '{}_iter{}.pth'.format(best_model.__class__.__name__,best_iter)
     # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
