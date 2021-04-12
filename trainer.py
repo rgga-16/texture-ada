@@ -22,16 +22,31 @@ def train(generator,feat_extractor,dataloader):
     generator.train()
     generator.cuda(device=D.DEVICE())
 
+    checkpoint=5
+
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optim, step_size=checkpoint,gamma=0.1)
 
     mse_loss = torch.nn.MSELoss()
 
-    checkpoint=100
+    
     loss_history=[]
     epoch_chkpts=[]
 
     lowest_loss = np.inf
     best_model = generator.state_dict()
+
+     # style_layers = D.STYLE_LAYERS.get()
+    style_layers = {
+                                        '1': 'relu1_1',   # Style layers
+                                        '6': 'relu2_1',
+                                        '11' : 'relu3_1',
+                                        '20' : 'relu4_1',
+                                    }
+    # s_layer_weights = D.SL_WEIGHTS.get()
+    s_layer_weights = {
+                            layer: 0.25 for layer in style_layers.values()
+                        }
 
     for i in range(iters):
         for _, sample in enumerate(dataloader):
@@ -40,26 +55,8 @@ def train(generator,feat_extractor,dataloader):
             uvs = sample['uvs']
             style = sample['style']
             
-            style_feats = st.get_features(feat_extractor,style,is_style=True,style_layers={
-                '1': 'relu1_1',   # Style layers
-                '6': 'relu2_1',
-                '11' : 'relu3_1',
-                '20' : 'relu4_1',
-            })
-
-
-            
-            # style_layers = D.STYLE_LAYERS.get()
-            style_layers = {
-                                                '1': 'relu1_1',   # Style layers
-                                                '6': 'relu2_1',
-                                                '11' : 'relu3_1',
-                                                '20' : 'relu4_1',
-                                            }
-            # s_layer_weights = D.SL_WEIGHTS.get()
-            s_layer_weights = {
-                                    layer: 0.2 for layer in style_layers.values()
-                                }
+            style_feats = st.get_features(feat_extractor,style,is_style=True,style_layers=style_layers)
+           
 
             mse_loss = torch.nn.MSELoss()
 
@@ -68,7 +65,7 @@ def train(generator,feat_extractor,dataloader):
             for uv in uvs:
                 # Setup inputs 
                 _,_,_,w = uv.shape
-                input_sizes = [w//2,w//4,w//8,w//16,w//32]
+                # input_sizes = [w//2,w//4,w//8,w//16,w//32]
                 # inputs = [uv[:,:3,...].clone().detach()]
                 # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
                 # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
@@ -80,7 +77,7 @@ def train(generator,feat_extractor,dataloader):
                 # output = generator(inputs)
 
                 # Get output FG
-                # output_mask = output[:,3,...].unsqueeze(0)
+                output_mask = output[:,3,...].unsqueeze(0)
 
                 # Get output features
                 output=output[:,:3,...]
@@ -97,31 +94,33 @@ def train(generator,feat_extractor,dataloader):
                 uv_mask = uv[:,3,...].unsqueeze(0)
 
                 # Get FG MSE Loss
-                # fg_loss = mse_loss(output_mask,uv_mask)
-                # fg_weight = args.foreground_weight
+                fg_loss = mse_loss(output_mask,uv_mask)
+                fg_weight = args.foreground_weight
                 
                 # Get loss
-                # loss = (style_loss * style_weight) + (fg_loss * fg_weight)
-                loss = (style_loss * style_weight)
+                loss = (style_loss * style_weight) + (fg_loss * fg_weight)
+                # loss = (style_loss * style_weight)
                 avg_loss+=loss
             
             avg_loss/= len(uvs)
             avg_loss.backward()
             optim.step()
 
-            if avg_loss < lowest_loss:
-                lowest_loss = avg_loss.item() 
-                best_model = copy.deepcopy(generator.state_dict())
-                best_iter = i
-
+            # if avg_loss < lowest_loss:
+            #     lowest_loss = avg_loss.item() 
+            #     best_model = copy.deepcopy(generator.state_dict())
+            #     best_iter = i
+        scheduler.step()
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
 
-    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
+    # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
+    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
-    torch.save(best_model,gen_path)
+    # torch.save(best_model,gen_path)
+    torch.save(generator.state_dict(),gen_path)
     print('Model saved in {}'.format(gen_path))
 
     losses_file = 'losses.png'
