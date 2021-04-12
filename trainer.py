@@ -77,7 +77,7 @@ def train(generator,feat_extractor,dataloader):
                 # output = generator(inputs)
 
                 # Get output FG
-                output_mask = output[:,3,...].unsqueeze(0)
+                # output_mask = output[:,3,...].unsqueeze(0)
 
                 # Get output features
                 output=output[:,:3,...]
@@ -91,33 +91,34 @@ def train(generator,feat_extractor,dataloader):
                     style_weight=args.style_weight
 
                 # Get uv FG
-                uv_mask = uv[:,3,...].unsqueeze(0)
+                # uv_mask = uv[:,3,...].unsqueeze(0)
 
                 # Get FG MSE Loss
-                fg_loss = mse_loss(output_mask,uv_mask)
-                fg_weight = args.foreground_weight
+                # fg_loss = mse_loss(output_mask,uv_mask)
+                # fg_weight = args.foreground_weight
                 
                 # Get loss
-                loss = (style_loss * style_weight) + (fg_loss * fg_weight)
-                # loss = (style_loss * style_weight)
+                # loss = (style_loss * style_weight) + (fg_loss * fg_weight)
+                loss = (style_loss * style_weight)
                 avg_loss+=loss
             
             avg_loss/= len(uvs)
             avg_loss.backward()
             optim.step()
 
-            # if avg_loss < lowest_loss:
-            #     lowest_loss = avg_loss.item() 
-            #     best_model = copy.deepcopy(generator.state_dict())
-            #     best_iter = i
-        # scheduler.step()
+            if avg_loss < lowest_loss:
+                lowest_loss = avg_loss.item() 
+                best_model = copy.deepcopy(generator.state_dict())
+                best_iter = i
+
         if(i%checkpoint==checkpoint-1):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
-
-    # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
-    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
+        
+    print("Lowest Loss: {}".format(lowest_loss))
+    model_file = '{}_iter{}.pth'.format(best_model.__class__.__name__,best_iter)
+    # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
     # torch.save(best_model,gen_path)
     torch.save(generator.state_dict(),gen_path)
