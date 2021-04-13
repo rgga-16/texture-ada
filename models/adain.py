@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from models.feedforward import FeedForwardNetwork
-from models.texture_transfer_models import VGG19
+from models.texture_transfer_models import VGG19,Pyramid2D
 
 
 class AdaIN(nn.Module):
@@ -96,15 +96,15 @@ Code borrowed from: https://github.com/naoto0804/pytorch-AdaIN
 class Network_AdaIN(nn.Module):
     def __init__(self):
         super(Network_AdaIN,self).__init__()
-        self.encoder = nn.Sequential(*list(VGG19().features.children())[:21])
+        self.encoder = nn.Sequential(*list(VGG19().features.children())[:19])
 
         # Download VGG19 normalized.
         for param in self.encoder.parameters():
             param.requires_grad = False
 
         self.decoder = nn.Sequential(
-            nn.ReflectionPad2d((1, 1, 1, 1)),
-            nn.Conv2d(512, 256, (3, 3)),
+            # nn.ReflectionPad2d((1, 1, 1, 1)),
+            # nn.Conv2d(512, 256, (3, 3)),
             nn.ReLU(),
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.ReflectionPad2d((1, 1, 1, 1)),
@@ -144,6 +144,57 @@ class Network_AdaIN(nn.Module):
         output = self.decoder(x_feats)
 
         return output
+
+class Pyramid2D_Adain(Pyramid2D):
+    def __init__(self, ch_in, ch_step, ch_out, n_samples):
+        super().__init__(ch_in=ch_in, ch_step=ch_step, ch_out=ch_out, n_samples=n_samples)
+    
+    def forward(self, z):
+        # Assuming image size = 256x256
+        #                       z[0]        z[1]        z[2]        z[3]     z[4]       z[5]   
+        # z is list of tensors [(3x256x256),(3x128x128),(3x64x64),(3x32x32),(3x16x16),(3x8x8)]
+
+        y = self.cb1_1(z[5]) # z[5]=(3x8x8) => y=(8x8x8)
+        y = self.up1(y) # y=(8x8x8) => y=(8x16x16)
+
+        # z[4]=(3x16x16) => (8x16x16)
+        # y cat z[4] => y=(16x16x16)
+        y = torch.cat((y,self.cb2_1(z[4])),1)
+
+        y = self.cb2_2(y) # y=(16x16x16) => (16x16x16)
+        y = self.up2(y) # y=(16x32x32)
+
+        # z[3]=(3x32x32) => (8x32x32)
+        # y cat z[3] => (24x32x32)
+        y = torch.cat((y,self.cb3_1(z[3])),1)
+
+        y = self.cb3_2(y) # y=(24x32x32) => (24x32x32)
+        y = self.up3(y) # y=(24x32x32) => (24x64x64)
+
+        # z[2]=(3x64x64) => (8x64x64)
+        # y cat z[2] => (32x64x64)
+        y = torch.cat((y,self.cb4_1(z[2])),1)
+
+        y = self.cb4_2(y) # y=(32x64x64) => (32x64x64)
+        # Insert adain here??
+        y = self.up4(y) # y=(32x128x128)
+        # Or insert adain here??
+
+        # z[1]=(3x128x128) => (8x128x128)
+        # y cat z[1] => (40x128x128)
+        y = torch.cat((y,self.cb5_1(z[1])),1)
+
+
+        y = self.cb5_2(y) # y=(40x128x128) => (40x128x128)
+        y = self.up5(y) # y=(40x128x128) => (40x256x256)
+
+        # z[0]=(3x256x256) => (8x256x256)
+        # y cat z[0] => (48x256x256)
+        y = torch.cat((y,self.cb6_1(z[0])),1)
+
+        y = self.cb6_2(y) # y=(48x256x256) => (48x256x256)
+        y = self.last_conv(y) # y=(48x256x256) => (3x256x256)
+        return y
 
 
 """
