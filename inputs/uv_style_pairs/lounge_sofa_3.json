@@ -1,0 +1,18 @@
+{
+    "uv_dir": "./inputs/uv_maps/lounge_sofa/smart_project",
+    "style_dir": "./inputs/style_images/tiled",
+    "uv_style_pairs" : {
+        "left_arm_uv.png":"chair-2_tiled.png",
+        "right_arm_uv.png":"chair-2_tiled.png",
+        "left_backseat_uv.png":"chair-2_tiled.png",
+        "mid_backseat_uv.png":"chair-2_tiled.png",
+        "right_backseat_uv.png":"chair-2_tiled.png",
+        "left_base_uv.png":"chair-2_tiled.png",
+        "right_base_uv.png":"chair-2_tiled.png",
+        "left_seat_uv.png":"chair-2_tiled.png",
+        "mid_seat_uv.png":"chair-2_tiled.png",
+        "right_seat_uv.png":"chair-2_tiled.png"
+    }
+
+
+}

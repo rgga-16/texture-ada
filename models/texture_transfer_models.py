@@ -70,7 +70,7 @@ class Up_In2D(nn.Module):
         return x
 
 class Pyramid2D(nn.Module):
-    def __init__(self, ch_in=3, ch_step=8, n_samples=6):
+    def __init__(self, ch_in=3, ch_step=8, ch_out=3, n_samples=6):
         super(Pyramid2D, self).__init__()
 
         self.conv_blocks = []
@@ -111,7 +111,7 @@ class Pyramid2D(nn.Module):
 
         self.cb6_1 = Conv_block2D(ch_in,ch_step)
         self.cb6_2 = Conv_block2D(6*ch_step,6*ch_step) # ch_step=48
-        self.last_conv = nn.Conv2d(6*ch_step, 4, 1, padding=0, bias=True)
+        self.last_conv = nn.Conv2d(6*ch_step, ch_out, 1, padding=0, bias=True)
 
     # def forward(self,z):
     #     y = None

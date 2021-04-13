@@ -28,7 +28,7 @@ def main():
     start=time.time()
 
     # Setup generator model 
-    net = Pyramid2D(ch_in=3, ch_step=8).to(device)
+    net = Pyramid2D(ch_in=3, ch_step=8,ch_out=3).to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
