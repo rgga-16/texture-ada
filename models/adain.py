@@ -96,15 +96,15 @@ Code borrowed from: https://github.com/naoto0804/pytorch-AdaIN
 class Network_AdaIN(nn.Module):
     def __init__(self):
         super(Network_AdaIN,self).__init__()
-        self.encoder = nn.Sequential(*list(VGG19().features.children())[:19])
+        self.encoder = nn.Sequential(*list(VGG19().features.children())[:21])
 
         # Download VGG19 normalized.
         for param in self.encoder.parameters():
             param.requires_grad = False
 
         self.decoder = nn.Sequential(
-            # nn.ReflectionPad2d((1, 1, 1, 1)),
-            # nn.Conv2d(512, 256, (3, 3)),
+            nn.ReflectionPad2d((1, 1, 1, 1)),
+            nn.Conv2d(512, 256, (3, 3)),
             nn.ReLU(),
             nn.Upsample(scale_factor=2, mode='nearest'),
             nn.ReflectionPad2d((1, 1, 1, 1)),

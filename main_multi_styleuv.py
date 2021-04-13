@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 
-import os, copy, time, datetime ,json
+import os, copy, time, datetime ,json,itertools
 
 
 def main():
@@ -46,6 +46,9 @@ def main():
 
     data = json.load(open(args.uv_style_pairs))
     uv_style_pairs = data['uv_style_pairs']
+
+    uv_style_trainpairs = dict(itertools.islice(uv_style_pairs.items(),6))
+    uv_style_testpairs = dict(itertools.islice(uv_style_pairs.items(),4))
     
     # Setup dataset for training
     dataset = UV_Style_Paired_Dataset(
@@ -53,7 +56,7 @@ def main():
         style_dir=args.style_dir,
         uv_sizes=args.uv_train_sizes,
         style_size=args.style_size,
-        uv_style_pairs=uv_style_pairs
+        uv_style_pairs=uv_style_trainpairs
     )
 
     # Setup dataloader for training
@@ -62,18 +65,7 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
-    # test_uv_files = uv_style_pairs.keys()
-
-    # for uv_file in test_uv_files:
-    #     test_uvs = []
-    #     for test_size in args.uv_test_sizes:
-    #         uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
-    #         test_uvs.append(uv)
-    #     output_path = os.path.join(output_folder,uv_file)
-
-    #     test(net,test_uvs,gen_path,output_path)
-    
-    test_files = uv_style_pairs
+    test_files = uv_style_testpairs
 
     for uv_file,style_file in test_files.items():
         test_ = []
