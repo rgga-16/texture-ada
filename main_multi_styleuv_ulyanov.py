@@ -5,7 +5,7 @@ from args import args
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, utils 
-from models.texture_transfer_models import VGG19, Pyramid2D
+from models.texture_transfer_models import VGG19, Pyramid2D_custom
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
 from trainer import train_ulyanov
@@ -28,7 +28,7 @@ def main():
     start=time.time()
 
     # Setup generator model 
-    net = Pyramid2D(ch_in=3, ch_step=64,ch_out=3).to(device)
+    net = Pyramid2D_custom(ch_in=3, ch_step=64,ch_out=3).to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
