@@ -5,11 +5,11 @@ from args import args
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, utils 
-from models.texture_transfer_models import VGG19, Pyramid2D_custom
+from models.texture_transfer_models import VGG19, Pyramid2D_custom, Pyramid2D_adain
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
 from trainer import train_ulyanov
-from tester import test_ulyanov
+from tester import test_ulyanov, test_ulyanov_adain
 
 import numpy as np
 import torch
@@ -28,7 +28,7 @@ def main():
     start=time.time()
 
     # Setup generator model 
-    net = Pyramid2D_custom(ch_in=3, ch_step=64,ch_out=3).to(device)
+    net = Pyramid2D_adain(ch_in=3, ch_step=64,ch_out=3).to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
@@ -61,16 +61,21 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train_ulyanov(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
-    test_uv_files = uv_style_pairs.keys()
+    test_files = uv_style_pairs.items()
 
-    for uv_file in test_uv_files:
+    for uv_file,style_file in test_files:
         test_uvs = []
+        
         for test_size in args.uv_test_sizes:
             uv = utils.image_to_tensor(utils.load_image(os.path.join(args.uv_dir,uv_file)),image_size=test_size)
             test_uvs.append(uv)
+        # COMMENT THIS OUT IF NOT INCLUDING STYLE AS INPUT
+        style = utils.image_to_tensor(utils.load_image(os.path.join(args.style_dir,style_file)),image_size=args.style_size)
+        test_uvs.append(style)
+        ###################
         output_path = os.path.join(output_folder,uv_file)
 
-        test_ulyanov(net,test_uvs,gen_path,output_path)
+        test_ulyanov_adain(net,test_uvs,gen_path,output_path)
 
     
     # record time elapsed and configurations

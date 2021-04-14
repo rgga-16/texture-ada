@@ -5,63 +5,24 @@ from models.feedforward import FeedForwardNetwork
 from models.texture_transfer_models import VGG19,Pyramid2D
 
 
-class AdaIN(nn.Module):
-    def __init__(self):
-        super(AdaIN,self).__init__()
-    
-    def forward(self,X,Y):
-        X_aligned = self.adain(X,Y)
-        return X_aligned
-    
-    @staticmethod
-    def adain(x,y):
-        """
-        Aligns mean and std of feature maps x to that of feature maps y.
-        Based on the AdaIN formula introduced by Huang & Belongie (2017) in their paper,
-        "Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization".
-        Link: https://arxiv.org/pdf/1703.06868.pdf
+# def adain(x,y):
+#         b_x,c_x,w_x,h_x = x.shape
+#         b_y,c_y,w_y,h_y = y.shape
+#         assert b_x*c_x == b_y*c_y
 
-        :param x: (b,c,h_x,w_x), feature maps x
-        :param x: (b,c,h_y,w_y), feature maps y
-        :return: (b,c,h_x,w_x), feature maps x with mean and variance matching y
-        """
-        b_x,c_x,w_x,h_x = x.shape
-        b_y,c_y,w_y,h_y = y.shape
+#         x_feats = x.view(b_x,c_x,w_x*h_x)
+#         x_mean = torch.mean(x_feats,dim=2,keepdim=True)
+#         x_std = torch.std(x_feats,dim=2,keepdim=True)
 
-        assert b_x*c_x == b_y*c_y
+#         y_feats = y.view(b_y,c_y,w_y*h_y)
+#         y_mean = torch.mean(y_feats,dim=2,keepdim=True)
+#         y_std = torch.std(y_feats,dim=2,keepdim=True)
 
-        x_feats = x.view(b_x,c_x,w_x*h_x)
-        x_mean = torch.mean(x_feats,dim=2,keepdim=True)
-        x_std = torch.std(x_feats,dim=2,keepdim=True)
+#         normalized_x = (x_feats - x_mean) / x_std
+#         output_feats = (normalized_x * y_std) + y_mean
 
-        y_feats = y.view(b_y,c_y,w_y*h_y)
-        y_mean = torch.mean(y_feats,dim=2,keepdim=True)
-        y_std = torch.std(y_feats,dim=2,keepdim=True)
-
-        normalized_x = (x_feats - x_mean) / x_std
-        output_feats = (normalized_x * y_std) + y_mean
-
-        output = output_feats.view(b_x,c_x,w_x,h_x)
-        return output
-
-def adain(x,y):
-        b_x,c_x,w_x,h_x = x.shape
-        b_y,c_y,w_y,h_y = y.shape
-        assert b_x*c_x == b_y*c_y
-
-        x_feats = x.view(b_x,c_x,w_x*h_x)
-        x_mean = torch.mean(x_feats,dim=2,keepdim=True)
-        x_std = torch.std(x_feats,dim=2,keepdim=True)
-
-        y_feats = y.view(b_y,c_y,w_y*h_y)
-        y_mean = torch.mean(y_feats,dim=2,keepdim=True)
-        y_std = torch.std(y_feats,dim=2,keepdim=True)
-
-        normalized_x = (x_feats - x_mean) / x_std
-        output_feats = (normalized_x * y_std) + y_mean
-
-        output = output_feats.view(b_x,c_x,w_x,h_x)
-        return output
+#         output = output_feats.view(b_x,c_x,w_x,h_x)
+#         return output
 
 def calc_mean_std(feat, eps=1e-5):
     # eps is a small value added to the variance to avoid divide-by-zero.
@@ -98,7 +59,6 @@ class Network_AdaIN(nn.Module):
         super(Network_AdaIN,self).__init__()
         self.encoder = nn.Sequential(*list(VGG19().features.children())[:21])
 
-        # Download VGG19 normalized.
         for param in self.encoder.parameters():
             param.requires_grad = False
 

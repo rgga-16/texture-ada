@@ -70,3 +70,30 @@ def test_ulyanov(generator,input,gen_path,output_path):
         output_image.putalpha(mask)
         output_image.save(output_path_,'PNG')
         print('Saving image as {}'.format(output_path_))
+
+
+def test_ulyanov_adain(generator,input,gen_path,output_path):
+    generator.eval()
+    generator.cuda(device=D.DEVICE())
+
+    generator.load_state_dict(torch.load(gen_path))
+    
+    # uvs = input
+    uvs=input[:-1]
+    style=input[-1]
+    for uv in uvs:
+        _,_,w = uv.shape
+        input_sizes = [w//2,w//4,w//8,w//16,w//32]
+        inputs = [uv[:3,...].unsqueeze(0).clone().detach()]
+        inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
+        uv_mask = uv[3,...].expand(1,1,-1,-1).clone().detach()
+        style_input = style[:3,...].unsqueeze(0).clone().detach()
+        with torch.no_grad():
+            output = generator(inputs,style_input)
+
+        output_path_ = '{}_{}.png'.format(output_path,w)
+        output_image = utils.tensor_to_image(output,image_size=args.output_size)
+        mask = utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
+        output_image.putalpha(mask)
+        output_image.save(output_path_,'PNG')
+        print('Saving image as {}'.format(output_path_))

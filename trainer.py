@@ -159,7 +159,6 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
             
             style_feats = st.get_features(feat_extractor,style,is_style=True,style_layers=style_layers)
            
-
             mse_loss = torch.nn.MSELoss()
 
             avg_loss=0
@@ -170,9 +169,9 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
                 input_sizes = [w//2,w//4,w//8,w//16,w//32]
                 inputs = [uv[:,:3,...].clone().detach()]
                 inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
-
+                style_input = style.clone().detach()
                 # Get output
-                output = generator(inputs)
+                output = generator(inputs,style_input)
 
                 # Get output features
                 output=output[:,:3,...]
@@ -204,7 +203,7 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
         
     print("Lowest Loss at epoch {}: {}".format(best_iter,lowest_loss))
 
-    model_file = '{}_iter{}.pth'.format(best_model.__class__.__name__,best_iter)
+    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
     # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
     # torch.save(best_model,gen_path)
