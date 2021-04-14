@@ -60,24 +60,27 @@ class Conv_block2D(nn.Module):
         super(Conv_block2D, self).__init__()
 
         self.conv1 = nn.Conv2d(n_ch_in, n_ch_out, 3, padding=0, bias=True)
-        self.bn1 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
+        # self.bn1 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
         self.conv2 = nn.Conv2d(n_ch_out, n_ch_out, 3, padding=0, bias=True)
-        self.bn2 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
+        # self.bn2 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
         self.conv3 = nn.Conv2d(n_ch_out, n_ch_out, 1, padding=0, bias=True)
-        self.bn3 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
+        # self.bn3 = nn.InstanceNorm2d(num_features=n_ch_out,momentum=m)
 
     def forward(self, x):
         # Pad x with its top and bottom pixel layers
         x = torch.cat((x[:,:,-1,:].unsqueeze(2),x,x[:,:,0,:].unsqueeze(2)),2)
         # Pad x with its left and right pixel layers
         x = torch.cat((x[:,:,:,-1].unsqueeze(3),x,x[:,:,:,0].unsqueeze(3)),3)
-        x = F.leaky_relu(self.bn1(self.conv1(x)))
+        # x = F.leaky_relu(self.bn1(self.conv1(x)))
+        x = F.leaky_relu(self.conv1(x))
          # Pad x with its top and bottom pixel layers
         x = torch.cat((x[:,:,-1,:].unsqueeze(2),x,x[:,:,0,:].unsqueeze(2)),2)
         # Pad x with its left and right pixel layers
         x = torch.cat((x[:,:,:,-1].unsqueeze(3),x,x[:,:,:,0].unsqueeze(3)),3)
-        x = F.leaky_relu(self.bn2(self.conv2(x)))
-        x = F.leaky_relu(self.bn3(self.conv3(x)))
+        # x = F.leaky_relu(self.bn2(self.conv2(x)))
+        # x = F.leaky_relu(self.bn3(self.conv3(x)))
+        x = F.leaky_relu(self.conv2(x))
+        x = F.leaky_relu(self.conv3(x))
         return x
 
 #Up-sampling + instance normalization block
@@ -86,10 +89,11 @@ class Up_In2D(nn.Module):
         super(Up_In2D, self).__init__()
 
         self.up = nn.Upsample(scale_factor=2, mode='nearest')
-        self.inst_norm = nn.InstanceNorm2d(num_features=n_ch)
+        # self.inst_norm = nn.InstanceNorm2d(num_features=n_ch)
 
     def forward(self, x):
-        x = self.inst_norm(self.up(x))
+        # x = self.inst_norm(self.up(x))
+        x = self.up(x)
         return x
 
 class Pyramid2D(nn.Module):
