@@ -30,12 +30,15 @@ class UV_Style_Paired_Dataset(Dataset):
         return len(self.style_files)
 
     def __getitem__(self, index):
+        
+        style_im = self.style_files[index]
+        style = utils.image_to_tensor(utils.load_image(style_im),image_size=self.style_size).detach()
+        style = style[:3,...]
+
         uv_map_set = []
         for uv_size in self.uv_sizes:
             uv_map_set.append(utils.image_to_tensor(utils.load_image(self.uv_files[index]),image_size = uv_size).detach())
-        
-        style = utils.image_to_tensor(utils.load_image(self.style_files[index]),image_size=self.style_size).detach()
-        style = style[:3,...]
+
         sample = {'style': style, 'uvs':uv_map_set}
         
         return sample
