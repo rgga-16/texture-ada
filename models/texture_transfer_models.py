@@ -83,6 +83,28 @@ class Conv_block2D(nn.Module):
         # x = F.leaky_relu(self.conv3(x))
         return x
 
+class Conv_block2D_adain(nn.Module):
+    def __init__(self, n_ch_in, n_ch_out, m=0.1):
+        super(Conv_block2D_adain, self).__init__()
+
+        self.conv1 = nn.Conv2d(n_ch_in, n_ch_out, 3, padding=0, bias=True)
+        self.conv2 = nn.Conv2d(n_ch_out, n_ch_out, 3, padding=0, bias=True)
+        self.conv3 = nn.Conv2d(n_ch_out, n_ch_out, 1, padding=0, bias=True)
+
+    def forward(self, x):
+        # Pad x with its top and bottom pixel layers
+        x = torch.cat((x[:,:,-1,:].unsqueeze(2),x,x[:,:,0,:].unsqueeze(2)),2)
+        # Pad x with its left and right pixel layers
+        x = torch.cat((x[:,:,:,-1].unsqueeze(3),x,x[:,:,:,0].unsqueeze(3)),3)
+        x = F.leaky_relu(self.conv1(x))
+         # Pad x with its top and bottom pixel layers
+        x = torch.cat((x[:,:,-1,:].unsqueeze(2),x,x[:,:,0,:].unsqueeze(2)),2)
+        # Pad x with its left and right pixel layers
+        x = torch.cat((x[:,:,:,-1].unsqueeze(3),x,x[:,:,:,0].unsqueeze(3)),3)
+        x = F.leaky_relu(self.conv2(x))
+        x = F.leaky_relu(self.conv3(x))
+        return x
+
 #Up-sampling + instance normalization block
 class Up_In2D(nn.Module):
     def __init__(self, n_ch):
@@ -94,6 +116,16 @@ class Up_In2D(nn.Module):
     def forward(self, x):
         x = self.inst_norm(self.up(x))
         # x = self.up(x)
+        return x
+
+class Up_In2D_adain(nn.Module):
+    def __init__(self, n_ch):
+        super(Up_In2D_adain, self).__init__()
+
+        self.up = nn.Upsample(scale_factor=2, mode='nearest')
+
+    def forward(self, x):
+        x = self.up(x)
         return x
 
 class Pyramid2D(nn.Module):
@@ -240,14 +272,14 @@ class Pyramid2D_adain(nn.Module):
 
         for i in range(n_samples):
             running_step = ch_step * (i+1)
-            list_ = [Conv_block2D(ch_in,running_step) if i==0 else Conv_block2D(running_step,running_step)]
+            list_ = [Conv_block2D_adain(ch_in,running_step) if i==0 else Conv_block2D_adain(running_step,running_step)]
             if i != n_samples-1:
-                upsamples.append(Up_In2D(running_step))
+                upsamples.append(Up_In2D_adain(running_step))
             conv_block = nn.Sequential(*list_)
             conv_blocks.append(conv_block)
             if i > 0:
                 conv_entries.append(
-                    Conv_block2D(ch_in,ch_step)
+                    Conv_block2D_adain(ch_in,ch_step)
                 )
 
         self.encoder = nn.Sequential(*list(VGG19().features.children())[:18])
