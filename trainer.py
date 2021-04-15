@@ -135,21 +135,94 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
     iters = args.epochs
     generator.train()
     generator.cuda(device=D.DEVICE())
-    
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-
     mse_loss = torch.nn.MSELoss()
-
-    
     loss_history=[]
     epoch_chkpts=[]
-
     lowest_loss = np.inf
     best_model = generator.state_dict()
-
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
+    for i in range(iters):
+        for _, sample in enumerate(dataloader):
+            optim.zero_grad()
 
+            uvs = sample['uvs']
+            style = sample['style']
+            
+            style_feats = st.get_features(feat_extractor,style,is_style=True,style_layers=style_layers)
+           
+            mse_loss = torch.nn.MSELoss()
+
+            avg_loss=0
+
+            for uv in uvs:
+                # Setup inputs 
+                _,_,_,w = uv.shape
+                input_sizes = [w//2,w//4,w//8,w//16,w//32]
+                inputs = [uv[:,:3,...].clone().detach()]
+                inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
+                style_input = style.clone().detach()
+                # Get output
+                # output = generator(inputs,style_input)
+                output = generator(inputs)
+
+                # Get output features
+                output=output[:,:3,...]
+                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
+
+                # Get style loss
+                style_loss=0
+                for s in style_layers.values():
+                    diff = mse_loss(out_feats[s],style_feats[s])
+                    style_loss += s_layer_weights[s] * diff
+
+                # Get loss
+                loss = (style_loss * args.style_weight)
+                avg_loss+=loss
+            
+            avg_loss/= len(uvs)
+            avg_loss.backward()
+            optim.step()
+
+            if avg_loss < lowest_loss:
+                lowest_loss = avg_loss.item() 
+                best_model = copy.deepcopy(generator.state_dict())
+                best_iter = i
+
+        if(i%checkpoint==checkpoint-1):
+            print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
+            loss_history.append(avg_loss)
+            epoch_chkpts.append(i)
+        
+    print("Lowest Loss at epoch {}: {}".format(best_iter,lowest_loss))
+
+    model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
+    # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
+    gen_path = os.path.join(args.output_dir,model_file)
+    torch.save(best_model,gen_path)
+    # torch.save(generator.state_dict(),gen_path)
+    print('Model saved in {}'.format(gen_path))
+
+    losses_file = 'losses.png'
+    losses_path = os.path.join(args.output_dir,losses_file)
+    logger.log_losses(loss_history,epoch_chkpts,losses_path)
+    print('Loss history saved in {}'.format(losses_path))
+    return gen_path
+
+def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
+    lr = args.lr
+    iters = args.epochs
+    generator.train()
+    generator.cuda(device=D.DEVICE())
+    optim = torch.optim.Adam(generator.parameters(),lr=lr)
+    mse_loss = torch.nn.MSELoss()
+    loss_history=[]
+    epoch_chkpts=[]
+    lowest_loss = np.inf
+    best_model = generator.state_dict()
+    style_layers = D.STYLE_LAYERS.get()
+    s_layer_weights = D.SL_WEIGHTS.get()
     for i in range(iters):
         for _, sample in enumerate(dataloader):
             optim.zero_grad()
@@ -206,8 +279,8 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
     model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
     # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
-    # torch.save(best_model,gen_path)
-    torch.save(generator.state_dict(),gen_path)
+    torch.save(best_model,gen_path)
+    # torch.save(generator.state_dict(),gen_path)
     print('Model saved in {}'.format(gen_path))
 
     losses_file = 'losses.png'
@@ -215,4 +288,3 @@ def train_ulyanov(generator,feat_extractor,dataloader,checkpoint=5):
     logger.log_losses(loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     return gen_path
-

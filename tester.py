@@ -30,9 +30,6 @@ def test(generator,input,gen_path,output_path):
     for uv in uvs:
         _,_,w = uv.shape
         input_sizes = [w//2,w//4,w//8,w//16,w//32]
-        # inputs = [uv[:3,...].unsqueeze(0).detach()]
-        # inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
-        # inputs.extend([F.interpolate(style,sz,mode='nearest') for sz in input_sizes])
         inputs = uv[:3,...].unsqueeze(0).clone().detach()
         uv_mask = uv[3,...].expand(1,1,-1,-1).clone().detach()
         input_style = style[:3,...].unsqueeze(0).clone().detach()
@@ -69,6 +66,35 @@ def test_ulyanov(generator,input,gen_path,output_path):
         mask = utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
         output_image.putalpha(mask)
         output_image.save(output_path_,'PNG')
+
+        colors = ['r','g','b']
+        for i in range(len(colors)):
+            output_1channel = output.clone()[:,i,...]
+
+            tensor = None 
+            if colors[i]=='r':
+                r = output_1channel
+                g = torch.zeros_like(r)
+                b = torch.zeros_like(r)
+                tensor = torch.stack([r,g,b],dim=1)
+            
+            elif colors[i]=='g':
+                g = output_1channel
+                r = torch.zeros_like(g) 
+                b = torch.zeros_like(g)
+                tensor = torch.stack([r,g,b],dim=1)
+            
+            elif colors[i]=='b':
+                b = output_1channel
+                r = torch.zeros_like(b)
+                g = torch.zeros_like(b) 
+                tensor = torch.stack([r,g,b],dim=1)
+
+            output_1channel_image = utils.tensor_to_image(tensor,image_size = args.output_size)
+            output_1channel_image.putalpha(mask)
+            output_1channel_image.save('{}_{}.png'.format(output_path_[:-4],colors[i]),'PNG')
+
+
         print('Saving image as {}'.format(output_path_))
 
 
