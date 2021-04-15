@@ -1,0 +1,12 @@
+{
+    "uv_dir": "./inputs/uv_maps/lounge_sofa/smart_project",
+    "style_dir": "./data/describable textures dataset/images/frilly",
+    "uv_style_pairs" : {
+        "left_arm_uv.png":"frilly_0001.jpg",
+        "right_arm_uv.png":"frilly_0006.jpg",
+        "left_backseat_uv.png":"frilly_0095.jpg",
+        "right_backseat_uv.png":"frilly_0077.jpg"
+    }
+
+
+}
