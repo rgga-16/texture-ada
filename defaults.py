@@ -5,10 +5,15 @@ import torchvision.transforms as transforms
 
 from enum import Enum
 import pathlib as p
+import datetime
 
 
 
 class DEFAULTS(Enum):
+
+    DATE_ = datetime.datetime.today().strftime('%m-%d-%y %H-%M-%S')
+
+
     DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
 
@@ -73,6 +78,10 @@ class DEFAULTS(Enum):
 
     def get(self):
         return self.value
+    
+    @classmethod
+    def DATE(cls):
+        return cls.DATE_.value
     
     @classmethod
     def DEVICE(cls):
