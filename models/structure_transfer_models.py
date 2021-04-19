@@ -26,25 +26,31 @@ def dot(x,y,is_sparse=False):
 class Pixel2MeshModel(nn.Module):
     def __init__(self, init_shape,
                 camera_f=[248., 248.],camera_c=[111.5, 111.5],
-                mesh_pos=[0., 0., -0.8]):
+                mesh_pos=[0., 0., -0.8],
+                # 960 = 512 + 256 + 128 + 64
+                n_image_feats=960):
         super(Pixel2MeshModel,self).__init__()
 
         self.init_verts = nn.Parameter(init_shape.verts,requires_grad=False)
 
+        # n_verts, 3
         n_verts,n_coord_channels = self.init_verts.shape
         self.coord_dim = n_coord_channels
 
         self.hidden_dim = 192
         self.last_hidden_dim = 192
-        self.features_dim = 960+self.coord_dim
+
+        # 963 features
+        self.features_dim = n_image_feats+self.coord_dim
 
         # self.img_encoder = VGG16_Encoder(3)
         self.img_encoder = VGG16P2M(3).to(D.DEVICE()).eval()
 
-        # gcn1_out_dim = 
+        
         self.gcn_1 = GraphConvBottleneck(6,self.features_dim,self.hidden_dim,
                                         self.coord_dim,init_shape.adj_mat[0])
-        
+
+                                        # 6, 963+192=1155, 192, 3, adj_mat[1]
         self.gcn_2 = GraphConvBottleneck(6,self.features_dim+self.hidden_dim,self.hidden_dim,
                                         self.coord_dim,init_shape.adj_mat[1])
 
@@ -54,7 +60,7 @@ class Pixel2MeshModel(nn.Module):
         # self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.unpool_idx[0])
         # self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.unpool_idx[1])
         self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.edges[0])
-        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.edges[1])
+        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.edges[0])
         
 
         self.projection = GraphProjection(mesh_pos=mesh_pos,
@@ -175,6 +181,11 @@ class GraphConvolutionLayer(nn.Module):
 
         self.bias = nn.Parameter(torch.zeros(out_feats).to(D.DEVICE()))
         self.reset_parameters()
+    
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_feats) + ' -> ' \
+               + str(self.out_feats) + ')'
 
     def reset_parameters(self):
         # stdv = math.sqrt(6.0/ (self.weight.shape[0] + self.weight.shape[1]))
@@ -214,18 +225,10 @@ class GraphProjection(nn.Module):
         :param camera_c: 
         :param bound: 
         """
-        
         super(GraphProjection, self).__init__()
-        # mesh_pos =[0., 0., -0.8]
-        self.mesh_pos = mesh_pos
-
-        # camera_f = [248., 248.]
-        self.camera_f = camera_f
-
-        # camer_c = [111.5, 111.5]
-        self.camera_c = camera_c 
-
-
+        self.mesh_pos = mesh_pos # mesh_pos =[0., 0., -0.8]
+        self.camera_f = camera_f # camera_f = [248., 248.]
+        self.camera_c = camera_c # camer_c = [111.5, 111.5]
         self.bound=bound 
         if self.bound != 0:
             self.threshold = Threshold(bound, bound)
@@ -252,8 +255,6 @@ class GraphProjection(nn.Module):
         :param sample_points: [batch_size x num_points x 2], in range [-1, 1]
         :return: [batch_size x num_points x feat_dim]
         """
-
-        
         if tensorflow_mode:
             feature_shape = self.image_feature_shape(img_feature)
 
@@ -363,7 +364,9 @@ class GraphUnpoolingLayer(nn.Module):
 
         # input num verts is highest vertex idx
         self.in_n_verts = torch.max(unpool_idx).item()
-        self.out_n_verts = self.in_n_verts + len(unpool_idx)
+
+        len_ = len(unpool_idx)
+        self.out_n_verts = self.in_n_verts + len_
         print()
     
     def forward(self,vertices):
@@ -379,6 +382,11 @@ class GraphUnpoolingLayer(nn.Module):
         # Append new vertices to existing list of vertices
         updated_vertices = torch.cat([vertices,new_vertices],1)
         return updated_vertices
+    
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_n_verts) + ' -> ' \
+               + str(self.out_n_verts) + ')'
 
 
 class VGG16_Encoder(nn.Module):
