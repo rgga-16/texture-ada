@@ -63,7 +63,8 @@ if __name__ == '__main__':
     
     # lounge sofa
     meshes_dir = './inputs/shape_samples/lounge_sofa'
-    textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)'
+    # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)'
+    textures_dir = 'outputs/output_images/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2'
     mesh_texture_file_pairs = {
         'left_arm.obj':'left_arm_uv.png',
         'right_arm.obj':'right_arm_uv.png',
@@ -99,4 +100,4 @@ if __name__ == '__main__':
             renderer.apply_texture(obj,'SMART_PROJECT',texture_path)
 
         # renderer.render(save_path='//render_round_table_colorless_{}.png'.format(size))
-        render_gif(renderer,save_path='./outputs/renders/blender/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)/render_loungesofa_{}.gif'.format(size))
+        render_gif(renderer,save_path='./outputs/renders/blender/lounge_sofa/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2/render_loungesofa_{}.gif'.format(size))

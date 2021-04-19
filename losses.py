@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 
-from helpers import utils
+from helpers import image_utils
 from defaults import DEFAULTS as D
 
 class Normalization(nn.Module):
