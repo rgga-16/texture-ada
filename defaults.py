@@ -2,11 +2,13 @@
 import torch   
 import torchvision.transforms as transforms
 
+import numpy as np 
+import random 
+
 
 from enum import Enum
 import pathlib as p
 import datetime
-
 
 
 class DEFAULTS(Enum):

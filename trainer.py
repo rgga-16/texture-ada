@@ -1,6 +1,7 @@
 import torch
 from torchvision import transforms
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 from args import args
 
@@ -37,16 +38,9 @@ def train(generator,feat_extractor,dataloader):
     best_model = generator.state_dict()
 
     style_layers = D.STYLE_LAYERS.get()
-    # style_layers = {
-    #                                     '1': 'relu1_1',   # Style layers
-    #                                     '6': 'relu2_1',
-    #                                     '11' : 'relu3_1',
-    #                                     '20' : 'relu4_1',
-    #                                 }
+    # style_layers = {'1': 'relu1_1','6': 'relu2_1','11' : 'relu3_1','20' : 'relu4_1'}
     s_layer_weights = D.SL_WEIGHTS.get()
-    # s_layer_weights = {
-    #                         layer: 0.25 for layer in style_layers.values()
-    #                     }
+    # s_layer_weights = {layer: 0.25 for layer in style_layers.values()}
 
     for i in range(iters):
         for _, sample in enumerate(dataloader):
@@ -215,14 +209,20 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
     iters = args.epochs
     generator.train()
     generator.cuda(device=D.DEVICE())
+
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
     mse_loss = torch.nn.MSELoss()
+    writer = SummaryWriter('./runs/texture_transfer/tensorboard')
+
+
     loss_history=[]
     epoch_chkpts=[]
     lowest_loss = np.inf
     best_model = generator.state_dict()
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
+
+
     for i in range(iters):
         for _, sample in enumerate(dataloader):
             optim.zero_grad()
@@ -273,14 +273,13 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
+            writer.add_scalar('Train Loss',avg_loss,global_step=i)
         
     print("Lowest Loss at epoch {}: {}".format(best_iter,lowest_loss))
 
     model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,best_iter)
-    # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
     torch.save(best_model,gen_path)
-    # torch.save(generator.state_dict(),gen_path)
     print('Model saved in {}'.format(gen_path))
 
     losses_file = 'losses.png'
