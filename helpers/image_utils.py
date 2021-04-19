@@ -11,17 +11,6 @@ import numpy as np
 import os 
 from args import args
 
-def normalize_vertices(vertices):
-        """
-        Normalize mesh vertices into a unit cube centered at zero.
-        """
-        vertices = vertices - vertices.min(0)[0][None, :]
-        vertices /= torch.abs(vertices).max()
-        vertices *= 2
-        vertices -= vertices.max(0)[0][None, :] / 2
-        return vertices
-
-
 # Preprocesses image and converts it to a Tensor
 def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
 
@@ -37,17 +26,12 @@ def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=
         temp = tensor[:3,:,:]
         tensor[:3,:,:] = norm(temp)
 
-    # c,h,w = tensor.shape
-
-    # if(c > 3):
-    #     tensor = tensor[:3,:,:]
-    # tensor = tensor.unsqueeze(0)
     return tensor.to(device)
 
 # Converts tensor to an image
 def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
 
-    postb = transforms.Compose([
+    postprocessor = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((image_size,image_size)),
     ])
@@ -59,7 +43,7 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
         temp = tensor_[...,:3]
         tensor_[...,:3] = temp * np.array(D.NORM_STD.get()) + np.array(D.NORM_MEAN.get())
 
-    image = postb(np.uint8(tensor_*225))
+    image = postprocessor(np.uint8(tensor_*225))
     return image
 
 
@@ -70,7 +54,7 @@ def show_image(img):
     plt.axis('off')
     plt.show()
 
-# Loads a single image or multiple images
+# Loads a single image
 def load_image(filename,mode="RGBA"):
     img = Image.open(filename).convert(mode)
     return img
