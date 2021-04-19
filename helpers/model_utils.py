@@ -8,7 +8,6 @@ import kaolin as kal
 import numpy as np, random, math
 
 import os
-from args import args
 
 
 class NormalizePointcloud(object):

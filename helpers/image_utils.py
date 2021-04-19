@@ -9,7 +9,6 @@ from PIL import Image
 import numpy as np
 
 import os 
-from args import args
 
 # Preprocesses image and converts it to a Tensor
 def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):

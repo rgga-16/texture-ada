@@ -1,5 +1,4 @@
-import struct
-from kaolin.ops.mesh.trianglemesh import _base_sample_points_selected_faces
+
 import torch
 from torch import nn 
 from torch.nn import functional as F
@@ -10,8 +9,6 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 
-import losses
-import os 
 from args import args
 from helpers import visualizer
 from models import structure_transfer_models, texture_transfer_models
