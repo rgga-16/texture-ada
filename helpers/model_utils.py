@@ -43,7 +43,7 @@ class RandomRotate(object):
                 [math.cos(theta),-math.sin(theta),0],
                 [math.sin(theta),math.cos(theta),0], 
                 [0,0,1]
-            ])
+            ],device=D.DEVICE())
 
         pointcloud = torch.matmul(pointcloud,rot_matrix)
         return pointcloud
@@ -51,6 +51,7 @@ class RandomRotate(object):
 class AddNoise(object):
     def __call__(self,pointcloud):
         noise = torch.normal(mean=0.0,std=0.02,size=pointcloud.shape)
+        noise = noise.to(D.DEVICE())
         pointcloud = pointcloud+noise 
         return pointcloud
 
@@ -68,14 +69,17 @@ def load_mesh(filename):
     vertices = res.vertices
     faces = res.faces.long()
 
+    vertices=vertices.to(D.DEVICE())
+    faces = faces.to(D.DEVICE())
+
     vertices = normalize_vertices(vertices)
     adj = kal.ops.mesh.adjacency_matrix(vertices.shape[0],faces).clone()
 	
     return vertices,faces,adj
 
-def mesh_to_pointcloud(vertices,faces,device=D.DEVICE()):
+def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
     transformer = transforms.Compose([
-        SamplePoints(3000),
+        SamplePoints(n_points),
         NormalizePointcloud(),
         RandomRotate(),
         AddNoise()

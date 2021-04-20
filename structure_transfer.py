@@ -1,6 +1,7 @@
 
 import torch
-from torch import nn 
+from torch import nn
+from torch._C import device 
 from torch.nn import functional as F
 from torch.utils import data
 import torchvision
@@ -8,6 +9,7 @@ import torchvision
 import numpy as np
 import math
 from matplotlib import pyplot as plt
+import time
 
 from args import args
 from helpers import visualizer
@@ -34,37 +36,55 @@ def load_dat(filename):
     
     return fp_info
 
+
+SEED=5
+torch.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)  # if you are using multi-GPU.
+np.random.seed(SEED)  # Numpy module.
+random.seed(SEED)  # Python random module.
+torch.manual_seed(SEED)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
+
+def _init_fn(workder_id):
+    np.random.seed(int(SEED))
+
+n_points=2048
+
 # Setup dataset
 ##########################################################
-dataset= Pix3D()
-train_size = int(0.03 * dataset.__len__())
+dataset= Pix3D(n_points,category='chair')
+
+train_size = int(0.75 * dataset.__len__())
 test_size = dataset.__len__() - train_size 
 
 train_dataset, test_dataset = data.random_split(dataset,[train_size,test_size],
-                                                            generator = torch.Generator().manual_seed(0))
+                                                            generator = torch.Generator().manual_seed(SEED))
 
-print("Train dataset size: {}".format(len(train_dataset)))
-print("Test dataset size: {}".format(len(test_dataset)))
-train_loader = data.DataLoader(train_dataset,batch_size=16)
-test_loader = data.DataLoader(test_dataset,batch_size=64)
+train_loader = data.DataLoader(train_dataset,batch_size=16,worker_init_fn=_init_fn)
+test_loader = data.DataLoader(test_dataset,batch_size=16,worker_init_fn=_init_fn)
 ##########################################################
 
 # Setup model
 ##########################################################
-model = Pointnet_Autoencoder(n_points=3000).to(D.DEVICE())
+model = Pointnet_Autoencoder(n_points=n_points).to(D.DEVICE())
 
 ##########################################################
 
 # Training algorithm
 ##########################################################
 lr = 0.0001
-n_epochs = 5
-checkpoint = 10
+n_epochs = 3
+checkpoint = 4
+
 
 optimizer = torch.optim.Adam(model.parameters(),lr=lr)
-
-
+since = int(round(time.time()*1000))
+print('Start training')
 for epoch in range(n_epochs):
+    # print('Epoch {}'.format(epoch+1))
+    # print('='*10)
     model.train()
     running_loss=0.0
     for i, data_ in enumerate(train_loader,0):
@@ -74,9 +94,9 @@ for epoch in range(n_epochs):
 
         optimizer.zero_grad()
 
-        output, matrix3x3, matrix64x64 = model(pointcloud)
+        output = model(pointcloud)
         batch_size = pointcloud.shape[0]
-        loss = models.pointnet.pointcloud_autoencoder_losses(output,pointcloud,matrix3x3,matrix64x64,batch_size)
+        loss = models.pointnet.pointcloud_autoencoder_loss(output,pointcloud,batch_size)
     
         loss.backward()
         optimizer.step()
@@ -85,7 +105,8 @@ for epoch in range(n_epochs):
         if(i%checkpoint==checkpoint-1):
             print('[Epoch {} | Batch {}/{} ] Loss: {:.3f}'.format(epoch+1,i+1,len(train_loader),running_loss/checkpoint))
             running_loss=0.0
-
+time_elapsed = int(round(time.time()*1000)) - since
+print ('training time elapsed {}ms'.format(time_elapsed))
 
 model_file = '{}.pth'.format(model.__class__.__name__)
 gen_path = model_file
@@ -97,16 +118,16 @@ print('Model saved in {}'.format(gen_path))
 # Visualize final output
 ##########################################################
 
-pointclouds,images = iter(test_loader).next()
-test_pointcloud = pointclouds[0:3]
+pointclouds,images = iter(test_loader).next() #use train_loader to see if network overfits train data
+test_pointcloud = pointclouds[:2]
 
 model.eval()
 with torch.no_grad():
-    final_output,_,_ = model(test_pointcloud)
+    final_output = model(test_pointcloud)
 
 
 # Visualizing the final pointcloud
-for f, tp in zip (test_pointcloud,final_output):
+for tp, f in zip(test_pointcloud,final_output):
     visualizer.display_pointcloud(tp)
     visualizer.display_pointcloud(f)
 
