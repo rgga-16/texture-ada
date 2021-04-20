@@ -45,11 +45,15 @@ class UV_Style_Paired_Dataset(Dataset):
 
 
 class Pix3D(Dataset):
-    def __init__(self, json_path='./data/3d-models/Pix3D/pix3d.json') -> None:
+    def __init__(self, n_points,category:str=None,json_path='./data/3d-models/Pix3D/pix3d.json') -> None:
         super().__init__()
 
         self.root_dir = os.path.dirname(json_path)
         self.data = json.load(open(json_path))
+        self.n_points=n_points
+
+        if category is not None: 
+            self.data = [d for d in self.data if d['category'].lower()==category.lower()]
         print()
     
     def __len__(self):
@@ -65,7 +69,7 @@ class Pix3D(Dataset):
 
         # Preprocess model
         verts,faces,_ = model_utils.load_mesh(model_path)
-        pointcloud = model_utils.mesh_to_pointcloud(verts,faces)
+        pointcloud = model_utils.mesh_to_pointcloud(verts,faces,self.n_points)
 
         # Preprocess image
         image = image_utils.image_to_tensor(image_utils.load_image(image_path))
