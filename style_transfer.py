@@ -11,7 +11,7 @@ from models.texture_transfer_models import VGG19
 from args import args
 
 
-import helpers.utils as utils
+import helpers.image_utils as utils
 from defaults import DEFAULTS as D
 
 from PIL import Image
