@@ -30,7 +30,7 @@ def unwrap_method(method:str):
         elif method.lower()=='UNWRAP'.lower():
             bpy.ops.uv.unwrap()
         elif method.lower()=='CUBE_PROJECT'.lower():
-            bpy.ops.uv.cube_project(cube_size=1.0, 
+            bpy.ops.uv.cube_project(cube_size=5.0, 
                         correct_aspect=True, 
                         clip_to_bounds=True, 
                         scale_to_bounds=True) 
@@ -38,6 +38,9 @@ def unwrap_method(method:str):
             bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
                             align='POLAR_ZX', radius=1.0, correct_aspect=True, 
                             clip_to_bounds=True, scale_to_bounds=True)
+        elif method.lower()=='SPHERE_PROJECT'.lower():
+            bpy.ops.uv.sphere_project
+            pass
         elif method.lower()=='LIGHTMAP_PACK'.lower():
             bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
         else: 
@@ -153,6 +156,23 @@ class BlenderRenderer():
 
         return still_files
 
+    def recalculate_normals(self,obj):
+        # obj_objects = bpy.context.selected_objects[:]
+        bpy.ops.object.select_all(action='DESELECT')
+        # for obj in obj_objects:    
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        # go edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        # select al faces
+        bpy.ops.mesh.select_all(action='SELECT')
+        # recalculate outside normals 
+        # bpy.ops.mesh.normals_make_consistent(inside=False)
+        bpy.ops.mesh.average_normals(average_type='FACE_AREA', weight=50, threshold=0.01)
+        # go object mode again
+        bpy.ops.object.editmode_toggle()
+        return
+    
     def render(self,save_path='//render.png'):
         print('Rendering image')
         bpy.context.scene.render.film_transparent = True
@@ -200,28 +220,23 @@ if __name__ == '__main__':
     mesh = "model_modified.obj"
     uv = "hello"
     mode = "MULTI"
-    unwrap_method_='smart_project'
+    unwrap_method_='cube_project'
     mesh_dir = "inputs/shape_samples/office_chair"
     uv_dir = "inputs/uv_maps/office_chair/{}".format(unwrap_method_)
 
     if mode=='SINGLE':
         mesh_path =os.path.join(mesh_dir,mesh)
-        
         renderer.load_object(mesh_path)
         selected = [obj_ for obj_ in bpy.context.selected_objects if obj_.type=='MESH']
-
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
-
         try:
             os.mkdir(uv_dir)
         except FileExistsError:
             pass
-
         for obj in selected:
             name = obj.name
             uv_path = os.path.join(uv_dir,'{}_uv.png'.format(name))
-            
             renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
     else:
         for mesh_file in os.listdir(mesh_dir):
@@ -229,5 +244,6 @@ if __name__ == '__main__':
             if ext in ['.obj']:
                 mesh_path = os.path.join(mesh_dir,mesh_file)
                 obj = renderer.load_object(mesh_path)
+                # renderer.recalculate_normals(obj)
                 uv_path = str(p.Path.cwd() / uv_dir / '{}_uv.png'.format(mesh_file[:-4]))
                 renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
