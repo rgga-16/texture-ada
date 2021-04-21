@@ -51,32 +51,32 @@ if __name__ == '__main__':
     # }
 
     # # office chair
-    # meshes_dir = './inputs/shape_samples/office chair'
-    # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/office chair/[3-2-21 7-00]'
-    # uv_maps_dir = 'inputs/uv_maps/office chair/unwrap'
-    # mesh_texture_file_pairs = {
-    #     'backseat.obj':'uv_map_backseat_chair-2_masked.png',
-    #     'arms.obj':'uv_map_arms_chair-3_masked.png',
-    #     'feet.obj':'uv_map_feet_chair-3_masked.png',
-    #     'seat.obj':'uv_map_seat_chair-1_masked.png',
-    # }
+    meshes_dir = './inputs/shape_samples/office_chair'
+    textures_dir = 'outputs/output_images/[04-21-21 12-07-53]'
+    uv_maps_dir = 'inputs/uv_maps/office chair/cube_project'
+    mesh_texture_file_pairs = {
+        "backseat.obj":"backseat_uv.png",
+        "arms.obj":"arms_uv.png",
+        "feet.obj":"feet_uv.png",
+        "seat.obj":"seat_uv.png"
+    }
     
     # lounge sofa
-    meshes_dir = './inputs/shape_samples/lounge_sofa'
-    # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)'
-    textures_dir = 'outputs/output_images/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2'
-    mesh_texture_file_pairs = {
-        'left_arm.obj':'left_arm_uv.png',
-        'right_arm.obj':'right_arm_uv.png',
-        'left_backseat.obj':'left_backseat_uv.png',
-        'mid_backseat.obj':'mid_backseat_uv.png',
-        'right_backseat.obj':'right_backseat_uv.png',
-        'left_base.obj':'left_base_uv.png',
-        'right_base.obj':'right_base_uv.png',
-        'left_seat.obj':'left_seat_uv.png',
-        'mid_seat.obj':'mid_seat_uv.png',
-        'right_seat.obj':'right_seat_uv.png',
-    }
+    # meshes_dir = './inputs/shape_samples/lounge_sofa'
+    # # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)'
+    # textures_dir = 'outputs/output_images/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2'
+    # mesh_texture_file_pairs = {
+    #     'left_arm.obj':'left_arm_uv.png',
+    #     'right_arm.obj':'right_arm_uv.png',
+    #     'left_backseat.obj':'left_backseat_uv.png',
+    #     'mid_backseat.obj':'mid_backseat_uv.png',
+    #     'right_backseat.obj':'right_backseat_uv.png',
+    #     'left_base.obj':'left_base_uv.png',
+    #     'right_base.obj':'right_base_uv.png',
+    #     'left_seat.obj':'left_seat_uv.png',
+    #     'mid_seat.obj':'mid_seat_uv.png',
+    #     'right_seat.obj':'right_seat_uv.png',
+    # }
 
     # # round table
     # meshes_dir = './inputs/shape_samples/round_table/models'
@@ -97,7 +97,8 @@ if __name__ == '__main__':
             mesh_path = os.path.join(meshes_dir,mesh_file)
             texture_path = str(p.Path.cwd() / textures_dir / '{}_{}.png'.format(texture_file,size))
             obj = renderer.load_object(mesh_path)
-            renderer.apply_texture(obj,'SMART_PROJECT',texture_path)
+            renderer.recalculate_normals(obj)
+            renderer.apply_texture(obj,'CUBE_PROJECT',texture_path)
 
         # renderer.render(save_path='//render_round_table_colorless_{}.png'.format(size))
-        render_gif(renderer,save_path='./outputs/renders/blender/lounge_sofa/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2/render_loungesofa_{}.gif'.format(size))
+        render_gif(renderer,save_path='./outputs/renders/blender/office_chair/[04-21-21 12-07-53]/render_officechair_{}.gif'.format(size))
