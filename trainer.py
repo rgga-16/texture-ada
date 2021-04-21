@@ -114,8 +114,8 @@ def train(generator,feat_extractor,dataloader):
     model_file = '{}_iter{}.pth'.format(best_model.__class__.__name__,best_iter)
     # model_file = '{}_iter{}.pth'.format(generator.__class__.__name__,i)
     gen_path = os.path.join(args.output_dir,model_file)
-    # torch.save(best_model,gen_path)
-    torch.save(generator.state_dict(),gen_path)
+    torch.save(best_model,gen_path)
+    # torch.save(generator.state_dict(),gen_path)
     print('Model saved in {}'.format(gen_path))
 
     losses_file = 'losses.png'
