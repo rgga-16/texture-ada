@@ -38,8 +38,8 @@ def test(generator,input,gen_path,output_path):
             output = generator(inputs,input_style)
 
         output_path_ = '{}_{}.png'.format(output_path,w)
-        output_image = utils.tensor_to_image(output,image_size=args.output_size)
-        mask = utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
+        output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+        mask = image_utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
         output_image.putalpha(mask)
         output_image.save(output_path_,'PNG')
         print('Saving image as {}'.format(output_path_))
@@ -62,8 +62,8 @@ def test_ulyanov(generator,input,gen_path,output_path):
             output = generator(inputs)
 
         output_path_ = '{}_{}.png'.format(output_path,w)
-        output_image = utils.tensor_to_image(output,image_size=args.output_size)
-        mask = utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
+        output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+        mask = image_utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
         output_image.putalpha(mask)
         output_image.save(output_path_,'PNG')
 
@@ -90,7 +90,7 @@ def test_ulyanov(generator,input,gen_path,output_path):
                 g = torch.zeros_like(b) 
                 tensor = torch.stack([r,g,b],dim=1)
 
-            output_1channel_image = utils.tensor_to_image(tensor,image_size = args.output_size)
+            output_1channel_image = image_utils.tensor_to_image(tensor,image_size = args.output_size)
             output_1channel_image.putalpha(mask)
             output_1channel_image.save('{}_{}.png'.format(output_path_[:-4],colors[i]),'PNG')
 
@@ -118,8 +118,8 @@ def test_ulyanov_adain(generator,input,gen_path,output_path):
             output = generator(inputs,style_input)
 
         output_path_ = '{}_{}.png'.format(output_path,w)
-        output_image = utils.tensor_to_image(output,image_size=args.output_size)
-        mask = utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
+        output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+        mask = image_utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
         output_image.putalpha(mask)
         output_image.save(output_path_,'PNG')
         print('Saving image as {}'.format(output_path_))
