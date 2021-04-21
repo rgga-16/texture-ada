@@ -1,0 +1,12 @@
+{
+    
+    "uv_dir": "./inputs/uv_maps/office_chair/cube_project",
+    "style_dir": "./data/describable textures dataset/images/frilly",
+    "uv_style_pairs" : {
+        "backseat_uv.png":"frilly_0001.jpg",
+        "arms_uv.png":"frilly_0006.jpg",
+        "feet_uv.png":"frilly_0095.jpg",
+        "seat_uv.png":"frilly_0077.jpg"
+    }
+
+}
