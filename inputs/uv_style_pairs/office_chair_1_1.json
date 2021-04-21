@@ -1,12 +1,12 @@
 {
     
     "uv_dir": "./inputs/uv_maps/office_chair/cube_project",
-    "style_dir": "",
+    "style_dir": "./inputs/style_images/tiled",
     "uv_style_pairs" : {
         "backseat_uv.png":"chair-2_tiled.png",
         "arms_uv.png":"chair-3_tiled.png",
         "feet_uv.png":"chair-3_tiled.png",
-        "seat_uv.png":"chair-1_tiled.png"
+        "seat_uv.png":"cobonpue-80_tiled.png"
     }
 
 }
