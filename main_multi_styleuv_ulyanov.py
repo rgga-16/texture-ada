@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 
-import os, copy, time, datetime ,json
+import os, copy, time, datetime ,json,itertools
 
 def main():
     print("Starting texture transfer..")
@@ -46,6 +46,9 @@ def main():
     data = json.load(open(args.uv_style_pairs))
     uv_style_pairs = data['uv_style_pairs']
 
+    uv_style_trainpairs = dict(itertools.islice(uv_style_pairs.items(),6))
+    uv_style_testpairs = dict(itertools.islice(uv_style_pairs.items(),4))
+
     uv_dir = None 
     if args.uv_dir is not None:
         uv_dir = args.uv_dir
@@ -68,8 +71,11 @@ def main():
         style_dir=style_dir,
         uv_sizes=args.uv_train_sizes,
         style_size=args.style_size,
-        uv_style_pairs=uv_style_pairs
+        uv_style_pairs=uv_style_trainpairs
     )
+
+    # train_size = int(0.75 * dataset.__len__())
+    # valid_size = dataset.__len__() - train_size 
 
     # Setup dataloader for training
     dataloader = DataLoader(dataset,num_workers=0,)
@@ -77,16 +83,16 @@ def main():
     # Training. Returns path of the generator weights.
     gen_path=train_ulyanov_adain(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
     
-    test_files = uv_style_pairs.items()
+    test_files = uv_style_testpairs.items()
 
     for uv_file,style_file in test_files:
         test_uvs = []
         
         for test_size in args.uv_test_sizes:
-            uv = utils.image_to_tensor(utils.load_image(os.path.join(uv_dir,uv_file)),image_size=test_size)
+            uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=test_size)
             test_uvs.append(uv)
 
-        style = utils.image_to_tensor(utils.load_image(os.path.join(style_dir,style_file)),image_size=args.style_size)
+        style = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file)),image_size=args.style_size)
         test_uvs.append(style)
         output_path = os.path.join(output_folder,uv_file)
 
