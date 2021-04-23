@@ -37,7 +37,8 @@ def covariance_matrix(tensor):
     mean=torch.mean(feats,dim=2,keepdim=True)
     feats=feats-mean
     feats = feats.squeeze()
-    covariance = torch.mm(feats,feats.t())
+    covariance = torch.matmul(feats,torch.transpose(feats,1,2))
+    # covariance = torch.bmm(feats,feats.t())
     return covariance / (h*w)
 
 def variance_aware_adaptive_weighting(tensor):

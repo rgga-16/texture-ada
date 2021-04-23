@@ -52,9 +52,8 @@ def train_texture(generator,feat_extractor,train_loader,val_loader=None,checkpoi
             loss = (style_loss * args.style_weight)
             loss.backward()
             optim.step()
-            running_loss+=loss
-           
-
+            
+            running_loss+=loss.item()
             if(i%checkpoint==checkpoint-1):
                 print('[Epoch {} | Batch {}/{}] Loss: {:.3f}'.format(epoch+1,i+1,len(train_loader),running_loss/checkpoint))
                 loss_history.append(loss)
