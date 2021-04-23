@@ -3,14 +3,14 @@ from torch.utils.data import DataLoader
 
 from args import args
 from seeder import SEED, init_fn
-from dataset import UV_Style_Paired_Dataset
+from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import VGG19, Pyramid2D_adain
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
-from trainer import train_ulyanov, train_ulyanov_adain
-from tester import test_ulyanov, test_ulyanov_adain
+from trainer import train_texture
+from tester import test_texture
 
 import numpy as np
 
@@ -55,16 +55,15 @@ def main():
         raise ValueError('Style images directory was not specified in terminal or in UV-Style pairs json file..')
     
     # Setup dataset for training
-    dataset = UV_Style_Paired_Dataset(
-        uv_dir=uv_dir,
-        style_dir=style_dir,
-        uv_sizes=args.uv_train_sizes,
-        style_size=args.style_size,
-        uv_style_pairs=uv_style_trainpairs
-    )
-
-    # train_size = int(0.75 * dataset.__len__())
-    # valid_size = dataset.__len__() - train_size 
+    # dataset = UV_Style_Paired_Dataset(
+    #     uv_dir=uv_dir,
+    #     style_dir=style_dir,
+    #     uv_sizes=args.uv_train_sizes,
+    #     style_size=args.style_size,
+    #     uv_style_pairs=uv_style_trainpairs
+    # )
+    train_set = DTD('train')
+    test_set = DTD('test')
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
@@ -75,31 +74,25 @@ def main():
         pass
 
     # Setup dataloader for training
-    dataloader = DataLoader(dataset,num_workers=0,worker_init_fn=init_fn)
+    trainloader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
+    testloader = DataLoader(test_set,batch_size=2,worker_init_fn=init_fn)
 
     # Training. Returns path of the generator weights.
-    gen_path=train_ulyanov_adain(generator=net,feat_extractor=feat_extractor,dataloader=dataloader)
+    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=trainloader)
     
     
-    test_files = uv_style_testpairs.items()
+    test_files = uv_style_testpairs
 
     for uv_file,style_file in test_files:
-        test_uvs = []
+        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
+        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file)),image_size=args.style_size)
         
-        for test_size in args.uv_test_sizes:
-            uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=test_size)
-            test_uvs.append(uv)
-
-        style = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file)),image_size=args.style_size)
-        test_uvs.append(style)
         output_path = os.path.join(output_folder,uv_file)
 
-        test_ulyanov_adain(net,test_uvs,gen_path,output_path)
+        test_texture(net,uv,texture,gen_path,output_path)
 
     # INSERT RENDERING MODULE HERE
     #######################################
-
-
 
     #######################################
     

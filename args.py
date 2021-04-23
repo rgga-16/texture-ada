@@ -31,8 +31,8 @@ def parse_arguments():
                         help='Size of output textured uv map')
     parser.add_argument('--style_weight', type=float, default=1e6,
                         help='Style loss weight value')
-    parser.add_argument('--foreground_weight', type=float, default=1e5,
-                        help='Foreground MSE loss weight value')
+    # parser.add_argument('--foreground_weight', type=float, default=0,
+    #                     help='Foreground MSE loss weight value')
 
     return parser.parse_args()
 
