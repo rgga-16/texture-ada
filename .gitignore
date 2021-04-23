@@ -6,6 +6,9 @@ __pycache__
 outputs/*
 archive/*
 dextr/*
+external_libs/*
+inputs/bunny
+notes
 
 *.txt
 *.pyc
@@ -14,4 +17,5 @@ dextr/*
 
 toy.py 
 yes.py 
+playground.py
 

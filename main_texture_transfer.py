@@ -1,5 +1,4 @@
 import torch
-from torch._C import Value
 from torch.utils.data import DataLoader
 
 from args import args
@@ -7,16 +6,13 @@ from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
-from models.texture_transfer_models import Pyramid2D, VGG19, Pyramid2D_custom, Pyramid2D_adain
+from models.texture_transfer_models import VGG19, Pyramid2D_adain
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
 from trainer import train_ulyanov, train_ulyanov_adain
 from tester import test_ulyanov, test_ulyanov_adain
 
 import numpy as np
-import torch
-from torch.utils.data import DataLoader
-from torchvision import transforms
 
 
 import os, copy, time, datetime ,json,itertools

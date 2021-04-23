@@ -1,20 +1,12 @@
 import torch
-from torchvision import transforms
-import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
+import numpy as np
+import os, copy
 
 from args import args
-
 from defaults import DEFAULTS as D
 from helpers import logger
 import style_transfer as st
 
-import numpy as np
-import torch
-
-
-
-import os, copy, time, datetime ,json
 
 
 def train(generator,feat_extractor,dataloader):
@@ -212,8 +204,6 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
     mse_loss = torch.nn.MSELoss()
-    writer = SummaryWriter('./runs/texture_transfer/tensorboard')
-
 
     loss_history=[]
     epoch_chkpts=[]
@@ -221,7 +211,6 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
     best_model = generator.state_dict()
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
-
 
     for i in range(iters):
         for _, sample in enumerate(dataloader):
@@ -240,7 +229,8 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
                 # Setup inputs 
                 _,_,_,w = uv.shape
                 input_sizes = [w//2,w//4,w//8,w//16,w//32]
-                inputs = [uv[:,:3,...].clone().detach()]
+                # inputs = [uv[:,:3,...].clone().detach()]
+                inputs = [torch.rand(1,3,w,w,device=D.DEVICE())]
                 inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
                 style_input = style.clone().detach()
                 # Get output
@@ -273,7 +263,6 @@ def train_ulyanov_adain(generator,feat_extractor,dataloader,checkpoint=5):
             print('ITER {} | LOSS: {}'.format(i+1,avg_loss.item()))
             loss_history.append(avg_loss)
             epoch_chkpts.append(i)
-            writer.add_scalar('Train Loss',avg_loss,global_step=i)
         
     print("Lowest Loss at epoch {}: {}".format(best_iter,lowest_loss))
 
