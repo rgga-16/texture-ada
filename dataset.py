@@ -3,9 +3,50 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 
-import os, json 
+import os,h5py, scipy.io , itertools
 from helpers import image_utils
 from defaults import DEFAULTS as D
+
+
+class Describable_Textures_Dataset(Dataset):
+    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat') -> None:
+        assert set.lower() in ['train','val','test']
+
+        self.root = root
+
+        mat = scipy.io.loadmat(imdb_path)
+
+        image_files = list(itertools.chain(*mat['images']['name'][0][0][0]))
+        ids = list(itertools.chain(*mat['images']['id'][0][0]))
+        sets = list(itertools.chain(*mat['images']['set'][0][0]))
+        class_ = list(itertools.chain(*mat['images']['class'][0][0]))
+
+        self.data = np.asarray([ids,image_files,sets,class_]).T
+        
+        if set.lower()=='train':
+            self.data = self.data[(self.data[:,2]=='1')] 
+        elif set.lower()=='val':
+            self.data = self.data[(self.data[:,2]=='2')]
+        elif set.lower()=='test':
+            self.data = self.data[(self.data[:,2]=='3')]
+
+        self.size = len(self.data)
+    
+    def __len__(self):
+        return self.size
+    
+    def __getitem__(self, index):
+
+        # Each row in the dataset has [id,image_path,set,class]
+        sample = self.data[index]
+        # id = sample[0]
+        image_path = os.path.join(self.root,'images',sample[1])
+        # set=sample[2]
+        # class_=sample[3]
+
+        image = image_utils.image_to_tensor(image_utils.load_image(image_path,'RGB'),image_size=256).detach()
+        
+        return image
 
 
 class UV_Style_Paired_Dataset(Dataset):
@@ -45,3 +86,6 @@ class UV_Style_Paired_Dataset(Dataset):
 
 
 
+if __name__ =='__main__':
+    td = Describable_Textures_Dataset('train')
+    yes = td.__getitem__(0)
