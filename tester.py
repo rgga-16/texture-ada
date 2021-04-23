@@ -110,7 +110,8 @@ def test_ulyanov_adain(generator,input,gen_path,output_path):
     for uv in uvs:
         _,_,w = uv.shape
         input_sizes = [w//2,w//4,w//8,w//16,w//32]
-        inputs = [uv[:3,...].unsqueeze(0).clone().detach()]
+        # inputs = [uv[:3,...].unsqueeze(0).clone().detach()]
+        inputs = [torch.rand(1,3,w,w,device=D.DEVICE())]
         inputs.extend([torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes])
         uv_mask = uv[3,...].expand(1,1,-1,-1).clone().detach()
         style_input = style[:3,...].unsqueeze(0).clone().detach()
