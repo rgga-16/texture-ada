@@ -81,7 +81,7 @@ def main():
     gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=trainloader)
     
     
-    test_files = uv_style_testpairs
+    test_files = uv_style_pairs
 
     for uv_file,style_file in test_files:
         uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
