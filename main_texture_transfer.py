@@ -75,7 +75,7 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
+    train_loader = DataLoader(train_set,batch_size=2,worker_init_fn=init_fn)
     test_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
 
     # Training. Returns path of the generator weights.
