@@ -64,7 +64,7 @@ def main():
     #     uv_style_pairs=uv_style_trainpairs
     # )
     train_set = DTD('train',lower_size=10)
-    # test_set = DTD('test')
+    # test_set = DTD('test',lower_size=10)
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
@@ -75,7 +75,7 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=2,worker_init_fn=init_fn)
+    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn)
     test_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
 
     # Training. Returns path of the generator weights.
