@@ -131,24 +131,6 @@ class Up_In2D_adain(nn.Module):
 class Pyramid2D(nn.Module):
     def __init__(self, ch_in=3, ch_step=8, ch_out=3, n_samples=6):
         super(Pyramid2D, self).__init__()
-
-        self.conv_blocks = []
-        self.conv_entries = []
-
-        for i in range(n_samples):
-            running_step = ch_step * (i+1)
-            self.conv_blocks.append(
-                nn.Sequential(
-                    Conv_block2D(ch_in,running_step) if i==0 
-                    else Conv_block2D(running_step,running_step),
-                    Up_In2D(running_step),
-                )
-            )
-            if i > 0:
-                self.conv_entries.append(
-                    Conv_block2D(ch_in,ch_step)
-                )
-
         
 
         self.cb1_1 = Conv_block2D(ch_in,ch_step) # ch_step=8
@@ -218,15 +200,6 @@ class Pyramid2D(nn.Module):
         y = self.cb6_2(y) # y=(48x256x256) => (48x256x256)
         y = self.last_conv(y) # y=(48x256x256) => (3x256x256)
         return y
-
-        # def forward(self,z):
-        #     y = None
-        #     # Order of z must start with the smallest samples
-        #     for i in range(len(z)):
-        #         y = self.conv_blocks[i](z[i])
-        #         if i == len(z)-1:
-        #             y = torch.cat((y,self.conv_entries[i](z[i+1])))
-        #     return 
 
 class Pyramid2D_custom(nn.Module):
     def __init__(self, ch_in=3, ch_step=8, ch_out=3, n_samples=6):

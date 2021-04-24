@@ -9,12 +9,17 @@ from defaults import DEFAULTS as D
 
 
 class Describable_Textures_Dataset(Dataset):
-    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat') -> None:
+
+    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[]) -> None:
         assert set.lower() in ['train','val','test']
 
         self.root = root
-
         mat = scipy.io.loadmat(imdb_path)
+
+        self.classes = list(itertools.chain(*mat['meta']['classes'][0][0][0]))
+        
+        if remove_classes:
+            assert all(x in self.classes for x in remove_classes)
 
         image_files = list(itertools.chain(*mat['images']['name'][0][0][0]))
         ids = list(itertools.chain(*mat['images']['id'][0][0]))
@@ -22,6 +27,9 @@ class Describable_Textures_Dataset(Dataset):
         class_ = list(itertools.chain(*mat['images']['class'][0][0]))
 
         self.data = np.asarray([ids,image_files,sets,class_]).T
+
+        if remove_classes:
+            self.data = np.asarray([x for x in self.data if os.path.dirname(x[1]) not in remove_classes])
         
         if set.lower()=='train':
             self.data = self.data[(self.data[:,2]=='1')] 
@@ -87,5 +95,5 @@ class UV_Style_Paired_Dataset(Dataset):
 
 
 if __name__ =='__main__':
-    td = Describable_Textures_Dataset('train')
+    td = Describable_Textures_Dataset('train',remove_classes=['banded'])
     yes = td.__getitem__(0)

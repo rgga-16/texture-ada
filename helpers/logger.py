@@ -14,7 +14,6 @@ def log_args(path,**kwargs):
         "Learning rate: {}\n".format(args.lr),
         "="*10,"\n",
         "Style Loss Weight: {:.4f}\n".format(args.style_weight),
-        "Foreground MSELoss Weight: {:.4f}\n".format(args.foreground_weight),
         "="*10,"\n",
         "Input UV Maps Directory: {}\n".format(args.uv_dir),
         "Style Images Directory: {}\n".format(args.style_dir),

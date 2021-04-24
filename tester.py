@@ -12,7 +12,24 @@ import numpy as np
 from torch.utils.data import DataLoader
 import os, copy, time, datetime ,json
 
+def test_texture2(generator,texture,gen_path,output_path):
+    generator.eval()
+    generator.to(device=D.DEVICE())
 
+    generator.load_state_dict(torch.load(gen_path))
+    
+    w = args.uv_test_sizes[0]
+    input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+    inputs = [torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+    style_input = texture.expand(1,-1,-1,-1).clone().detach()
+    
+    with torch.no_grad():
+        output = generator(inputs,style_input)
+
+    output_path_ = '{}_{}.png'.format(output_path,w)
+    output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+    output_image.save(output_path_,'PNG')
+    print('Saving image as {}'.format(output_path_))
 
 def test_texture(generator,uv,texture,gen_path,output_path):
     generator.eval()

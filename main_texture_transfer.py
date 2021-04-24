@@ -10,7 +10,7 @@ from models.texture_transfer_models import VGG19, Pyramid2D_adain
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
 from trainer import train_texture
-from tester import test_texture
+from tester import test_texture, test_texture2
 
 import numpy as np
 
@@ -63,7 +63,7 @@ def main():
     #     uv_style_pairs=uv_style_trainpairs
     # )
     train_set = DTD('train')
-    # test_set = DTD('test')
+    test_set = DTD('test')
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
@@ -74,22 +74,27 @@ def main():
         pass
 
     # Setup dataloader for training
-    trainloader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
-    # testloader = DataLoader(test_set,batch_size=2,worker_init_fn=init_fn)
+    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
+    test_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
 
     # Training. Returns path of the generator weights.
-    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=trainloader)
-    
-    test_files = uv_style_pairs.items()
+    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader)
+    # gen_path='./Pyramid2D_adain.pth'
+    #######################################
+    for i, texture in enumerate(test_loader):
+        output_path = os.path.join(output_folder,'{}.png'.format(i))
+        test_texture2(net,texture,gen_path,output_path)
 
-    for uv_file,style_file in test_files:
-        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
-        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
+    #######################################
+    # test_files = uv_style_pairs.items()
+    # for uv_file,style_file in test_files:
+    #     uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
+    #     texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
         
-        output_path = os.path.join(output_folder,uv_file)
+    #     output_path = os.path.join(output_folder,uv_file)
 
-        test_texture(net,uv,texture,gen_path,output_path)
-
+    #     test_texture(net,uv,texture,gen_path,output_path)
+    #######################################
     # INSERT RENDERING MODULE HERE
     #######################################
 
