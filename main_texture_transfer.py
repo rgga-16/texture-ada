@@ -74,18 +74,17 @@ def main():
         pass
 
     # Setup dataloader for training
-    trainloader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn)
+    trainloader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
     # testloader = DataLoader(test_set,batch_size=2,worker_init_fn=init_fn)
 
     # Training. Returns path of the generator weights.
     gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=trainloader)
     
-    
     test_files = uv_style_pairs.items()
 
     for uv_file,style_file in test_files:
         uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
-        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file)),image_size=args.style_size)
+        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
         
         output_path = os.path.join(output_folder,uv_file)
 
