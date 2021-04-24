@@ -63,7 +63,7 @@ def main():
     #     style_size=args.style_size,
     #     uv_style_pairs=uv_style_trainpairs
     # )
-    train_set = DTD('train',lower_size=10)
+    train_set = DTD('train',lower_size=16)
     # test_set = DTD('test',lower_size=10)
 
     # Create output folder
