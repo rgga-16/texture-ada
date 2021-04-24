@@ -8,9 +8,11 @@ from helpers import logger
 import style_transfer as st
 
 
-def train_texture(generator,feat_extractor,train_loader,val_loader=None,checkpoint=100):
+def train_texture(generator,feat_extractor,train_loader,val_loader=None):
     lr = args.lr
     epochs = args.epochs
+    checkpoint=len(train_loader)//5
+
     generator.train()
     generator.to(device=D.DEVICE())
 
