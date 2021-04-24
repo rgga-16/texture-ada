@@ -13,16 +13,14 @@ def train_texture(generator,feat_extractor,train_loader,val_loader=None):
     epochs = args.epochs
     checkpoint=len(train_loader)//5
 
-    
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
+    scheduler = torch.optim.ReduceLROnPlateau(optim,mode='min',patience=3,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
 
     loss_history=[]
     epoch_chkpts=[]
-    lowest_loss = np.inf
-    best_model = generator.state_dict()
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
 
@@ -57,11 +55,11 @@ def train_texture(generator,feat_extractor,train_loader,val_loader=None):
             
             running_loss+=loss.item()
             if(i%checkpoint==checkpoint-1):
-                print('[Epoch {} | Batch {}/{}] Loss: {:.3f}'.format(epoch+1,i+1,len(train_loader),running_loss/checkpoint))
+                print('[Epoch {} | Batch {}/{}] Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),running_loss/checkpoint,lr))
                 loss_history.append(loss)
                 epoch_chkpts.append(i)
                 running_loss=0.0
-
+        scheduler.step()
 
     model_file = '{}.pth'.format(generator.__class__.__name__)
     gen_path = os.path.join(args.output_dir,model_file)
