@@ -13,11 +13,11 @@ def train_texture(generator,feat_extractor,train_loader,val_loader=None):
     epochs = args.epochs
     checkpoint=len(train_loader)//5
 
-    generator.train()
+    
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-    mse_loss = torch.nn.MSELoss()
+    mse_loss = torch.nn.MSELoss().to(D.DEVICE())
 
     loss_history=[]
     epoch_chkpts=[]
@@ -27,13 +27,13 @@ def train_texture(generator,feat_extractor,train_loader,val_loader=None):
     s_layer_weights = D.SL_WEIGHTS.get()
 
     for epoch in range(epochs):
+        generator.train()
         running_loss=0.0
         for i, texture in enumerate(train_loader):
             texture = texture.to(D.DEVICE())
             bs = texture.shape[0]
             optim.zero_grad()
             style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
-            mse_loss = torch.nn.MSELoss()
 
             # Setup inputs 
             w = args.uv_train_sizes[0]

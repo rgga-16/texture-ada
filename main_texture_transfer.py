@@ -1,3 +1,4 @@
+
 import torch
 from torch.utils.data import DataLoader
 
@@ -62,8 +63,8 @@ def main():
     #     style_size=args.style_size,
     #     uv_style_pairs=uv_style_trainpairs
     # )
-    train_set = DTD('train')
-    test_set = DTD('test')
+    train_set = DTD('train',lower_size=10)
+    # test_set = DTD('test')
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log

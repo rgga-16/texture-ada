@@ -10,7 +10,7 @@ from defaults import DEFAULTS as D
 
 class Describable_Textures_Dataset(Dataset):
 
-    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[]) -> None:
+    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[],lower_size=None) -> None:
         assert set.lower() in ['train','val','test']
 
         self.root = root
@@ -37,6 +37,10 @@ class Describable_Textures_Dataset(Dataset):
             self.data = self.data[(self.data[:,2]=='2')]
         elif set.lower()=='test':
             self.data = self.data[(self.data[:,2]=='3')]
+
+        if lower_size:
+            self.data = self.data[np.random.choice(self.data.shape[0],lower_size,replace=False)]
+            print(self.data[:,1])
 
         self.size = len(self.data)
     
@@ -95,5 +99,5 @@ class UV_Style_Paired_Dataset(Dataset):
 
 
 if __name__ =='__main__':
-    td = Describable_Textures_Dataset('train',remove_classes=['banded'])
+    td = Describable_Textures_Dataset('train',remove_classes=['banded'],lower_size=10)
     yes = td.__getitem__(0)
