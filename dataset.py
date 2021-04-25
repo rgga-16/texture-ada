@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 import os,h5py, scipy.io , itertools
 from helpers import image_utils
 from defaults import DEFAULTS as D
+from args import args
 
 
 class Describable_Textures_Dataset(Dataset):
@@ -56,7 +57,7 @@ class Describable_Textures_Dataset(Dataset):
         # set=sample[2]
         # class_=sample[3]
 
-        image = image_utils.image_to_tensor(image_utils.load_image(image_path,'RGB'),image_size=256).detach()
+        image = image_utils.image_to_tensor(image_utils.load_image(image_path,'RGB'),image_size=args.style_size).detach()
         
         return image
 
