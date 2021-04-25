@@ -35,6 +35,10 @@ def parse_arguments():
                         help='Number of checkpoints to print batch training losses')
     parser.add_argument('--num_epoch_chkpts', type=int,default=5,
                         help='Number of checkpoints to print epoch training losses')
+    parser.add_argument('--num_points', type=int,default=2048,
+                        help='Number of points to sample for pointcloud (structure transfer)')
+    parser.add_argument('--multiprocess', type=bool,default=False,
+                        help='To use multiple cpu cores for the dataloader or not')
 
     return parser.parse_args()
 
