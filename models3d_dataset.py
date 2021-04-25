@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 import os, json 
 from helpers import image_utils, model_utils
 from defaults import DEFAULTS as D
+from args import args
 
 
 class Pix3D(Dataset):
@@ -36,7 +37,7 @@ class Pix3D(Dataset):
         pointcloud = model_utils.mesh_to_pointcloud(verts,faces,self.n_points)
 
         # Preprocess image
-        image = image_utils.image_to_tensor(image_utils.load_image(image_path))
+        image = image_utils.image_to_tensor(image_utils.load_image(image_path),image_size=args.style_size)
 
         return pointcloud.squeeze(),image.squeeze()
         
