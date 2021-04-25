@@ -31,8 +31,10 @@ def parse_arguments():
                         help='Size of output textured uv map')
     parser.add_argument('--style_weight', type=float, default=1e6,
                         help='Style loss weight value')
-    # parser.add_argument('--foreground_weight', type=float, default=0,
-    #                     help='Foreground MSE loss weight value')
+    parser.add_argument('--num_batch_chkpts', type=int,default=5,
+                        help='Number of checkpoints to print batch training losses')
+    parser.add_argument('--num_epoch_chkpts', type=int,default=5,
+                        help='Number of checkpoints to print epoch training losses')
 
     return parser.parse_args()
 

@@ -12,14 +12,15 @@ import style_transfer as st
 def train_texture(generator,feat_extractor,train_loader,val_loader):
     lr = args.lr
     epochs = args.epochs
-    chkpt_interval = 5
-    batch_chkpt= 1 if len(train_loader) <= chkpt_interval else len(train_loader)//chkpt_interval
-    epoch_chkpt = 1 if epochs <= chkpt_interval else epochs//chkpt_interval
+    n_batch_chkpts = args.num_batch_chkpts
+    n_epoch_chkpts = args.num_epoch_chkpts
+    batch_chkpt= 1 if len(train_loader) <= n_batch_chkpts else len(train_loader)//n_batch_chkpts
+    epoch_chkpt = 1 if epochs <= n_epoch_chkpts else epochs//n_epoch_chkpts
 
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=1,verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=5,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
 
     style_layers = D.STYLE_LAYERS.get()
