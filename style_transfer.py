@@ -47,7 +47,7 @@ def filter_k_feature_maps(raw_feature_maps,k):
     return feature_maps.unsqueeze_(0)
 
 
-def get_features(model, tensor, is_style,
+def get_features(model, tensor, is_style=False,
                 content_layers:dict = D.CONTENT_LAYERS.get(), 
                 style_layers:dict = D.STYLE_LAYERS.get()):
 
