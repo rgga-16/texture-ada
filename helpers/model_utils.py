@@ -5,6 +5,7 @@ import torch
 from defaults import DEFAULTS as D
 
 import kaolin as kal
+import open3d as o3d
 import numpy as np, random, math
 
 import os
@@ -82,9 +83,26 @@ def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
         SamplePoints(n_points),
         NormalizePointcloud(),
         RandomRotate(),
-        AddNoise()
+        # AddNoise()
     ])
 
     pointcloud = transformer((vertices,faces))
 
     return pointcloud.to(device)
+
+'''
+Reconstructs mesh from pointcloud using Poisson surface reconstruction method (Kahzdan et al, 2006)
+Reference: http://hhoppe.com/poissonrecon.pdf 
+'''
+def pointcloud_to_mesh_poisson(pointcloud,depth=5):
+    pointcloud.normals = o3d.utility.Vector3dVector(np.zeros((1,3)))
+    pointcloud.estimate_normals()
+    mesh,_ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pointcloud,depth=depth,width=0,scale=1.1,linear_fit=True)
+    mesh = mesh.crop(pointcloud.get_axis_aligned_bounding_box())
+    mesh.compute_vertex_normals()
+    return mesh
+
+def pointcloud_kaolin_to_open3d(pointcloud):
+    pointcloud_o3d = o3d.geometry.PointCloud()
+    pointcloud_o3d.points = o3d.utility.Vector3dVector(pointcloud.squeeze().detach().cpu().numpy())
+    return pointcloud_o3d
