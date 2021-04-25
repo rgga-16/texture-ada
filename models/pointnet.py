@@ -6,44 +6,98 @@ import torchvision
 from defaults import DEFAULTS as D
 
 from kaolin.metrics.pointcloud import chamfer_distance
+from chamferdist import ChamferDistance
 from external_libs.emd import emd_module as emd
+from external_libs.ChamferDistancePytorch.chamfer3D import dist_chamfer_3D
+from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
 
-def regularization_loss(m3x3, m64x64,batch_size,device=D.DEVICE(), alpha=1e-4):
-     # Make identity matrix (batch_size,3,3) for m3x3 matrices. Used for regularization loss for matrix.
-    identity_3x3 = torch.eye(3,requires_grad=True,device=device).repeat(batch_size,1,1)
+def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=False):
+    # earth_movers_distance_loss = emd.emdModule()
+    # emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
+    # emd_loss = torch.sqrt(torch.sum(emd_loss) / float(batch_size))
+    if (D.DEVICE().type=='cuda'):
+        dist_forward,dist_backward,_,_ = dist_chamfer_3D.chamfer_3DDist()(predicted_pointcloud,real_pointcloud)
+    else:
+        dist_forward,dist_backward,_,_ = chamfer_python.distChamfer(predicted_pointcloud,real_pointcloud)
+    # Averaging is doen to get the mean chamfer_loss in the batch of pointclouds.
+    chamfer_loss = (dist_forward.sum(dim=-1)+dist_backward.sum(dim=-1)).mean()
 
-    # Make identity matrix (batch_size,64,64) for m64x64 matrices. Used for regularization loss for matrix.
-    identity_64x64 = torch.eye(64,requires_grad=True,device=device).repeat(batch_size,1,1)
- 
-    # Get regularization loss for 3x3 matrix batch
-    reg_loss3x3 = identity_3x3 - torch.bmm(m3x3, m3x3.transpose(1, 2))
+    if is_eval:
+        f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
+        return chamfer_loss,f_score,precision,recall
 
-    # Get regularization loss for 64x64 matrix batch
-    reg_loss64x64 = identity_64x64 - torch.bmm(m64x64, m64x64.transpose(1, 2))
-    regularization_loss = alpha* (torch.norm(reg_loss3x3) + torch.norm(reg_loss64x64)) / float(batch_size)
-    return regularization_loss
+    return chamfer_loss
 
-def pointnet_classifier_losses(output_labels,real_labels,m3x3,m64x64):
-    criterion = nn.NLLLoss() #Classification loss between output labels and real labels
-    reg_loss = regularization_loss(m3x3,m64x64,output_labels.shape[0])
 
-    classification_loss = criterion(output_labels, real_labels)
+class ConvLayer(torch.nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride):
+        super(ConvLayer, self).__init__()
+        reflection_padding = kernel_size // 2
+        self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
+        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
 
-    return classification_loss + reg_loss
+    def forward(self, x):
+        out = self.reflection_pad(x)
+        out = self.conv1d(out)
+        return out
 
-def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,batch_size, loss_weight=1e2):
-    earth_movers_distance_loss = emd.emdModule()
-    emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
-    emd_loss = torch.sqrt(torch.sum(emd_loss) / float(batch_size))
-    chamfer_loss = chamfer_distance(predicted_pointcloud,real_pointcloud)
-    chamfer_loss = torch.sum(chamfer_loss) / float(batch_size)
-    return (chamfer_loss+emd_loss)*loss_weight
+class UpsampleConvLayer(torch.nn.Module):
+    """UpsampleConvLayer
+    Upsamples the input and then does a convolution. This method gives better results
+    compared to ConvTranspose2d.
+    ref: http://distill.pub/2016/deconv-checkerboard/
+    """
+    def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
+        super(UpsampleConvLayer, self).__init__()
+        self.upsample = upsample
+        reflection_padding = kernel_size // 2
+        self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
+        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
+    def forward(self, x):
+        x_in = x
+        if self.upsample:
+            x_in = torch.nn.functional.interpolate(x_in, mode='nearest', scale_factor=self.upsample)
+        out = self.reflection_pad(x_in)
+        out = self.conv1d(out)
+        return out
 
 
 class Pointnet_Autoencoder(nn.Module):
     def __init__(self,n_points,point_dim=3):
         super(Pointnet_Autoencoder,self).__init__()
+        self.n_points=n_points
+        # Custom Encoder
+        #################################
+        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=9,stride=1)
+        self.bn1 = nn.BatchNorm1d(32,affine=True)
+        self.conv2 = nn.Conv1d(32,64,kernel_size=3,stride=2)
+        self.bn2 = nn.BatchNorm1d(64,affine=True)
+        self.conv3 = nn.Conv1d(64,128,kernel_size=3,stride=2)
+        self.bn3 = nn.BatchNorm1d(128,affine=True)
+        #################################
+
+        # Custom Decoder
+        #################################
+        self.deconv1 = nn.ConvTranspose1d(128,64,kernel_size=3,stride=2)
+        self.dbn1 = nn.BatchNorm1d(64)
+        self.deconv2 = nn.ConvTranspose1d(64,32,kernel_size=3,stride=2)
+        self.dbn2 = nn.BatchNorm1d(32)
+        self.deconv3 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
+        # self.dbn3 = nn.BatchNorm1d(32)
+        # self.deconv4 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
+        #################################
+
+        
+        # Custom Resblock
+        #################################
+        # self.conv6 = nn.Conv1d(128,128,kernel_size=1,stride=1)
+        # self.bn6 = nn.BatchNorm1d(128)
+        # self.conv7 = nn.Conv1d(128,128,kernel_size=1,stride=1)
+        # self.bn7 = nn.BatchNorm1d(128)
+        #################################
+
+
         # self.encoder = Transformer()
 
         # Encoder
@@ -59,35 +113,6 @@ class Pointnet_Autoencoder(nn.Module):
         # # self.conv5 = nn.Conv1d(128,1024,kernel_size=1)
         # # self.bn5 = nn.BatchNorm1d(1024)
         # # self.maxpool = nn.MaxPool1d(kernel_size=(n_points))
-        #################################
-
-        # Custom Encoder
-        #################################
-        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=1,stride=1)
-        self.bn1 = nn.BatchNorm1d(32,affine=True)
-        self.conv2 = nn.Conv1d(32,64,kernel_size=1,stride=1)
-        self.bn2 = nn.BatchNorm1d(64,affine=True)
-        self.conv3 = nn.Conv1d(64,128,kernel_size=1,stride=1)
-        self.bn3 = nn.BatchNorm1d(128,affine=True)
-        #################################
-
-        # Custom Resblock
-        #################################
-        # self.conv6 = nn.Conv1d(128,128,kernel_size=1,stride=1)
-        # self.bn6 = nn.BatchNorm1d(128)
-        # self.conv7 = nn.Conv1d(128,128,kernel_size=1,stride=1)
-        # self.bn7 = nn.BatchNorm1d(128)
-        #################################
-
-        # Custom Decoder
-        #################################
-        self.deconv1 = nn.Conv1d(128,64,kernel_size=1,stride=1)
-        self.dbn1 = nn.BatchNorm1d(64)
-        self.deconv2 = nn.Conv1d(64,32,kernel_size=1,stride=1)
-        self.dbn2 = nn.BatchNorm1d(32)
-        self.deconv3 = nn.Conv1d(32,point_dim,kernel_size=1,stride=1)
-        # self.dbn3 = nn.BatchNorm1d(32)
-        # self.deconv4 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
         #################################
 
         # FC Decoder
@@ -137,6 +162,20 @@ class Pointnet_Autoencoder(nn.Module):
         batch_size = pointcloud.shape[0]
         n_points = pointcloud.shape[2]
 
+        #Custom Encoder
+        #################################
+        x = F.relu(self.bn1(self.conv1(pointcloud))) 
+        x = F.relu(self.bn2(self.conv2(x))) 
+        x = F.relu(self.bn3(self.conv3(x))) 
+        #################################
+
+        #Custom Decoder
+        #################################
+        x = F.relu(self.dbn1(self.deconv1(x)))
+        x = F.relu(self.dbn2(self.deconv2(x))) 
+        output = self.deconv3(x)
+        #################################
+
         # Encoder
         #################################
         # x = F.relu(self.bn1(self.conv1(pointcloud))) #(bs,3,n_points)=>(bs,64,n_points)
@@ -146,29 +185,6 @@ class Pointnet_Autoencoder(nn.Module):
         # # x = F.relu(self.bn5(self.conv5(x))) #(bs,128,n_points)=>(bs,1024,n_points)
         # # global_feats = self.maxpool(x) #(bs,1024,n_points)=>(bs,1024,1)
         # # global_feats = torch.reshape(global_feats,(batch_size,-1)) #gfeats(bs,1024,1)=>(bs,1024)
-        #################################
-
-        #Custom Encoder
-        #################################
-        x = F.relu(self.bn1(self.conv1(pointcloud))) 
-        x = F.relu(self.bn2(self.conv2(x))) 
-        x = F.relu(self.bn3(self.conv3(x))) 
-        #################################
-        # residual=x
-
-        # Custom resblock
-        #################################
-        # x = F.relu(self.bn6(self.conv6(x))) 
-        # x = self.bn7(self.conv7(x))
-        # x = x + residual
-        #################################
-
-        #Custom Decoder
-        #################################
-        x = F.relu(self.dbn1(self.deconv1(x)))
-        x = F.relu(self.dbn2(self.deconv2(x))) 
-        # x = F.relu(self.dbn3(self.deconv3(x)))
-        output = self.deconv3(x)
         #################################
         
         # FC Decoder
@@ -322,3 +338,22 @@ class PointNet_Classifier(nn.Module):
         output = self.fc3(xb) #xb(1,256) => output(1,10)
         # logsoftmax puts values in the range [-inf,0)
         return self.logsoftmax(output), matrix3x3, matrix64x64
+
+    
+def regularization_loss(m3x3, m64x64,batch_size,device=D.DEVICE(), alpha=1e-4):
+     # Make identity matrix (batch_size,3,3) for m3x3 matrices. Used for regularization loss for matrix.
+    identity_3x3 = torch.eye(3,requires_grad=True,device=device).repeat(batch_size,1,1)
+    # Make identity matrix (batch_size,64,64) for m64x64 matrices. Used for regularization loss for matrix.
+    identity_64x64 = torch.eye(64,requires_grad=True,device=device).repeat(batch_size,1,1)
+    # Get regularization loss for 3x3 matrix batch
+    reg_loss3x3 = identity_3x3 - torch.bmm(m3x3, m3x3.transpose(1, 2))
+    # Get regularization loss for 64x64 matrix batch
+    reg_loss64x64 = identity_64x64 - torch.bmm(m64x64, m64x64.transpose(1, 2))
+    regularization_loss = alpha* (torch.norm(reg_loss3x3) + torch.norm(reg_loss64x64)) / float(batch_size)
+    return regularization_loss
+
+def pointnet_classifier_losses(output_labels,real_labels,m3x3,m64x64):
+    criterion = nn.NLLLoss() #Classification loss between output labels and real labels
+    reg_loss = regularization_loss(m3x3,m64x64,output_labels.shape[0])
+    classification_loss = criterion(output_labels, real_labels)
+    return classification_loss + reg_loss
