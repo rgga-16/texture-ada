@@ -36,9 +36,6 @@ def main():
     data = json.load(open(args.uv_style_pairs))
     uv_style_pairs = data['uv_style_pairs']
 
-    uv_style_trainpairs = dict(itertools.islice(uv_style_pairs.items(),6))
-    uv_style_testpairs = dict(itertools.islice(uv_style_pairs.items(),4))
-
     uv_dir = None 
     if args.uv_dir is not None:
         uv_dir = args.uv_dir
@@ -56,15 +53,9 @@ def main():
         raise ValueError('Style images directory was not specified in terminal or in UV-Style pairs json file..')
     
     # Setup dataset for training
-    # dataset = UV_Style_Paired_Dataset(
-    #     uv_dir=uv_dir,
-    #     style_dir=style_dir,
-    #     uv_sizes=args.uv_train_sizes,
-    #     style_size=args.style_size,
-    #     uv_style_pairs=uv_style_trainpairs
-    # )
     train_set = DTD('train',lower_size=40)
-    # test_set = DTD('test',lower_size=10)
+    val_set = DTD('val',lower_size=40)
+    test_set = DTD('test',lower_size=10)
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
@@ -75,27 +66,31 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn)
-    test_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn)
+    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
+    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
+    test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
 
     # Training. Returns path of the generator weights.
-    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader)
-    # gen_path='./Pyramid2D_adain.pth'
+    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
+    
+    # Test on DTD Test Set
     #######################################
     for i, texture in enumerate(test_loader):
         output_path = os.path.join(output_folder,'{}.png'.format(i))
         test_texture2(net,texture,gen_path,output_path)
-
+    
+    # Test on Furniture pairngs
     #######################################
-    # test_files = uv_style_pairs.items()
-    # for uv_file,style_file in test_files:
-    #     uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
-    #     texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
+    test_files = uv_style_pairs.items()
+    for uv_file,style_file in test_files:
+        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
+        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
         
-    #     output_path = os.path.join(output_folder,uv_file)
+        output_path = os.path.join(output_folder,uv_file)
 
-    #     test_texture(net,uv,texture,gen_path,output_path)
+        test_texture(net,uv,texture,gen_path,output_path)
     #######################################
+
     # INSERT RENDERING MODULE HERE
     #######################################
 
