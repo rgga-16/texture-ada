@@ -53,9 +53,10 @@ def main():
         raise ValueError('Style images directory was not specified in terminal or in UV-Style pairs json file..')
     
     # Setup dataset for training
-    train_set = DTD('train',lower_size=40)
-    val_set = DTD('val',lower_size=40)
-    test_set = DTD('test',lower_size=10)
+    remove_classes= ['cobwebbed','freckled','stained']
+    train_set = DTD('train',remove_classes=remove_classes)
+    val_set = DTD('val',remove_classes=remove_classes)
+    test_set = DTD('test',lower_size=40,remove_classes=remove_classes)
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
