@@ -1,3 +1,4 @@
+from numpy.lib.function_base import _quantile_is_valid
 import torch
 import numpy as np
 import os, copy
@@ -8,68 +9,98 @@ from helpers import logger
 import style_transfer as st
 
 
-def train_texture(generator,feat_extractor,train_loader,val_loader=None):
+def train_texture(generator,feat_extractor,train_loader,val_loader):
     lr = args.lr
     epochs = args.epochs
-    checkpoint=len(train_loader)//5
+    chkpt_interval = 5
+    batch_chkpt= 1 if len(train_loader) <= chkpt_interval else len(train_loader)//chkpt_interval
+    epoch_chkpt = 1 if epochs <= chkpt_interval else epochs//chkpt_interval
 
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-    scheduler = torch.optim.ReduceLROnPlateau(optim,mode='min',patience=3,verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=1,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
 
-    loss_history=[]
-    epoch_chkpts=[]
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
 
     for epoch in range(epochs):
         generator.train()
         running_loss=0.0
+        train_loss,val_loss=0.0,0.0
+        curr_lr = optim.param_groups[0]['lr']
+        # Train Loop
         for i, texture in enumerate(train_loader):
             texture = texture.to(D.DEVICE())
             bs = texture.shape[0]
             optim.zero_grad()
-            style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
-
+            style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
             # Setup inputs 
             w = args.uv_train_sizes[0]
-            input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
-            inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
-
+            inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in [w, w//2,w//4,w//8,w//16,w//32]]
             # Get output
             output = generator(inputs,texture)
-            out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
-
+            out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
             # Get style loss
             style_loss=0
             for s in style_layers.values():
                 diff = mse_loss(out_feats[s],style_feats[s])
                 style_loss += s_layer_weights[s] * diff
-
             # Get loss
             loss = (style_loss * args.style_weight)
             loss.backward()
             optim.step()
-            
+
+            train_loss+= loss.item() * bs
             running_loss+=loss.item()
-            if(i%checkpoint==checkpoint-1):
-                print('[Epoch {} | Batch {}/{}] Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),running_loss/checkpoint,lr))
-                loss_history.append(loss)
-                epoch_chkpts.append(i)
+            if(i%batch_chkpt==batch_chkpt-1):
+                print('[Epoch {} | Train Batch {}/{}] Train Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),running_loss/batch_chkpt,curr_lr))
                 running_loss=0.0
-        scheduler.step()
+        
+        
+        # Validation Loop
+        generator.eval()
+        for j,texture in enumerate(val_loader):
+            texture = texture.to(D.DEVICE())
+            bs = texture.shape[0]
+            style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
+            # Setup inputs 
+            w = args.uv_test_sizes[0]
+            input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+            inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+            # Get output
+            with torch.no_grad():
+                output = generator(inputs,texture)
+                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
+                # Get style loss
+                style_loss=0
+                for s in style_layers.values():
+                    diff = mse_loss(out_feats[s],style_feats[s])
+                    style_loss += s_layer_weights[s] * diff
+                # Get loss
+                style_val_loss = (style_loss * args.style_weight)
+                val_loss+= style_val_loss.item() * bs
+                # INSERT METRIC CALCULATION HERE
 
-    model_file = '{}.pth'.format(generator.__class__.__name__)
-    gen_path = os.path.join(args.output_dir,model_file)
+        print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t LR: {}\n'.format(epoch+1,
+                                                                                    train_loss/len(train_loader), 
+                                                                                    val_loss/len(val_loader), 
+                                                                                    curr_lr ))
+        scheduler.step(val_loss/len(val_loader))
+        if (epoch%epoch_chkpt==epoch_chkpt-1):
+            gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_epoch-{epoch+1}.pth')
+            torch.save(generator.state_dict(),gen_path)
+            print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
+
+    gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_final.pth')
     torch.save(generator.state_dict(),gen_path)
-    print('Model saved in {}'.format(gen_path))
+    print('Final Model saved in {}\n'.format(gen_path))
 
-    losses_file = 'losses.png'
-    losses_path = os.path.join(args.output_dir,losses_file)
-    logger.log_losses(loss_history,epoch_chkpts,losses_path)
-    print('Loss history saved in {}'.format(losses_path))
+    # losses_file = 'losses.png'
+    # losses_path = os.path.join(args.output_dir,losses_file)
+    # logger.log_losses(loss_history,epoch_chkpts,losses_path)
+    # print('Loss history saved in {}'.format(losses_path))
     return gen_path
 
 # def train_texture(generator,feat_extractor,dataloader,checkpoint=5):
