@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import os
 import args as args_
-args = args_.parse_arguments()
+
 from re import search
 
 
@@ -11,7 +11,7 @@ def main():
 
     input_dir = './inputs/style_images/masked'
     output_dir = './inputs/style_images/cropped'
-
+    args = args_.parse_arguments()
     for file in os.listdir(input_dir):
         if search('cobonpue',file):
             input_path = os.path.join(input_dir,file)

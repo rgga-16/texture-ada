@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import args as args_
-args = args_.parse_arguments()
+
 from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD
 from defaults import DEFAULTS as D
@@ -23,8 +23,9 @@ def main():
     print("Starting texture transfer..")
     print("="*10)
     device = D.DEVICE()
-
+    
     start=time.time()
+    args = args_.parse_arguments()
 
     # Setup generator model 
     net = Pyramid2D_adain(ch_in=3, ch_step=64,ch_out=3).to(device)

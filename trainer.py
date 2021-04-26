@@ -4,13 +4,13 @@ import numpy as np
 import os, copy
 
 import args as args_
-args = args_.parse_arguments()
 from defaults import DEFAULTS as D
 from helpers import logger
 import style_transfer as st
 
 
 def train_texture(generator,feat_extractor,train_loader,val_loader):
+    args = args_.parse_arguments()
     lr = args.lr
     epochs = args.epochs
     n_batch_chkpts = args.num_batch_chkpts

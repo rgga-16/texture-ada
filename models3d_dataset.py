@@ -7,7 +7,7 @@ import os, json
 from helpers import image_utils, model_utils
 from defaults import DEFAULTS as D
 import args as args_
-args = args_.parse_arguments()
+
 
 
 class Pix3D(Dataset):
@@ -26,6 +26,7 @@ class Pix3D(Dataset):
         return len(self.data)
     
     def __getitem__(self, index):
+        args = args_.parse_arguments()
         sample = self.data[index]
 
         model_path = os.path.join(self.root_dir,sample['model'])

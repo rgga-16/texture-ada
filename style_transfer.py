@@ -9,7 +9,7 @@ import losses
 import models
 from models.texture_transfer_models import VGG19
 import args as args_
-args = args_.parse_arguments()
+
 
 
 import helpers.image_utils as utils
@@ -147,7 +147,7 @@ def get_mean_std(feat):
 
 if __name__ == '__main__':
     import os
-
+    args = args_.parse_arguments()
     # style_file = 'chair-5_masked.png'
     # content_file = 'uv_map_right_foot.png'
 

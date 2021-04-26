@@ -7,7 +7,7 @@ import os,h5py, scipy.io , itertools
 from helpers import image_utils
 from defaults import DEFAULTS as D
 import args as args_
-args = args_.parse_arguments()
+
 
 class Describable_Textures_Dataset(Dataset):
 
@@ -49,6 +49,7 @@ class Describable_Textures_Dataset(Dataset):
         return self.size
     
     def __getitem__(self, index):
+        args = args_.parse_arguments()
 
         # Each row in the dataset has [id,image_path,set,class]
         sample = self.data[index]

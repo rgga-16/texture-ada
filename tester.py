@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import args as args_
-args = args_.parse_arguments()
+
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 import os, copy, time, datetime ,json
 
 def test_texture2(generator,texture,gen_path,output_path):
+    args = args_.parse_arguments()
     generator.eval()
     generator.to(device=D.DEVICE())
 
@@ -33,6 +34,7 @@ def test_texture2(generator,texture,gen_path,output_path):
     print('Saving image as {}'.format(output_path_))
 
 def test_texture(generator,uv,texture,gen_path,output_path):
+    args = args_.parse_arguments()
     generator.eval()
     generator.to(device=D.DEVICE())
 

@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 import time
 
 import args as args_
-args = args_.parse_arguments()
+
 from seeder import SEED, init_fn
 from helpers import visualizer, logger, model_utils
 from models import structure_transfer_models, texture_transfer_models
@@ -26,6 +26,8 @@ import kaolin as kal
 import open3d as o3d
 
 import multiprocessing
+
+args = args_.parse_arguments()
 
 assert args.num_points is not None
 n_points=args.num_points
