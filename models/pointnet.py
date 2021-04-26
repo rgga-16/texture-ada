@@ -6,8 +6,8 @@ import torchvision
 from defaults import DEFAULTS as D
 
 from kaolin.metrics.pointcloud import chamfer_distance
-from chamferdist import ChamferDistance
-from external_libs.emd import emd_module as emd
+# from chamferdist import ChamferDistance
+# from external_libs.emd import emd_module as emd
 from external_libs.ChamferDistancePytorch.chamfer3D import dist_chamfer_3D
 from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
@@ -17,6 +17,7 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
     # emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
     # emd_loss = torch.sqrt(torch.sum(emd_loss) / float(batch_size))
     if (D.DEVICE().type=='cuda'):
+        # Link: https://github.com/ThibaultGROUEIX/ChamferDistancePytorch 
         dist_forward,dist_backward,_,_ = dist_chamfer_3D.chamfer_3DDist()(predicted_pointcloud,real_pointcloud)
     else:
         dist_forward,dist_backward,_,_ = chamfer_python.distChamfer(predicted_pointcloud,real_pointcloud)
