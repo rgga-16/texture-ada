@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 
-import os, json 
+import os, json, random 
 from helpers import image_utils, model_utils
 from defaults import DEFAULTS as D
 import args as args_
@@ -11,7 +11,7 @@ import args as args_
 
 
 class Pix3D(Dataset):
-    def __init__(self, n_points,categories:list=[],json_path='./data/3d-models/Pix3D/pix3d.json') -> None:
+    def __init__(self, n_points,categories:list=[],json_path='./data/3d-models/Pix3D/pix3d.json',lower_size=None) -> None:
         super().__init__()
 
         self.root_dir = os.path.dirname(json_path)
@@ -20,7 +20,9 @@ class Pix3D(Dataset):
 
         if len(categories)>0: 
             self.data = [d for d in self.data if d['category'].lower() in categories]
-        print()
+        
+        if lower_size:
+            self.data = random.sample(self.data,lower_size)
     
     def __len__(self):
         return len(self.data)
