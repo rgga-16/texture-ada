@@ -8,7 +8,8 @@ from defaults import DEFAULTS as D
 from kaolin.metrics.pointcloud import chamfer_distance
 # from chamferdist import ChamferDistance
 # from external_libs.emd import emd_module as emd
-from external_libs.ChamferDistancePytorch.chamfer3D import dist_chamfer_3D
+if D.DEVICE().type=='cuda':
+    from external_libs.ChamferDistancePytorch.chamfer3D import dist_chamfer_3D
 from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
 
