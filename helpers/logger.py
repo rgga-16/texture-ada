@@ -1,8 +1,9 @@
 import args as args_
-args = args_.parse_arguments()
+
 from matplotlib import pyplot as plt
 
 def log_args(path,**kwargs):
+    args = args_.parse_arguments()
     f = open(path,"x")
     f.writelines([
         "Configurations\n\n",
