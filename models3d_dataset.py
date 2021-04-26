@@ -6,19 +6,20 @@ from torch.utils.data import Dataset
 import os, json 
 from helpers import image_utils, model_utils
 from defaults import DEFAULTS as D
-from args import args
+import args as args_
+args = args_.parse_arguments()
 
 
 class Pix3D(Dataset):
-    def __init__(self, n_points,category:str=None,json_path='./data/3d-models/Pix3D/pix3d.json') -> None:
+    def __init__(self, n_points,categories:list=[],json_path='./data/3d-models/Pix3D/pix3d.json') -> None:
         super().__init__()
 
         self.root_dir = os.path.dirname(json_path)
         self.data = json.load(open(json_path))
         self.n_points=n_points
 
-        if category is not None: 
-            self.data = [d for d in self.data if d['category'].lower()==category.lower()]
+        if len(categories)>0: 
+            self.data = [d for d in self.data if d['category'].lower() in categories]
         print()
     
     def __len__(self):

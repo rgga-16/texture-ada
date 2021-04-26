@@ -1,7 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from dataset import UV_Style_Paired_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 

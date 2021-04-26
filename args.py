@@ -41,6 +41,3 @@ def parse_arguments():
                         help='To use multiple cpu cores for the dataloader or not')
 
     return parser.parse_args()
-
-global args
-args = parse_arguments()

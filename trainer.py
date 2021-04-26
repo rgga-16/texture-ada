@@ -3,7 +3,8 @@ import torch
 import numpy as np
 import os, copy
 
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from defaults import DEFAULTS as D
 from helpers import logger
 import style_transfer as st

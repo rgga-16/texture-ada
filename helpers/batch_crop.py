@@ -2,7 +2,8 @@ from helpers import crop
 from PIL import Image
 import numpy as np
 import os
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from re import search
 
 

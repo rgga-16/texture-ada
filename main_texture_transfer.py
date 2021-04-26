@@ -2,7 +2,8 @@
 import torch
 from torch.utils.data import DataLoader
 
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD
 from defaults import DEFAULTS as D

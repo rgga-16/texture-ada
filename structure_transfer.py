@@ -10,7 +10,8 @@ import math
 from matplotlib import pyplot as plt
 import time
 
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from seeder import SEED, init_fn
 from helpers import visualizer, logger, model_utils
 from models import structure_transfer_models, texture_transfer_models
@@ -30,7 +31,7 @@ assert args.num_points is not None
 n_points=args.num_points
 
 # Setup dataset
-dataset= Pix3D(n_points,category='chair')
+dataset= Pix3D(n_points,categories=['chair'])
 train_size, val_size, test_size = round(0.70 * dataset.__len__()),round(0.20 * dataset.__len__()),round(0.10 * dataset.__len__())
 train_dataset, val_dataset, test_dataset = data.random_split(dataset,[train_size,val_size,test_size],
                                                             generator = torch.Generator().manual_seed(SEED))
@@ -83,15 +84,15 @@ for epoch in range(n_epochs):
             loss,f_score,precision,recall = models.pointnet.pointcloud_autoencoder_loss(output,pointcloud,is_eval=True)
         val_loss+= loss.item() * bs
         val_running_loss+=loss.item()
-        if(i%batch_val_chkpt==batch_val_chkpt-1):
+        if(j%batch_val_chkpt==batch_val_chkpt-1):
             print('[Epoch {} | Val Batch {}/{} ] Loss: {:.3f}\t F-Score: {}\t Precision: {}\t Recall: {}'.format(epoch+1,j+1,
-            len(val_loader),val_running_loss/batch_val_chkpt,f_score,precision,recall))
+            len(val_loader),val_running_loss/batch_val_chkpt,f_score.mean(),precision.mean(),recall.mean()))
             val_running_loss=0.0
     print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t \n'.format(epoch+1,
                                                                                 train_loss/len(train_loader), 
                                                                                 val_loss/len(val_loader)))
     if (epoch%epoch_chkpt==epoch_chkpt-1):
-        gen_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_epoch-{epoch+1}.pth')
+        gen_path = f'{model.__class__.__name__}_epoch-{epoch+1}.pth'
         torch.save(model.state_dict(),gen_path)
         print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
 

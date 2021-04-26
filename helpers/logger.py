@@ -1,4 +1,5 @@
-from args import args
+import args as args_
+args = args_.parse_arguments()
 from matplotlib import pyplot as plt
 
 def log_args(path,**kwargs):

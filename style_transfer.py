@@ -8,7 +8,8 @@ from torchvision import transforms
 import losses
 import models
 from models.texture_transfer_models import VGG19
-from args import args
+import args as args_
+args = args_.parse_arguments()
 
 
 import helpers.image_utils as utils
