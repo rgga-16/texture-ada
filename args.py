@@ -9,7 +9,7 @@ def parse_arguments():
     
     parser = argparse.ArgumentParser(
         description='Texture Transfer Algorithm')
-    parser.add_argument('--uv_style_pairs',type=str, 
+    parser.add_argument('--uv_style_pairs',type=str, default=None,
                         help='Path to .json file of uv map and style image pairings.')
     parser.add_argument('--style_dir', type=str, default=None,
                         help='Path to the style images directory to retrieve textures from')
