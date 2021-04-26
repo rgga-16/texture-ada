@@ -54,8 +54,8 @@ def main():
     
     # Setup dataset for training
     remove_classes= ['cobwebbed','freckled','stained']
-    train_set = DTD('train',remove_classes=remove_classes)
-    val_set = DTD('val',remove_classes=remove_classes)
+    train_set = DTD('train',lower_size=200,remove_classes=remove_classes)
+    val_set = DTD('val',lower_size=200,remove_classes=remove_classes)
     test_set = DTD('test',lower_size=40,remove_classes=remove_classes)
 
     # Create output folder
