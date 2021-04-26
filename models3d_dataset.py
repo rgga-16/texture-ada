@@ -28,7 +28,7 @@ class Pix3D(Dataset):
         return len(self.data)
     
     def __getitem__(self, index):
-        args = args_.parse_arguments()
+        # args = args_.parse_arguments()
         sample = self.data[index]
 
         model_path = os.path.join(self.root_dir,sample['model'])
@@ -41,7 +41,7 @@ class Pix3D(Dataset):
         pointcloud = model_utils.mesh_to_pointcloud(verts,faces,self.n_points)
 
         # Preprocess image
-        image = image_utils.image_to_tensor(image_utils.load_image(image_path),image_size=args.style_size)
+        image = image_utils.image_to_tensor(image_utils.load_image(image_path),image_size=256)
 
         return pointcloud.squeeze(),image.squeeze()
         
