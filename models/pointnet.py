@@ -105,25 +105,23 @@ class Pointnet_Autoencoder(nn.Module):
 
         # Custom Resblock
         #################################
-        self.res1 = ResidualBlock(128)
-        self.res2 = ResidualBlock(128)
-        self.res3 = ResidualBlock(128)
-        self.res4 = ResidualBlock(128)
-        self.res5 = ResidualBlock(128)
+        # self.res1 = ResidualBlock(128)
+        # self.res2 = ResidualBlock(128)
+        # self.res3 = ResidualBlock(128)
+        # self.res4 = ResidualBlock(128)
+        # self.res5 = ResidualBlock(128)
         #################################
 
         # Custom Decoder
         #################################
-        # self.deconv1 = nn.ConvTranspose1d(128,64,kernel_size=3,stride=2)
-        self.deconv1 = UpsampleConvLayer(128,64,kernel_size=3,stride=1,upsample=2)
+        self.deconv1 = nn.ConvTranspose1d(128,64,kernel_size=3,stride=2)
+        # self.deconv1 = UpsampleConvLayer(128,64,kernel_size=3,stride=1,upsample=2)
         self.dbn1 = nn.BatchNorm1d(64)
-        # self.deconv2 = nn.ConvTranspose1d(64,32,kernel_size=3,stride=2)
-        self.deconv2 = UpsampleConvLayer(64,32,kernel_size=3,stride=1,upsample=2)
+        self.deconv2 = nn.ConvTranspose1d(64,32,kernel_size=3,stride=2)
+        # self.deconv2 = UpsampleConvLayer(64,32,kernel_size=3,stride=1,upsample=2)
         self.dbn2 = nn.BatchNorm1d(32)
-        # self.deconv3 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
-        self.deconv3 = UpsampleConvLayer(32,point_dim,kernel_size=9,stride=1,upsample=2)
-        # self.dbn3 = nn.BatchNorm1d(32)
-        # self.deconv4 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
+        self.deconv3 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
+        # self.deconv3 = UpsampleConvLayer(32,point_dim,kernel_size=9,stride=1,upsample=2)
         #################################
         
 
