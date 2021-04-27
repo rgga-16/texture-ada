@@ -92,14 +92,14 @@ class Pointnet_Autoencoder(nn.Module):
         self.n_points=n_points
         # Custom Encoder
         #################################
-        self.conv1 = ConvLayer(point_dim,32,kernel_size=9,stride=1)
-        # self.conv1 = nn.Conv1d(point_dim,32,kernel_size=9,stride=1)
+        # self.conv1 = ConvLayer(point_dim,32,kernel_size=9,stride=1)
+        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=9,stride=1)
         self.bn1 = nn.BatchNorm1d(32,affine=True)
-        self.conv2 = ConvLayer(32,64,kernel_size=3,stride=2)
-        # self.conv2 = nn.Conv1d(32,64,kernel_size=3,stride=2)
+        # self.conv2 = ConvLayer(32,64,kernel_size=3,stride=2)
+        self.conv2 = nn.Conv1d(32,64,kernel_size=3,stride=2)
         self.bn2 = nn.BatchNorm1d(64,affine=True)
-        self.conv3 = ConvLayer(64,128,kernel_size=3,stride=2)
-        # self.conv3 = nn.Conv1d(64,128,kernel_size=3,stride=2)
+        # self.conv3 = ConvLayer(64,128,kernel_size=3,stride=2)
+        self.conv3 = nn.Conv1d(64,128,kernel_size=3,stride=2)
         self.bn3 = nn.BatchNorm1d(128,affine=True)
         #################################
 
