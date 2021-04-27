@@ -23,8 +23,7 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
     else:
         dist_forward,dist_backward,_,_ = chamfer_python.distChamfer(predicted_pointcloud,real_pointcloud)
     # Averaging is doen to get the mean chamfer_loss in the batch of pointclouds.
-    chamfer_loss = (dist_forward.sum(dim=-1)+dist_backward.sum(dim=-1)).mean()
-
+    chamfer_loss = (dist_forward.mean(dim=-1)+dist_backward.mean(dim=-1)).mean()
     if is_eval:
         f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
         return chamfer_loss,f_score,precision,recall
