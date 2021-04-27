@@ -139,11 +139,11 @@ class Pointnet_Autoencoder(nn.Module):
         x = F.relu(self.bn3(self.conv3(x))) 
         #################################
 
-        x = F.relu(self.res1(x))
-        x = F.relu(self.res2(x))
-        x = F.relu(self.res3(x))
-        x = F.relu(self.res4(x))
-        x = F.relu(self.res5(x))
+        # x = F.relu(self.res1(x))
+        # x = F.relu(self.res2(x))
+        # x = F.relu(self.res3(x))
+        # x = F.relu(self.res4(x))
+        # x = F.relu(self.res5(x))
 
         #Custom Decoder
         #################################
