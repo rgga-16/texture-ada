@@ -56,9 +56,9 @@ def main():
     
     # Setup dataset for training
     remove_classes= ['cobwebbed','freckled','stained']
-    train_set = DTD('train',lower_size=200,remove_classes=remove_classes)
-    val_set = DTD('val',lower_size=200,remove_classes=remove_classes)
-    test_set = DTD('test',lower_size=40,remove_classes=remove_classes)
+    train_set = DTD('train',lower_size=20,remove_classes=remove_classes)
+    val_set = DTD('val',lower_size=20,remove_classes=remove_classes)
+    test_set = DTD('test',lower_size=5,remove_classes=remove_classes)
 
     # Create output folder
     # This will store the model, output images, loss history chart and configurations log
