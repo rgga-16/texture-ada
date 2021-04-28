@@ -57,18 +57,18 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
-                                    style_files=uv_style_pairs.values())
-    train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
-    train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
-                                                            generator = torch.Generator().manual_seed(SEED))
+    # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
+    #                                 style_files=uv_style_pairs.values())
+    # train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
+    # train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
+    #                                                         generator = torch.Generator().manual_seed(SEED))
     ####################
     # DTD
     ####################
-    # remove_classes= ['cobwebbed','freckled','stained']
-    # train_set = DTD('train',lower_size=1,remove_classes=remove_classes)
-    # val_set = DTD('val',lower_size=1,remove_classes=remove_classes)
-    # test_set = DTD('test',lower_size=1,remove_classes=remove_classes)
+    remove_classes= ['cobwebbed','freckled','stained']
+    train_set = DTD('train',lower_size=20,remove_classes=remove_classes)
+    val_set = DTD('val',lower_size=20,remove_classes=remove_classes)
+    test_set = DTD('test',lower_size=10,remove_classes=remove_classes)
     ####################
 
     # Create output folder
@@ -80,8 +80,8 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
-    val_loader = DataLoader(val_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
+    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
+    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
     test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
 
     # Training. Returns path of the generator weights.
