@@ -40,8 +40,13 @@ class Pix3D(Dataset):
         verts,faces,_ = model_utils.load_mesh(model_path)
         pointcloud = model_utils.mesh_to_pointcloud(verts,faces,self.n_points)
 
-        # Preprocess image
-        image = image_utils.image_to_tensor(image_utils.load_image(image_path),image_size=256)
+        img = image_utils.load_image(image_path)
+        mask = image_utils.load_image(mask_path,mode='L')
+        masked_img = img 
+        masked_img.putalpha(mask)
 
-        return pointcloud.squeeze(),image.squeeze()
+        # Preprocess image
+        image_tensor = image_utils.image_to_tensor(masked_img,image_size=256)[:3,...]
+
+        return pointcloud.squeeze(),image_tensor.squeeze()
         
