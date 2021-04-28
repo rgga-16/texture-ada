@@ -21,7 +21,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=5,verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
 
     style_layers = D.STYLE_LAYERS.get()
@@ -89,7 +89,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                                                                                     train_loss/len(train_loader), 
                                                                                     val_loss/len(val_loader), 
                                                                                     curr_lr ))
-        scheduler.step(val_loss/len(val_loader))
+        scheduler.step(val_loss)
         if (epoch%epoch_chkpt==epoch_chkpt-1):
             gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_epoch-{epoch+1}.pth')
             torch.save(generator.state_dict(),gen_path)
