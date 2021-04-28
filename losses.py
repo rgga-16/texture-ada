@@ -23,8 +23,6 @@ def adaptive_instance_normalization(content_feat, style_feat):
     style_mean, style_std = calc_mean_std(style_feat)
     content_mean, content_std = calc_mean_std(content_feat)
 
-    content_mean.squeeze_()
-    
     normalized_feat = (content_feat - content_mean.expand(
         size)) / content_std.expand(size)
     return normalized_feat * style_std.expand(size) + style_mean.expand(size)
