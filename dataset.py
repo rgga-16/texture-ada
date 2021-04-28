@@ -62,6 +62,27 @@ class Describable_Textures_Dataset(Dataset):
         
         return image
 
+class Styles_Dataset(Dataset):
+
+    def __init__(self, style_dir, style_size, style_files):
+        super().__init__()
+
+        self.style_dir = style_dir 
+        self.style_size = style_size 
+        self.style_files = []
+        
+        for s in style_files:
+            self.style_files.append(os.path.join(self.style_dir,s))
+    
+    def __len__(self):
+        return len(self.style_files)
+
+    def __getitem__(self, index):
+        style_im = self.style_files[index]
+        style = image_utils.image_to_tensor(image_utils.load_image(style_im),image_size=self.style_size).detach()
+        style = style[:3,...]
+        return style
+
 
 class UV_Style_Paired_Dataset(Dataset):
 
