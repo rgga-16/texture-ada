@@ -11,7 +11,7 @@ import args as args_
 
 class Describable_Textures_Dataset(Dataset):
 
-    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[],lower_size=None) -> None:
+    def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[],only_class=[],lower_size=None) -> None:
         assert set.lower() in ['train','val','test']
 
         self.root = root
@@ -31,6 +31,9 @@ class Describable_Textures_Dataset(Dataset):
 
         if remove_classes:
             self.data = np.asarray([x for x in self.data if os.path.dirname(x[1]) not in remove_classes])
+        
+        if only_class:
+            self.data = np.asarray([x for x in self.data if os.path.dirname(x[1]) in only_class])
         
         if set.lower()=='train':
             self.data = self.data[(self.data[:,2]=='1')] 
