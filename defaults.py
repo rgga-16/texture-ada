@@ -37,12 +37,11 @@ class DEFAULTS(Enum):
     STYLE_LAYERS = {
         '3': 'relu1_2',   # Style layers
         '8': 'relu2_2',
-        '17' : 'relu3_4',
+        '13' : 'relu3_4',
         '26' : 'relu4_4',
-        '35' : 'relu5_4',
     }
     SL_WEIGHTS = {
-        layer: 0.2 for layer in STYLE_LAYERS.values()
+        layer: 0.25 for layer in STYLE_LAYERS.values()
     }
 
     MASK_DIR = 'data/images/masks'
