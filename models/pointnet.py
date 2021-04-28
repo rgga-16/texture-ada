@@ -4,6 +4,7 @@ from torch import nn
 from torch.nn import functional as F
 import torchvision
 from defaults import DEFAULTS as D
+from losses import adaptive_instance_normalization,adain_pointcloud
 
 from kaolin.metrics.pointcloud import chamfer_distance
 # from chamferdist import ChamferDistance
@@ -17,12 +18,13 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
     # earth_movers_distance_loss = emd.emdModule()
     # emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
     # emd_loss = torch.sqrt(torch.sum(emd_loss) / float(batch_size))
+
     if (D.DEVICE().type=='cuda'):
         # Link: https://github.com/ThibaultGROUEIX/ChamferDistancePytorch 
         dist_forward,dist_backward,_,_ = dist_chamfer_3D.chamfer_3DDist()(predicted_pointcloud,real_pointcloud)
     else:
         dist_forward,dist_backward,_,_ = chamfer_python.distChamfer(predicted_pointcloud,real_pointcloud)
-    # Averaging is doen to get the mean chamfer_loss in the batch of pointclouds.
+    # # Averaging is doen to get the mean chamfer_loss in the batch of pointclouds.
     chamfer_loss = (dist_forward.mean(dim=-1)+dist_backward.mean(dim=-1)).mean()
     if is_eval:
         f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
@@ -30,125 +32,123 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
 
     return chamfer_loss
 
-
-class ConvLayer(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride):
-        super(ConvLayer, self).__init__()
-        reflection_padding = kernel_size // 2
-        self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
-        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
-
-    def forward(self, x):
-        out = self.reflection_pad(x)
-        out = self.conv1d(out)
-        return out
-
-class UpsampleConvLayer(torch.nn.Module):
-    """UpsampleConvLayer
-    Upsamples the input and then does a convolution. This method gives better results
-    compared to ConvTranspose2d.
-    ref: http://distill.pub/2016/deconv-checkerboard/
-    """
-    def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
-        super(UpsampleConvLayer, self).__init__()
-        self.upsample = upsample
-        reflection_padding = kernel_size // 2
-        self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
-        self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
-    def forward(self, x):
-        x_in = x
-        if self.upsample:
-            x_in = torch.nn.functional.interpolate(x_in, mode='nearest', scale_factor=self.upsample)
-        out = self.reflection_pad(x_in)
-        out = self.conv1d(out)
-        return out
-
-class ResidualBlock(torch.nn.Module):
-    """ResidualBlock
-    introduced in: https://arxiv.org/abs/1512.03385
-    recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html
-    """
-
-    def __init__(self, channels):
-        super(ResidualBlock, self).__init__()
-        self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        self.in1 = nn.BatchNorm1d(channels, affine=True)
-        self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        self.in2 = nn.BatchNorm1d(channels, affine=True)
-        self.relu = torch.nn.ReLU()
-
-    def forward(self, x):
-        residual = x
-        out = self.relu(self.in1(self.conv1(x)))
-        out = self.in2(self.conv2(out))
-        out = out + residual
-        return out
-
-
 class Pointnet_Autoencoder(nn.Module):
     def __init__(self,n_points,point_dim=3):
         super(Pointnet_Autoencoder,self).__init__()
         self.n_points=n_points
-        # Custom Encoder
-        #################################
-        # self.conv1 = ConvLayer(point_dim,32,kernel_size=9,stride=1)
-        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=9,stride=1)
+
+        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=1,stride=2)
         self.bn1 = nn.BatchNorm1d(32,affine=True)
-        # self.conv2 = ConvLayer(32,64,kernel_size=3,stride=2)
-        self.conv2 = nn.Conv1d(32,64,kernel_size=3,stride=2)
+        self.conv2 = nn.Conv1d(32,64,kernel_size=1,stride=2)
         self.bn2 = nn.BatchNorm1d(64,affine=True)
-        # self.conv3 = ConvLayer(64,128,kernel_size=3,stride=2)
-        self.conv3 = nn.Conv1d(64,128,kernel_size=3,stride=2)
+        self.conv3 = nn.Conv1d(64,128,kernel_size=1,stride=2)
         self.bn3 = nn.BatchNorm1d(128,affine=True)
-        #################################
+        self.conv4 = nn.Conv1d(128, 256, kernel_size=1,stride=2)
+        self.bn4 = nn.BatchNorm1d(256,affine=True)
+        self.conv5 = nn.Conv1d(256, 512, kernel_size=1,stride=2)
+        self.bn5 = nn.BatchNorm1d(512,affine=True)
 
-        # Custom Resblock
-        #################################
-        # self.res1 = ResidualBlock(128)
-        # self.res2 = ResidualBlock(128)
-        # self.res3 = ResidualBlock(128)
-        # self.res4 = ResidualBlock(128)
-        # self.res5 = ResidualBlock(128)
-        #################################
-
-        # Custom Decoder
-        #################################
-        self.deconv1 = nn.ConvTranspose1d(128,64,kernel_size=3,stride=2)
-        # self.deconv1 = UpsampleConvLayer(128,64,kernel_size=3,stride=1,upsample=2)
-        self.dbn1 = nn.BatchNorm1d(64)
-        self.deconv2 = nn.ConvTranspose1d(64,32,kernel_size=3,stride=2)
-        # self.deconv2 = UpsampleConvLayer(64,32,kernel_size=3,stride=1,upsample=2)
+        self.deconv5 = nn.ConvTranspose1d(512,256,kernel_size=2,stride=2)
+        self.dbn5 = nn.BatchNorm1d(256)
+        self.deconv4 = nn.ConvTranspose1d(256,128,kernel_size=2,stride=2)
+        self.dbn4 = nn.BatchNorm1d(128)
+        self.deconv3 = nn.ConvTranspose1d(128,64,kernel_size=2,stride=2)
+        self.dbn3 = nn.BatchNorm1d(64)
+        self.deconv2 = nn.ConvTranspose1d(64,32,kernel_size=2,stride=2)
         self.dbn2 = nn.BatchNorm1d(32)
-        self.deconv3 = nn.ConvTranspose1d(32,point_dim,kernel_size=9,stride=1)
-        # self.deconv3 = UpsampleConvLayer(32,point_dim,kernel_size=9,stride=1,upsample=2)
-        #################################
+        self.deconv1 = nn.ConvTranspose1d(32,point_dim,kernel_size=2,stride=2)
         
+
+    def forward(self,pointcloud,image_feats):
+        # Change pointcloud to shape (batch_size,3,n_points)
+        pointcloud = pointcloud.permute(0,2,1)
+        assert pointcloud.dim()==3
+
+        x = F.relu(self.bn1(self.conv1(pointcloud))) 
+        pfeat_relu1_2 = F.relu(self.bn2(self.conv2(x))) 
+        pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
+
+        pfeat_relu2_2 = F.relu(self.bn3(self.conv3(pfeat_relu1_2))) 
+        pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
+
+        pfeat_relu3_4 = F.relu(self.bn4(self.conv4(pfeat_relu2_2))) 
+        pfeat_relu3_4 = adain_pointcloud(pfeat_relu3_4,image_feats['relu3_4'])
+
+        pfeat_relu4_4 = F.relu(self.bn5(self.conv5(pfeat_relu3_4))) 
+        pfeat_relu4_4 = adain_pointcloud(pfeat_relu4_4,image_feats['relu4_4'])
+
+        x = F.relu(self.dbn5(self.deconv5(pfeat_relu4_4)))
+        x = F.relu(self.dbn4(self.deconv4(x)))
+        x = F.relu(self.dbn3(self.deconv3(x)))
+        x = F.relu(self.dbn2(self.deconv2(x)))
+        output =self.deconv1(x)
+
+
+        output = output.permute(0,2,1)
+        return output
+
+class Pointnet_UpconvAutoencoder(nn.Module):
+    def __init__(self,n_points,point_dim=3):
+        super(Pointnet_UpconvAutoencoder,self).__init__()
+        self.n_points=n_points
+
+        # Encoder Portion
+        self.conv1 = nn.Conv1d(point_dim,64,kernel_size=point_dim,stride=1)
+        self.bn1 = nn.InstanceNorm1d(64,affine=True)
+        self.conv2 = nn.Conv1d(64,64,kernel_size=1,stride=1)
+        self.bn2 = nn.InstanceNorm1d(64,affine=True)
+        self.conv3 = nn.Conv1d(64,64,kernel_size=1,stride=1)
+        self.bn3 = nn.InstanceNorm1d(64,affine=True)
+        self.conv4 = nn.Conv1d(64,128,kernel_size=1,stride=1)
+        self.bn4 = nn.InstanceNorm1d(128,affine=True)
+        self.conv5 = nn.Conv1d(128,1024,kernel_size=(point_dim),stride=1)
+        self.bn5 = nn.InstanceNorm1d(1024,affine=True)
+        self.maxpool = nn.AdaptiveMaxPool1d(output_size=1)
+        # end Encoder Portion
+
+        self.fc = nn.Linear(1024,1024)
+        self.bnfc = nn.BatchNorm1d(1024)
+
+        #Start Decoder Portion
+        self.deconv1=nn.ConvTranspose2d(512,512,kernel_size=(2,2),stride=(2,2))
+        self.dbn1 = nn.InstanceNorm2d(512)
+        self.deconv2=nn.ConvTranspose2d(512,256,kernel_size=(3,3),stride=(1,1))
+        self.dbn2 = nn.InstanceNorm2d(256)
+        self.deconv3=nn.ConvTranspose2d(256,256,kernel_size=(4,5),stride=(2,3))
+        self.dbn3 = nn.InstanceNorm2d(256)
+        self.deconv4=nn.ConvTranspose2d(256,128,kernel_size=(5,7),stride=(3,3))
+        self.dbn4 = nn.InstanceNorm2d(128)
+        self.deconv5=nn.ConvTranspose2d(128,3,kernel_size=(1,1),stride=(1,1))
+
 
     def forward(self,pointcloud):
         # Change pointcloud to shape (batch_size,3,n_points)
         pointcloud = pointcloud.permute(0,2,1)
         assert pointcloud.dim()==3
+        bs = pointcloud.shape[0]
+        point_dim = pointcloud.shape[1]
 
-        #Custom Encoder
-        #################################
-        x = F.relu(self.bn1(self.conv1(pointcloud))) 
-        x = F.relu(self.bn2(self.conv2(x))) 
-        x = F.relu(self.bn3(self.conv3(x))) 
-        #################################
+        net = F.relu(self.bn1(self.conv1(pointcloud)))
+        net = F.relu(self.bn2(self.conv2(net)))
+        net = F.relu(self.bn3(self.conv3(net)))
+        net = F.relu(self.bn4(self.conv4(net)))
+        net = F.relu(self.bn5(self.conv5(net)))
 
-        # x = F.relu(self.res1(x))
-        # x = F.relu(self.res2(x))
-        # x = F.relu(self.res3(x))
-        # x = F.relu(self.res4(x))
-        # x = F.relu(self.res5(x))
+        global_feat = self.maxpool(net)
+        global_feat = torch.reshape(global_feat,(bs,-1))
 
-        #Custom Decoder
-        #################################
-        x = F.relu(self.dbn1(self.deconv1(x)))
-        x = F.relu(self.dbn2(self.deconv2(x))) 
-        output = self.deconv3(x)
-        #################################
+        net = F.relu(self.bnfc(self.fc(global_feat)))
 
+        net = torch.reshape(global_feat,(bs,-1))
+        net = torch.reshape(net,(bs,-1,1,2))
+
+        net = F.relu(self.dbn1(self.deconv1(net)))
+        net = F.relu(self.dbn2(self.deconv2(net)))
+        net = F.relu(self.dbn3(self.deconv3(net)))
+        net = F.relu(self.dbn4(self.deconv4(net)))
+        output = self.deconv5(net)
+
+        output=torch.reshape(output,(bs,point_dim,-1))
         output = output.permute(0,2,1)
         return output
 
