@@ -23,6 +23,8 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
+    train_loss_history=[]
+    epoch_chkpts=[]
 
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
@@ -91,18 +93,20 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                                                                                     curr_lr ))
         # scheduler.step(val_loss)
         if (epoch%epoch_chkpt==epoch_chkpt-1):
-            gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_epoch-{epoch+1}.pth')
+            gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_chkpt.pth')
             torch.save(generator.state_dict(),gen_path)
             print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
+            train_loss_history.append(train_loss/len(train_loader))
+            epoch_chkpts.append(epoch)
 
     gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_final.pth')
     torch.save(generator.state_dict(),gen_path)
     print('Final Model saved in {}\n'.format(gen_path))
 
-    # losses_file = 'losses.png'
-    # losses_path = os.path.join(args.output_dir,losses_file)
-    # logger.log_losses(loss_history,epoch_chkpts,losses_path)
-    # print('Loss history saved in {}'.format(losses_path))
+    losses_file = 'losses.png'
+    losses_path = os.path.join(args.output_dir,losses_file)
+    logger.log_losses(train_loss_history,epoch_chkpts,losses_path)
+    print('Loss history saved in {}'.format(losses_path))
     return gen_path
 
 # def train_texture(generator,feat_extractor,dataloader,checkpoint=5):

@@ -30,8 +30,9 @@ def log_args(path,**kwargs):
     f.close()
 
 
-def log_losses(losses,iterations,path,title='Loss History'):
-    plt.plot(iterations,losses,label='Loss')
+def log_losses(train_losses,val_losses,iterations,path,title='Loss History'):
+    plt.plot(iterations,train_losses,label='Train Loss')
+    plt.plot(iterations, val_losses, label='Validation Loss')
     plt.xlabel('No. iterations')
 
     plt.legend(loc='upper left')
