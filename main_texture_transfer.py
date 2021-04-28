@@ -66,9 +66,10 @@ def main():
     # DTD
     ####################
     remove_classes= ['cobwebbed','freckled','stained']
-    train_set = DTD('train',lower_size=20,remove_classes=remove_classes)
-    val_set = DTD('val',lower_size=20,remove_classes=remove_classes)
-    test_set = DTD('test',lower_size=10,remove_classes=remove_classes)
+    only_class = ['woven']
+    train_set = DTD('train',only_class='woven')
+    val_set = DTD('val',only_class='woven')
+    test_set = DTD('test',only_class='woven')
     ####################
 
     # Create output folder
