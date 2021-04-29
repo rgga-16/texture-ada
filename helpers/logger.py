@@ -38,4 +38,5 @@ def log_losses(train_losses,val_losses,iterations,path,title='Loss History'):
     plt.legend(loc='upper left')
     plt.title(title)
     plt.savefig(path)
+    plt.clf()
     return
