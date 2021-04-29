@@ -1,4 +1,5 @@
 
+
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import torch
@@ -10,15 +11,27 @@ import numpy as np
 
 import os 
 
+
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
-
-    preprocessor = transforms.Compose([
-        transforms.Resize((image_size,image_size)),
-        transforms.ToTensor(),
-    ])
-
-    tensor = preprocessor(image)
+def image_to_tensor(image,phase:str,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
+    transformer = {
+        'train': transforms.Compose([
+                    transforms.RandomResizedCrop((image_size,image_size)),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor()
+                ]),
+        'val': transforms.Compose([
+                    transforms.Resize((image_size,image_size)),
+                    transforms.CenterCrop(round(0.875*image_size)),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                ]),
+        'test': transforms.Compose([
+                   transforms.Resize((image_size,image_size)),
+                    transforms.ToTensor(),
+                ]),
+    }
+    tensor = transformer[phase](image)
 
     if normalize:
         norm = transforms.Normalize(D.NORM_MEAN.get(),D.NORM_STD.get())
@@ -47,10 +60,11 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
 
 
 # Show image
-def show_image(img):
-    plt.figure(figsize=(10,10))
-    plt.imshow(img)
-    plt.axis('off')
+def show_images(images):
+    f, axs = plt.subplots(1,len(images),figsize=(10,10))
+    for img, ax in zip(images,axs):
+        ax.imshow(img)
+        ax.axis('off')
     plt.show()
 
 # Loads a single image
