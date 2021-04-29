@@ -20,8 +20,8 @@ import numpy as np
 import os, copy, time, datetime ,json,itertools
 
 def main():
-    print("Starting texture transfer..")
-    print("="*10)
+    print("Starting texture transfer..\n")
+    
     device = D.DEVICE()
     
     start=time.time()
@@ -58,19 +58,21 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
-    #                                 style_files=uv_style_pairs.values())
-    # train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
-    # train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
-    #                                                         generator = torch.Generator().manual_seed(SEED))
+    fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
+                                    style_files=uv_style_pairs.values())
+    train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
+    train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
+                                                            generator = torch.Generator().manual_seed(SEED))
+    train_set.dataset.set='train'; val_set.dataset.set='val'; test_set.dataset.set='test'
+    
     ####################
     # DTD
     ####################
-    remove_classes= ['cobwebbed','freckled','stained']
-    only_class = ['woven']
-    train_set = DTD('train',only_class=only_class)
-    val_set = DTD('val',only_class=only_class)
-    test_set = DTD('test',only_class=only_class)
+    # remove_classes= ['cobwebbed','freckled','stained']
+    # only_class = ['woven']
+    # train_set = DTD('train',only_class=only_class)
+    # val_set = DTD('val',only_class=only_class)
+    # test_set = DTD('test',only_class=only_class)
     ####################
 
     # Create output folder
@@ -82,8 +84,8 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
-    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
+    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
+    val_loader = DataLoader(val_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
     test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
 
     # Training. Returns path of the generator weights.
