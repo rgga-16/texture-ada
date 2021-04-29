@@ -15,6 +15,7 @@ from trainer import train_texture
 from tester import test_texture
 
 import numpy as np
+import multiprocessing
 
 
 import os, copy, time, datetime ,json,itertools
@@ -82,9 +83,10 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
-    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
-    test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
+    n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
+    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
     # Training. Returns path of the generator weights.
     gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
