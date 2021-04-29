@@ -12,7 +12,7 @@ from models.texture_transfer_models import VGG19, Pyramid2D_adain
 from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
 import style_transfer as st
 from trainer import train_texture
-from tester import test_texture, test_texture2
+from tester import test_texture
 
 import numpy as np
 
@@ -58,21 +58,19 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
-                                    style_files=uv_style_pairs.values())
-    train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
-    train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
-                                                            generator = torch.Generator().manual_seed(SEED))
-    train_set.dataset.set='train'; val_set.dataset.set='val'; test_set.dataset.set='test'
+    # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
+    #                                 style_files=uv_style_pairs.values())
+    # train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
+    # train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
+    #                                                         generator = torch.Generator().manual_seed(SEED))
+    # train_set.dataset.set='train'; val_set.dataset.set='val'; test_set.dataset.set='test'
     
     ####################
     # DTD
     ####################
-    # remove_classes= ['cobwebbed','freckled','stained']
-    # only_class = ['woven']
-    # train_set = DTD('train',only_class=only_class)
-    # val_set = DTD('val',only_class=only_class)
-    # test_set = DTD('test',only_class=only_class)
+    train_set = DTD('train',only_class=['woven'])
+    val_set = DTD('val',only_class=['woven'])
+    test_set = DTD('test',only_class=['woven'],lower_size=5)
     ####################
 
     # Create output folder
@@ -84,8 +82,8 @@ def main():
         pass
 
     # Setup dataloader for training
-    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
-    val_loader = DataLoader(val_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
+    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
+    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True)
     test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True)
 
     # Training. Returns path of the generator weights.
@@ -95,18 +93,18 @@ def main():
     #######################################
     for i, texture in enumerate(test_loader):
         output_path = os.path.join(output_folder,'{}.png'.format(i))
-        test_texture2(net,texture,gen_path,output_path)
+        test_texture(net,texture,gen_path,output_path)
     
     # Test on Furniture pairngs
     #######################################
     test_files = uv_style_pairs.items()
     for uv_file,style_file in test_files:
-        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),phase='test',image_size=args.uv_test_sizes[0])
+        uv = image_utils.load_image(os.path.join(uv_dir,uv_file),mode='L')
         texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
         
         output_path = os.path.join(output_folder,uv_file)
 
-        test_texture(net,uv,texture,gen_path,output_path)
+        test_texture(net,texture,gen_path,output_path,mask=uv)
     #######################################
 
     # INSERT RENDERING MODULE HERE
