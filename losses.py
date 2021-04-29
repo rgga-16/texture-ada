@@ -42,12 +42,6 @@ def gram_matrix(tensor):
     gram = torch.mm(features,features.t())
     return gram / (h*w)
 
-
-
-    
-
-
-
 def covariance_matrix(tensor):
     b,c,w,h = tensor.shape
     feats = tensor.view(b,c,h*w)
@@ -55,7 +49,6 @@ def covariance_matrix(tensor):
     feats=feats-mean
     feats = feats.squeeze()
     covariance = torch.matmul(feats,torch.transpose(feats,-2,-1))
-    # covariance = torch.mm(feats,feats.t())
     return covariance / (h*w)
 
 def variance_aware_adaptive_weighting(tensor):

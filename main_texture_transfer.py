@@ -28,7 +28,8 @@ def main():
     args = args_.parse_arguments()
 
     # Setup generator model 
-    net = Pyramid2D_adain(ch_in=3, ch_step=64,ch_out=3).to(device)
+    # net = Pyramid2D_adain(ch_in=3, ch_step=64,ch_out=3).to(device)
+    net = Network_AdaIN().to(device)
             
     # Setup feature extraction model 
     feat_extractor = VGG19()
@@ -67,9 +68,9 @@ def main():
     ####################
     remove_classes= ['cobwebbed','freckled','stained']
     only_class = ['woven']
-    train_set = DTD('train',only_class='woven')
-    val_set = DTD('val',only_class='woven')
-    test_set = DTD('test',only_class='woven')
+    train_set = DTD('train',only_class=only_class)
+    val_set = DTD('val',only_class=only_class)
+    test_set = DTD('test',only_class=only_class)
     ####################
 
     # Create output folder
@@ -87,7 +88,7 @@ def main():
 
     # Training. Returns path of the generator weights.
     gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
-    
+
     # Test on DTD Test Set
     #######################################
     for i, texture in enumerate(test_loader):
@@ -98,8 +99,8 @@ def main():
     #######################################
     test_files = uv_style_pairs.items()
     for uv_file,style_file in test_files:
-        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),image_size=args.uv_test_sizes[0])
-        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),image_size=args.style_size)
+        uv = image_utils.image_to_tensor(image_utils.load_image(os.path.join(uv_dir,uv_file)),phase='test',image_size=args.uv_test_sizes[0])
+        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
         
         output_path = os.path.join(output_folder,uv_file)
 

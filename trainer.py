@@ -8,15 +8,16 @@ from defaults import DEFAULTS as D
 from helpers import logger
 import style_transfer as st
 
+from helpers import image_utils
+
 
 def train_texture(generator,feat_extractor,train_loader,val_loader):
     args = args_.parse_arguments()
-    lr = args.lr
-    epochs = args.epochs
-    n_batch_chkpts = args.num_batch_chkpts
-    n_epoch_chkpts = args.num_epoch_chkpts
-    batch_chkpt= 1 if len(train_loader) <= n_batch_chkpts else len(train_loader)//n_batch_chkpts
-    epoch_chkpt = 1 if epochs <= n_epoch_chkpts else epochs//n_epoch_chkpts
+    lr,epochs = args.lr,args.epochs
+
+    batch_train_chkpt= 1 if len(train_loader) <= args.num_batch_chkpts else len(train_loader)//args.num_batch_chkpts
+    batch_val_chkpt = 1 if len(val_loader) <= args.num_batch_chkpts else len(val_loader)//args.num_batch_chkpts
+    epoch_chkpt = 1 if epochs <= args.num_epoch_chkpts else epochs//args.num_epoch_chkpts
 
     generator.to(device=D.DEVICE())
 
@@ -24,6 +25,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
     train_loss_history=[]
+    val_loss_history = []
     epoch_chkpts=[]
 
     style_layers = D.STYLE_LAYERS.get()
@@ -31,18 +33,26 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
 
     for epoch in range(epochs):
         generator.train()
-        running_loss=0.0
+        train_running_loss=0.0
         train_loss,val_loss=0.0,0.0
         curr_lr = optim.param_groups[0]['lr']
         # Train Loop
         for i, texture in enumerate(train_loader):
             texture = texture.to(D.DEVICE())
+
             bs = texture.shape[0]
             optim.zero_grad()
             style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
             # Setup inputs 
-            w = args.uv_train_sizes[0]
-            inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in [w, w//2,w//4,w//8,w//16,w//32]]
+            w = args.uv_test_sizes[0]
+            ################################ Input for Ulyanov
+            # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+            # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+            ################################ Input for Ulyanov
+
+            ################################ Input for AdaIN
+            inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
+            ################################ Input for AdaIN
             # Get output
             output = generator(inputs,texture)
             out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
@@ -57,22 +67,29 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
             optim.step()
 
             train_loss+= loss.item() * bs
-            running_loss+=loss.item()
-            if(i%batch_chkpt==batch_chkpt-1):
-                print('[Epoch {} | Train Batch {}/{}] Train Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),running_loss/batch_chkpt,curr_lr))
-                running_loss=0.0
+            train_running_loss+=loss.item()
+            if(i%batch_train_chkpt==batch_train_chkpt-1):
+                print('[Epoch {} | Train Batch {}/{}] Train Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),train_running_loss/batch_train_chkpt,curr_lr))
+                train_running_loss=0.0
         
         
         # Validation Loop
         generator.eval()
+        val_running_loss=0.0
         for j,texture in enumerate(val_loader):
             texture = texture.to(D.DEVICE())
             bs = texture.shape[0]
             style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
             # Setup inputs 
             w = args.uv_test_sizes[0]
-            input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
-            inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+            ################################ Input for Ulyanov
+            # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+            # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+            ################################ Input for Ulyanov
+
+            ################################ Input for AdaIN
+            inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
+            ################################ Input for AdaIN
             # Get output
             with torch.no_grad():
                 output = generator(inputs,texture)
@@ -86,7 +103,10 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                 style_val_loss = (style_loss * args.style_weight)
                 val_loss+= style_val_loss.item() * bs
                 # INSERT METRIC CALCULATION HERE
-
+                if(j%batch_val_chkpt==batch_val_chkpt-1):
+                    print('[Epoch {} | Val Batch {}/{} ] Loss: {:.3f}'.format(epoch+1,j+1,
+                    len(val_loader),val_running_loss/batch_val_chkpt))
+                    val_running_loss=0.0
         print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t LR: {}\n'.format(epoch+1,
                                                                                     train_loss/len(train_loader), 
                                                                                     val_loss/len(val_loader), 
@@ -97,6 +117,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
             torch.save(generator.state_dict(),gen_path)
             print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
             train_loss_history.append(train_loss/len(train_loader))
+            val_loss_history.append(val_loss/len(val_loader))
             epoch_chkpts.append(epoch)
 
     gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_final.pth')
@@ -105,7 +126,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
 
     losses_file = 'losses.png'
     losses_path = os.path.join(args.output_dir,losses_file)
-    logger.log_losses(train_loss_history,epoch_chkpts,losses_path)
+    logger.log_losses(train_loss_history,val_loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     return gen_path
 
