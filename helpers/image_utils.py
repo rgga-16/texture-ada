@@ -60,12 +60,15 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
 
 
 # Show image
-def show_images(images):
-    f, axs = plt.subplots(1,len(images),figsize=(10,10))
+def show_images(images,show=True,save_path=None):
+    f, axs = plt.subplots(1,len(images),figsize=(15,15))
     for img, ax in zip(images,axs):
         ax.imshow(img)
         ax.axis('off')
-    plt.show()
+    if show:
+        plt.show()
+    if save_path:
+        plt.savefig(save_path)
 
 # Loads a single image
 def load_image(filename,mode="RGBA"):

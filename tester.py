@@ -33,6 +33,8 @@ def test_texture2(generator,texture,gen_path,output_path):
 
     output_path_ = '{}_{}.png'.format(output_path,w)
     output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+    style_img = image_utils.tensor_to_image(style_input,image_size=args.output_size)
+    image_utils.show_images([style_img,output_image],show=False,save_path=f'{output_path},_compare.png')
     output_image.save(output_path_,'PNG')
     print('Saving image as {}'.format(output_path_))
 
@@ -57,6 +59,9 @@ def test_texture(generator,uv,texture,gen_path,output_path):
 
     output_path_ = '{}_{}.png'.format(output_path,w)
     output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
+    style_img = image_utils.tensor_to_image(style_input,image_size=args.output_size)
+    image_utils.show_images([style_img,output_image],show=False,save_path=f'{output_path},_compare.png')
+
     mask = image_utils.tensor_to_image(uv_mask,image_size=args.output_size,denorm=False)
     output_image.putalpha(mask)
     output_image.save(output_path_,'PNG')
