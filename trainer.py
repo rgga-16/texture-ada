@@ -102,9 +102,10 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                 # Get loss
                 style_val_loss = (style_loss * args.style_weight)
                 val_loss+= style_val_loss.item() * bs
+                val_running_loss += style_val_loss.item()
                 # INSERT METRIC CALCULATION HERE
                 if(j%batch_val_chkpt==batch_val_chkpt-1):
-                    print('[Epoch {} | Val Batch {}/{} ] Loss: {:.3f}'.format(epoch+1,j+1,
+                    print('[Epoch {} | Val Batch {}/{} ] Val Loss: {:.3f}'.format(epoch+1,j+1,
                     len(val_loader),val_running_loss/batch_val_chkpt))
                     val_running_loss=0.0
         print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t LR: {}\n'.format(epoch+1,
