@@ -73,6 +73,7 @@ class Styles_Dataset(Dataset):
         self.style_dir = style_dir 
         self.style_size = style_size 
         self.style_files = []
+        self.set=''
         
         for s in style_files:
             self.style_files.append(os.path.join(self.style_dir,s))
@@ -82,7 +83,7 @@ class Styles_Dataset(Dataset):
 
     def __getitem__(self, index):
         style_im = self.style_files[index]
-        style = image_utils.image_to_tensor(image_utils.load_image(style_im),image_size=self.style_size).detach()
+        style = image_utils.image_to_tensor(image_utils.load_image(style_im),phase=self.set,image_size=self.style_size).detach()
         style = style[:3,...]
         return style
 
