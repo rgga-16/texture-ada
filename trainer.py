@@ -1,3 +1,4 @@
+from enum import IntFlag
 from numpy.lib.function_base import _quantile_is_valid
 import torch
 import numpy as np
@@ -14,6 +15,9 @@ from helpers import image_utils
 def train_texture(generator,feat_extractor,train_loader,val_loader):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
+
+    best_model_wts = copy.deepcopy(generator.state_dict())
+    best_val_loss = np.inf 
 
     batch_train_chkpt= 1 if len(train_loader) <= args.num_batch_chkpts else len(train_loader)//args.num_batch_chkpts
     batch_val_chkpt = 1 if len(val_loader) <= args.num_batch_chkpts else len(val_loader)//args.num_batch_chkpts
@@ -32,97 +36,73 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     s_layer_weights = D.SL_WEIGHTS.get()
 
     for epoch in range(epochs):
-        generator.train()
-        train_running_loss=0.0
-        train_loss,val_loss=0.0,0.0
-        curr_lr = optim.param_groups[0]['lr']
-        # Train Loop
-        for i, texture in enumerate(train_loader):
-            texture = texture.to(D.DEVICE())
+        print(f'Epoch {epoch+1}/{epochs}')
+        print('='*10)
+        for phase in ['Train','Val']:
+            if phase.casefold()=='train':
+                generator.train()
+                dataloader = train_loader
+                loss_history = train_loss_history
+            else:
+                generator.eval()
+                dataloader = val_loader
+                loss_history = val_loss_history
 
-            bs = texture.shape[0]
-            optim.zero_grad()
-            style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
-            # Setup inputs 
-            w = args.uv_test_sizes[0]
-            ################################ Input for Ulyanov
-            # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
-            # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
-            ################################ Input for Ulyanov
+            running_loss = 0.0
+            for i,texture in enumerate(dataloader):
+                texture = texture.to(D.DEVICE())
 
-            ################################ Input for AdaIN
-            inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
-            ################################ Input for AdaIN
-            # Get output
-            output = generator(inputs,texture)
-            out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
-            # Get style loss
-            style_loss=0
-            for s in style_layers.values():
-                diff = mse_loss(out_feats[s],style_feats[s])
-                style_loss += s_layer_weights[s] * diff
-            # Get loss
-            loss = (style_loss * args.style_weight)
-            loss.backward()
-            optim.step()
+                optim.zero_grad()
+                
+                w = args.uv_test_sizes[0]
+                ################################ Input for Ulyanov
+                # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+                # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+                ################################ Input for Ulyanov
+                ################################ Input for AdaIN
+                inputs = torch.rand(texture.shape[0],3,w,w,device=D.DEVICE())
+                ################################ Input for AdaIN
 
-            train_loss+= loss.item() * bs
-            train_running_loss+=loss.item()
-            if(i%batch_train_chkpt==batch_train_chkpt-1):
-                print('[Epoch {} | Train Batch {}/{}] Train Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),train_running_loss/batch_train_chkpt,curr_lr))
-                train_running_loss=0.0
-        
-        
-        # Validation Loop
-        generator.eval()
-        val_running_loss=0.0
-        for j,texture in enumerate(val_loader):
-            texture = texture.to(D.DEVICE())
-            bs = texture.shape[0]
-            style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
-            # Setup inputs 
-            w = args.uv_test_sizes[0]
-            ################################ Input for Ulyanov
-            # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
-            # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
-            ################################ Input for Ulyanov
+                # Get output
+                with torch.set_grad_enabled(phase.casefold()=='train'):
+                    style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
+                    output = generator(inputs,texture)
+                    out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
+                    # Get style loss
+                    style_loss=0
+                    for s in style_layers.values():
+                        diff = mse_loss(out_feats[s],style_feats[s])
+                        style_loss += s_layer_weights[s] * diff
+                    # Get loss
+                    loss = (style_loss * args.style_weight)
+                
+                if phase.casefold()=='train':
+                    loss.backward()
+                    optim.step()
+                
+                running_loss += loss.item() * texture.shape[0]
+                # INSERT TEXTURE METRIC CALCULATION HERE HERE
+            
+            epoch_loss = running_loss / dataloader.dataset.__len__()
+            # INSERT EPOCH TEXTURE METRIC CALCULATION HERE HERE
 
-            ################################ Input for AdaIN
-            inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
-            ################################ Input for AdaIN
-            # Get output
-            with torch.no_grad():
-                output = generator(inputs,texture)
-                out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
-                # Get style loss
-                style_loss=0
-                for s in style_layers.values():
-                    diff = mse_loss(out_feats[s],style_feats[s])
-                    style_loss += s_layer_weights[s] * diff
-                # Get loss
-                style_val_loss = (style_loss * args.style_weight)
-                val_loss+= style_val_loss.item() * bs
-                val_running_loss += style_val_loss.item()
-                # INSERT METRIC CALCULATION HERE
-                if(j%batch_val_chkpt==batch_val_chkpt-1):
-                    print('[Epoch {} | Val Batch {}/{} ] Val Loss: {:.3f}'.format(epoch+1,j+1,
-                    len(val_loader),val_running_loss/batch_val_chkpt))
-                    val_running_loss=0.0
-        print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t LR: {}\n'.format(epoch+1,
-                                                                                    train_loss/len(train_loader), 
-                                                                                    val_loss/len(val_loader), 
-                                                                                    curr_lr ))
-        # scheduler.step(val_loss)
-        if (epoch%epoch_chkpt==epoch_chkpt-1):
-            gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_chkpt.pth')
-            torch.save(generator.state_dict(),gen_path)
-            print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
-            train_loss_history.append(train_loss/len(train_loader))
-            val_loss_history.append(val_loss/len(val_loader))
-            epoch_chkpts.append(epoch)
+            print(f'{phase} Loss: {epoch_loss:.4f}')
+            loss_history.append(epoch_loss)
+            
+
+            if phase.casefold()=='val' and epoch_loss < best_val_loss:
+                best_val_loss = epoch_loss
+                best_model_wts = copy.deepcopy(generator.state_dict())
+
+                model_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_chkpt.pth')
+                torch.save(generator.state_dict(),model_path)
+                print(f'Checkpoint saved in {model_path}')
+        epoch_chkpts.append(epoch)
+        print('='*10)
+        print('')        
 
     gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_final.pth')
-    torch.save(generator.state_dict(),gen_path)
+    torch.save(best_model_wts,gen_path)
     print('Final Model saved in {}\n'.format(gen_path))
 
     losses_file = 'losses.png'
@@ -130,6 +110,98 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     logger.log_losses(train_loss_history,val_loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     return gen_path
+    
+    
+        # generator.train()
+        # train_running_loss=0.0
+        # train_loss,val_loss=0.0,0.0
+        # curr_lr = optim.param_groups[0]['lr']
+        # # Train Loop
+        # for i, texture in enumerate(train_loader):
+        #     texture = texture.to(D.DEVICE())
+
+        #     bs = texture.shape[0]
+        #     optim.zero_grad()
+        #     style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
+        #     # Setup inputs 
+        #     w = args.uv_test_sizes[0]
+        #     ################################ Input for Ulyanov
+        #     # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+        #     # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+        #     ################################ Input for Ulyanov
+
+        #     ################################ Input for AdaIN
+        #     inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
+        #     ################################ Input for AdaIN
+        #     # Get output
+        #     output = generator(inputs,texture)
+        #     out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
+        #     # Get style loss
+        #     style_loss=0
+        #     for s in style_layers.values():
+        #         diff = mse_loss(out_feats[s],style_feats[s])
+        #         style_loss += s_layer_weights[s] * diff
+        #     # Get loss
+        #     loss = (style_loss * args.style_weight)
+        #     loss.backward()
+        #     optim.step()
+
+        #     train_loss+= loss.item() * bs
+        #     train_running_loss+=loss.item()
+        #     if(i%batch_train_chkpt==batch_train_chkpt-1):
+        #         print('[Epoch {} | Train Batch {}/{}] Train Loss: {:.3f}, LR: {}'.format(epoch+1,i+1,len(train_loader),train_running_loss/batch_train_chkpt,curr_lr))
+        #         train_running_loss=0.0
+        
+        
+        # # Validation Loop
+        # generator.eval()
+        # val_running_loss=0.0
+        # for j,texture in enumerate(val_loader):
+        #     texture = texture.to(D.DEVICE())
+        #     bs = texture.shape[0]
+        #     style_feats = st.get_features(feat_extractor,texture,is_style=True,style_layers=style_layers)
+        #     # Setup inputs 
+        #     w = args.uv_test_sizes[0]
+        #     ################################ Input for Ulyanov
+        #     # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
+        #     # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+        #     ################################ Input for Ulyanov
+
+        #     ################################ Input for AdaIN
+        #     inputs = torch.rand(bs,3,w,w,device=D.DEVICE())
+        #     ################################ Input for AdaIN
+        #     # Get output
+        #     with torch.no_grad():
+        #         output = generator(inputs,texture)
+        #         out_feats = st.get_features(feat_extractor,output,is_style=False,style_layers=style_layers)
+        #         # Get style loss
+        #         style_loss=0
+        #         for s in style_layers.values():
+        #             diff = mse_loss(out_feats[s],style_feats[s])
+        #             style_loss += s_layer_weights[s] * diff
+        #         # Get loss
+        #         style_val_loss = (style_loss * args.style_weight)
+        #         val_loss+= style_val_loss.item() * bs
+        #         val_running_loss += style_val_loss.item()
+        #         # INSERT METRIC CALCULATION HERE
+        #         if(j%batch_val_chkpt==batch_val_chkpt-1):
+        #             print('[Epoch {} | Val Batch {}/{} ] Val Loss: {:.3f}'.format(epoch+1,j+1,
+        #             len(val_loader),val_running_loss/batch_val_chkpt))
+        #             val_running_loss=0.0
+        # print('\n[Epoch {}]\t Train Loss: {:.3f}\t  Validation Loss: {:.3f}\t LR: {}\n'.format(epoch+1,
+        #                                                                             train_loss/train_loader.dataset.size, 
+        #                                                                             val_loss/val_loader.dataset.size, 
+        #                                                                             curr_lr ))
+        # # scheduler.step(val_loss)
+        # if (epoch%epoch_chkpt==epoch_chkpt-1):
+        #     gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_chkpt.pth')
+        #     torch.save(generator.state_dict(),gen_path)
+        #     print(f'[Epoch {epoch+1}]\t Model saved in {gen_path}\n')
+        #     train_loss_history.append(train_loss/len(train_loader))
+        #     val_loss_history.append(val_loss/len(val_loader))
+        #     epoch_chkpts.append(epoch)
+
+    
 
 # def train_texture(generator,feat_extractor,dataloader,checkpoint=5):
 #     lr = args.lr
