@@ -23,6 +23,9 @@ def test_texture2(generator,texture,gen_path,output_path):
     w = args.uv_test_sizes[0]
     input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
     inputs = [torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+    ################################ Input for AdaIN
+    inputs = torch.rand(1,3,w,w,device=D.DEVICE())
+    ################################ Input for AdaIN
     style_input = texture.expand(1,-1,-1,-1).clone().detach()
     
     with torch.no_grad():
@@ -43,6 +46,9 @@ def test_texture(generator,uv,texture,gen_path,output_path):
     w = args.uv_test_sizes[0]
     input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
     inputs = [torch.rand(1,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
+    ################################ Input for AdaIN
+    inputs = torch.rand(1,3,w,w,device=D.DEVICE())
+    ################################ Input for AdaIN
     uv_mask = uv[3,...].expand(1,1,-1,-1).clone().detach()
     style_input = texture.expand(1,-1,-1,-1).clone().detach()
     
