@@ -1,8 +1,9 @@
-from enum import IntFlag
-from numpy.lib.function_base import _quantile_is_valid
 import torch
+from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import os, copy
+
+import torchvision
 
 import args as args_
 from defaults import DEFAULTS as D
@@ -22,18 +23,22 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     batch_train_chkpt= 1 if len(train_loader) <= args.num_batch_chkpts else len(train_loader)//args.num_batch_chkpts
     batch_val_chkpt = 1 if len(val_loader) <= args.num_batch_chkpts else len(val_loader)//args.num_batch_chkpts
     epoch_chkpt = 1 if epochs <= args.num_epoch_chkpts else epochs//args.num_epoch_chkpts
-
+    
     generator.to(device=D.DEVICE())
 
     optim = torch.optim.Adam(generator.parameters(),lr=lr)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     mse_loss = torch.nn.MSELoss().to(D.DEVICE())
+    
     train_loss_history=[]
     val_loss_history = []
     epoch_chkpts=[]
+    writer = SummaryWriter(f'runs/{os.path.dirname(args.output_dir)}')
 
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
+
+
 
     for epoch in range(epochs):
         print(f'Epoch {epoch+1}/{epochs}')
@@ -47,8 +52,9 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                 generator.eval()
                 dataloader = val_loader
                 loss_history = val_loss_history
+            batch_chkpt = 1 if len(dataloader) <= args.num_batch_chkpts else len(dataloader)//args.num_batch_chkpts
 
-            running_loss = 0.0
+            running_loss, batch_running_loss = 0.0, 0.0
             for i,texture in enumerate(dataloader):
                 texture = texture.to(D.DEVICE())
 
@@ -81,7 +87,12 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
                     optim.step()
                 
                 running_loss += loss.item() * texture.shape[0]
+                batch_running_loss += loss.item() 
                 # INSERT TEXTURE METRIC CALCULATION HERE HERE
+                if(i%batch_chkpt==batch_chkpt-1):
+                    print(f'[{phase} Batch {i+1}/{len(dataloader)}] {phase} Loss: {batch_running_loss/batch_chkpt:.3f}')
+                    writer.add_scalar(f'{phase} loss', batch_running_loss/batch_chkpt, epoch*len(dataloader)+i)
+                    batch_running_loss=0.0
             
             epoch_loss = running_loss / dataloader.dataset.__len__()
             # INSERT EPOCH TEXTURE METRIC CALCULATION HERE HERE
@@ -109,6 +120,7 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     losses_path = os.path.join(args.output_dir,losses_file)
     logger.log_losses(train_loss_history,val_loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
+    writer.close()
     return gen_path
     
     
