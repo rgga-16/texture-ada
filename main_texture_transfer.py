@@ -68,9 +68,9 @@ def main():
     ####################
     # DTD
     ####################
-    train_set = DTD('train',only_class=['woven'])
-    val_set = DTD('val',only_class=['woven'])
-    test_set = DTD('test',only_class=['woven'],lower_size=5)
+    train_set = DTD('train')
+    val_set = DTD('val')
+    test_set = DTD('test',lower_size=25)
     ####################
 
     # Create output folder

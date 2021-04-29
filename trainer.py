@@ -38,8 +38,6 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     style_layers = D.STYLE_LAYERS.get()
     s_layer_weights = D.SL_WEIGHTS.get()
 
-
-
     for epoch in range(epochs):
         print(f'Epoch {epoch+1}/{epochs}')
         print('='*10)
