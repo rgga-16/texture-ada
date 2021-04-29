@@ -101,10 +101,7 @@ def main():
     for uv_file,style_file in test_files:
         uv = image_utils.load_image(os.path.join(uv_dir,uv_file),mode='L')
         texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
-        
-        output_path = os.path.join(output_folder,uv_file)
-
-        test_texture(net,texture,gen_path,output_path,mask=uv)
+        test_texture(net,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
     #######################################
 
     # INSERT RENDERING MODULE HERE
