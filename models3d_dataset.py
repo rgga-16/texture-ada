@@ -46,7 +46,7 @@ class Pix3D(Dataset):
         masked_img.putalpha(mask)
 
         # Preprocess image
-        image_tensor = image_utils.image_to_tensor(masked_img,image_size=256)[:3,...]
+        image_tensor = image_utils.image_to_tensor(masked_img,phase='test',image_size=256)[:3,...]
 
         return pointcloud.squeeze(),image_tensor.squeeze()
         
