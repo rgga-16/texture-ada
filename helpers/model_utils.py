@@ -82,7 +82,7 @@ def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
     transformer = transforms.Compose([
         SamplePoints(n_points),
         NormalizePointcloud(),
-        RandomRotate(),
+        # RandomRotate(),
         # AddNoise()
     ])
 
