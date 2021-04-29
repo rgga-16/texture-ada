@@ -13,7 +13,7 @@ class Describable_Textures_Dataset(Dataset):
 
     def __init__(self,set,root='./data/dtd',imdb_path='./data/dtd/imdb/imdb.mat',remove_classes=[],only_class=[],lower_size=None) -> None:
         assert set.lower() in ['train','val','test']
-
+        self.set = set.lower()
         self.root = root
         mat = scipy.io.loadmat(imdb_path)
 
@@ -61,7 +61,7 @@ class Describable_Textures_Dataset(Dataset):
         # set=sample[2]
         # class_=sample[3]
 
-        image = image_utils.image_to_tensor(image_utils.load_image(image_path,'RGB'),image_size=args.style_size).detach()
+        image = image_utils.image_to_tensor(image_utils.load_image(image_path,'RGB'),phase='test',image_size=args.style_size).detach()
         
         return image
 
