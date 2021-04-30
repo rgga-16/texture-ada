@@ -62,12 +62,12 @@ def get_features(model, tensor, is_style=False,
         x=layer(x)
 
         if name in style_layers.keys():
-            # features[style_layers[name]] = losses.gram_matrix(x)
+            features[style_layers[name]] = losses.gram_matrix(x)
             # if is_style:
             #     _,c,_,_ = x.shape
             #     k = round(0.05 * c) 
             #     x = filter_k_feature_maps(x,c)
-            features[style_layers[name]] = losses.covariance_matrix(x)
+            # features[style_layers[name]] = losses.covariance_matrix(x)
             # losses.covariance_matrix(x)
             # losses.weighted_style_rep(x)
         
