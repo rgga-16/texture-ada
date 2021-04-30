@@ -5,6 +5,9 @@ import os, copy
 
 import torchvision
 
+from models.adain_model import AdaIN_Autoencoder
+from models.texturenet_model import TextureNet
+
 import args as args_
 from defaults import DEFAULTS as D
 from helpers import logger
@@ -13,79 +16,49 @@ import style_transfer as st
 from helpers import image_utils
 
 
-def train_texture(generator,feat_extractor,train_loader,val_loader):
+
+def train_texture(model,train_loader,val_loader):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
 
-    best_model_wts = copy.deepcopy(generator.state_dict())
+    best_model_wts = copy.deepcopy(model.net.state_dict())
     best_val_loss = np.inf 
 
-    batch_train_chkpt= 1 if len(train_loader) <= args.num_batch_chkpts else len(train_loader)//args.num_batch_chkpts
-    batch_val_chkpt = 1 if len(val_loader) <= args.num_batch_chkpts else len(val_loader)//args.num_batch_chkpts
-    epoch_chkpt = 1 if epochs <= args.num_epoch_chkpts else epochs//args.num_epoch_chkpts
-    
-    generator.to(device=D.DEVICE())
-
-    optim = torch.optim.Adam(generator.parameters(),lr=lr)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
-    mse_loss = torch.nn.MSELoss().to(D.DEVICE())
     
     train_loss_history=[]
     val_loss_history = []
     epoch_chkpts=[]
     writer = SummaryWriter(f'runs/{os.path.dirname(args.output_dir)}')
 
-    style_layers = D.STYLE_LAYERS.get()
-    s_layer_weights = D.SL_WEIGHTS.get()
-
     for epoch in range(epochs):
         print(f'Epoch {epoch+1}/{epochs}')
         print('='*10)
         for phase in ['Train','Val']:
             if phase.casefold()=='train':
-                generator.train()
+                model.train()
                 dataloader = train_loader
                 loss_history = train_loss_history
             else:
-                generator.eval()
+                model.eval()
                 dataloader = val_loader
                 loss_history = val_loss_history
             batch_chkpt = 1 if len(dataloader) <= args.num_batch_chkpts else len(dataloader)//args.num_batch_chkpts
 
             running_loss, batch_running_loss = 0.0, 0.0
             for i,texture in enumerate(dataloader):
-                texture = texture.to(D.DEVICE())
-
-                optim.zero_grad()
-                
-                w = args.uv_test_sizes[0]
-                ################################ Input for Ulyanov
-                # input_sizes = [w, w//2,w//4,w//8,w//16,w//32]
-                # inputs = [torch.rand(bs,3,sz,sz,device=D.DEVICE()) for sz in input_sizes]
-                ################################ Input for Ulyanov
-                ################################ Input for AdaIN
-                inputs = torch.rand(texture.shape[0],3,w,w,device=D.DEVICE())
-                ################################ Input for AdaIN
-
+                model.set_input(texture)
                 # Get output
+                enable_grad=phase.casefold()=='train'
                 with torch.set_grad_enabled(phase.casefold()=='train'):
-                    style_feats = st.get_features(feat_extractor,texture,style_layers=style_layers)
-                    output = generator(inputs,texture)
-                    out_feats = st.get_features(feat_extractor,output,style_layers=style_layers)
-                    # Get style loss
-                    style_loss=0
-                    for s in style_layers.values():
-                        diff = mse_loss(out_feats[s],style_feats[s])
-                        style_loss += s_layer_weights[s] * diff
-                    # Get loss
-                    loss = (style_loss * args.style_weight)
+                    output = model.forward()
+                    loss = model.get_losses()
                 
                 if phase.casefold()=='train':
-                    loss.backward()
-                    optim.step()
+                    model.optimize_parameters()
                 
-                running_loss += loss.item() * texture.shape[0]
-                batch_running_loss += loss.item() 
+                running_loss += loss * texture.shape[0]
+                batch_running_loss += loss
                 # INSERT TEXTURE METRIC CALCULATION HERE HERE
                 if(i%batch_chkpt==batch_chkpt-1):
                     print(f'[{phase} Batch {i+1}/{len(dataloader)}] {phase} Loss: {batch_running_loss/batch_chkpt:.3f}')
@@ -97,20 +70,19 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
 
             print(f'{phase} Loss: {epoch_loss:.4f}')
             loss_history.append(epoch_loss)
-            
 
             if phase.casefold()=='val' and epoch_loss < best_val_loss:
                 best_val_loss = epoch_loss
-                best_model_wts = copy.deepcopy(generator.state_dict())
+                best_model_wts = copy.deepcopy(model.net.state_dict())
 
-                model_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_chkpt.pth')
-                torch.save(generator.state_dict(),model_path)
+                model_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_chkpt.pth')
+                torch.save(best_model_wts,model_path)
                 print(f'Checkpoint saved in {model_path}')
         epoch_chkpts.append(epoch)
         print('='*10)
         print('')        
 
-    gen_path = os.path.join(args.output_dir,f'{generator.__class__.__name__}_final.pth')
+    gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
     torch.save(best_model_wts,gen_path)
     print('Final Model saved in {}\n'.format(gen_path))
 
@@ -120,7 +92,6 @@ def train_texture(generator,feat_extractor,train_loader,val_loader):
     print('Loss history saved in {}'.format(losses_path))
     writer.close()
     return gen_path
-    
     
         # generator.train()
         # train_running_loss=0.0

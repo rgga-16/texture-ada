@@ -8,8 +8,10 @@ from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
-from models.texture_transfer_models import VGG19, Pyramid2D_adain
-from models.adain import FeedForwardNetwork_AdaIN, Network_AdaIN
+from models.feedforward_model import FeedForward
+from models.texturenet_model import TextureNet
+from models.adain_model import AdaIN_Autoencoder
+from models.proposed_model import ProposedModel
 import style_transfer as st
 from trainer import train_texture
 from tester import test_texture
@@ -29,13 +31,7 @@ def main():
     args = args_.parse_arguments()
 
     # Setup generator model 
-    # net = Pyramid2D_adain(ch_in=3, ch_step=64,ch_out=3).to(device)
-    net = Network_AdaIN().to(device)
-            
-    # Setup feature extraction model 
-    feat_extractor = VGG19()
-    for param in feat_extractor.parameters():
-        param.requires_grad = False
+    model = FeedForward()
 
     data = json.load(open(args.uv_style_pairs))
     uv_style_pairs = data['uv_style_pairs']
@@ -59,19 +55,18 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
-    #                                 style_files=uv_style_pairs.values())
-    # train_size, val_size, test_size = round(0.70 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.10 * fil_dataset.__len__())
-    # train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
-    #                                                         generator = torch.Generator().manual_seed(SEED))
-    # train_set.dataset.set='train'; val_set.dataset.set='val'; test_set.dataset.set='test'
-    
+    fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
+                                    style_files=uv_style_pairs.values())
+    train_size, val_size, test_size = round(0.60 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__())
+    train_set, val_set, test_set = random_split(fil_dataset,[train_size,val_size,test_size],
+                                                            generator = torch.Generator().manual_seed(SEED))
+    train_set.dataset.set='train'; val_set.dataset.set='val'; test_set.dataset.set='test'
     ####################
     # DTD
     ####################
-    train_set = DTD('train')
-    val_set = DTD('val')
-    test_set = DTD('test',lower_size=25)
+    # train_set = DTD('train',lower_size=25)
+    # val_set = DTD('val',lower_size=25)
+    # test_set = DTD('test',lower_size=5)
     ####################
 
     # Create output folder
@@ -84,18 +79,19 @@ def main():
 
     # Setup dataloader for training
     n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
-    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    train_loader = DataLoader(train_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    val_loader = DataLoader(val_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
     # Training. Returns path of the generator weights.
-    gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
+    # gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
+    gen_path=train_texture(model,train_loader=train_loader,val_loader=val_loader)
 
     # Test on DTD Test Set
     #######################################
     for i, texture in enumerate(test_loader):
         output_path = os.path.join(output_folder,'{}.png'.format(i))
-        test_texture(net,texture,gen_path,output_path)
+        test_texture(model,texture,gen_path,output_path)
     
     # Test on Furniture pairngs
     #######################################
@@ -103,7 +99,7 @@ def main():
     for uv_file,style_file in test_files:
         uv = image_utils.load_image(os.path.join(uv_dir,uv_file),mode='L')
         texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
-        test_texture(net,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
+        test_texture(model,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
     #######################################
 
     # INSERT RENDERING MODULE HERE
@@ -117,7 +113,7 @@ def main():
     
     logger.log_args(os.path.join(output_folder,log_file),
                     Time_Elapsed='{:.2f}s'.format(time_elapsed),
-                    Model_Name=net.__class__.__name__,
+                    Model_Name=model.__class__.__name__,
                     Seed = torch.seed())
     print("="*10)
     print("Transfer completed. Outputs saved in {}".format(output_folder))

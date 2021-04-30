@@ -19,6 +19,8 @@ class DEFAULTS(Enum):
     DEVICE_ID = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE_ = torch.device(DEVICE_ID)
 
+    LR_=1e-4
+
     IMSIZE = 256
     EPOCHS_ = 5000
 
@@ -79,6 +81,10 @@ class DEFAULTS(Enum):
 
     def get(self):
         return self.value
+
+    @classmethod
+    def LR(cls):
+        return cls.LR_.value
     
     @classmethod
     def DATE(cls):

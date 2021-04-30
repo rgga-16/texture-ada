@@ -7,7 +7,7 @@ from torchvision import transforms
 
 import losses
 import models
-from models.texture_transfer_models import VGG19
+from models.networks.vgg import VGG19
 import args as args_
 
 
@@ -48,7 +48,7 @@ def filter_k_feature_maps(raw_feature_maps,k):
     return feature_maps.unsqueeze_(0)
 
 
-def get_features(model, tensor, is_style=False,
+def get_features(tensor,model=VGG19() ,is_style=False,
                 content_layers:dict = D.CONTENT_LAYERS.get(), 
                 style_layers:dict = D.STYLE_LAYERS.get()):
 
@@ -62,19 +62,15 @@ def get_features(model, tensor, is_style=False,
         x=layer(x)
 
         if name in style_layers.keys():
-            features[style_layers[name]] = losses.gram_matrix(x)
+            # features[style_layers[name]] = losses.gram_matrix(x)
             # if is_style:
             #     _,c,_,_ = x.shape
             #     k = round(0.05 * c) 
             #     x = filter_k_feature_maps(x,c)
-            # features[style_layers[name]] = losses.covariance_matrix(x)
-            # losses.covariance_matrix(x)
-            # losses.weighted_style_rep(x)
+            features[style_layers[name]] = losses.covariance_matrix(x)
         
         if name in content_layers.keys():
             features[content_layers[name]] = x
-
-
     return features
 
     

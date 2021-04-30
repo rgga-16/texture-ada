@@ -6,33 +6,7 @@ from torchvision import models, transforms
 from defaults import DEFAULTS as D
 import copy
 from losses import adaptive_instance_normalization
-
-class VGG19(nn.Module):
-
-    def __init__(self,vgg_path='models/weights/vgg19-dcbb9e9d.pth',device=D.DEVICE()):
-        super(VGG19,self).__init__()
-
-        _ = models.vgg19(pretrained=True).eval().to(device)
-        # _.load_state_dict(torch.load(vgg_path), strict=False)
-        self.features = _.features
-
-        for param in self.features.parameters():
-            param.requires_grad = False
-    
-    def forward(self,x,layers:dict=None):
-        extracted_feats = {}
-        for name, layer in self.features._modules.items():
-            x = layer(x)
-
-            if layers is not None and name in layers:
- 
-                extracted_feats[layers[name]]=x
-        
-        if layers:
-            return extracted_feats
-        return x
-
-
+from models.networks.vgg import VGG19
 
 class Conv_block2D(nn.Module):
     def __init__(self, n_ch_in, n_ch_out, m=0.1):
@@ -108,10 +82,8 @@ class Up_In2D_adain(nn.Module):
         return x
 
 class Pyramid2D(nn.Module):
-    def __init__(self, ch_in=3, ch_step=8, ch_out=3, n_samples=6):
+    def __init__(self, ch_in=3, ch_step=8, ch_out=3):
         super(Pyramid2D, self).__init__()
-        
-
         self.cb1_1 = Conv_block2D(ch_in,ch_step) # ch_step=8
         self.up1 = Up_In2D(ch_step)
 
@@ -167,7 +139,6 @@ class Pyramid2D(nn.Module):
         # z[1]=(3x128x128) => (8x128x128)
         # y cat z[1] => (40x128x128)
         y = torch.cat((y,self.cb5_1(z[1])),1)
-
 
         y = self.cb5_2(y) # y=(40x128x128) => (40x128x128)
         y = self.up5(y) # y=(40x128x128) => (40x256x256)
@@ -235,7 +206,6 @@ class Pyramid2D_adain(nn.Module):
                 )
 
         self.encoder = nn.Sequential(*list(VGG19().features.children())[:18])
-
         for param in self.encoder.parameters():
             param.requires_grad = False
 
@@ -253,7 +223,6 @@ class Pyramid2D_adain(nn.Module):
 
         style_feats = self.encoder(style)
 
-        # adain.adaptive_instance_normalization()
         for i in range(self.n_samples):
             y = self.conv_blocks[i](y)
 
