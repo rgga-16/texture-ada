@@ -88,7 +88,7 @@ class GraphProjection(nn.Module):
         # map to [-1, 1]
         # not sure why they render to negative x
         # Moves shape verts by mesh_pos
-        positions = shape_verts + torch.tensor(self.mesh_pos, device=shape_verts.device, dtype=torch.float)
+        positions = shape_verts.permute(0,2,1) + torch.tensor(self.mesh_pos, device=shape_verts.device, dtype=torch.float)
 
         # Tensorflow (original) version: h = 248 * tf.divide(-Y, -Z) + 112
         y_pos = positions[:,:, 1]
@@ -106,8 +106,8 @@ class GraphProjection(nn.Module):
         feats = [shape_verts]
         for img_feature in img_features:
             yes = torch.stack([w,h],dim=-1)
-            feats.append(self.project(img_feature,yes))
-        output = torch.cat(feats,2)
+            feats.append(self.project(img_feature,yes).permute(0,2,1))
+        output = torch.cat(feats,1)
         return output
 
 
@@ -149,7 +149,7 @@ class Pointnet_Autoencoder(nn.Module):
         pfeat_relu1_2 = F.relu(self.bn2(self.conv2(x))) 
         pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
 
-        self.graph_projection()
+        
 
         pfeat_relu2_2 = F.relu(self.bn3(self.conv3(pfeat_relu1_2))) 
         pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
@@ -171,11 +171,11 @@ class Pointnet_Autoencoder(nn.Module):
         return output
 
 class Pointnet_Autoencoder2(nn.Module):
-    def __init__(self,n_points,point_dim=3):
+    def __init__(self,n_points,point_dim=3,n_feats=960):
         super(Pointnet_Autoencoder2,self).__init__()
         self.n_points=n_points
 
-        self.conv1 = nn.Conv1d(point_dim,32,kernel_size=1,stride=1)
+        self.conv1 = nn.Conv1d(point_dim+n_feats,32,kernel_size=1,stride=1)
         self.bn1 = nn.BatchNorm1d(32,affine=True)
         self.conv2 = nn.Conv1d(32,64,kernel_size=1,stride=1)
         self.bn2 = nn.BatchNorm1d(64,affine=True)
@@ -204,18 +204,20 @@ class Pointnet_Autoencoder2(nn.Module):
         pointcloud = pointcloud.permute(0,2,1)
         assert pointcloud.dim()==3
 
+        pointcloud=self.graph_projection(np.array([256,256]), image_feats.values(), pointcloud)
+
         x = F.leaky_relu(self.bn1(self.conv1(pointcloud))) 
         pfeat_relu1_2 = F.leaky_relu(self.bn2(self.conv2(x))) 
-        # pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
+        pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
 
         pfeat_relu2_2 = F.leaky_relu(self.bn3(self.conv3(pfeat_relu1_2))) 
-        # pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
+        pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
 
         pfeat_relu3_4 = F.leaky_relu(self.bn4(self.conv4(pfeat_relu2_2))) 
-        # pfeat_relu3_4 = adain_pointcloud(pfeat_relu3_4,image_feats['relu3_4'])
+        pfeat_relu3_4 = adain_pointcloud(pfeat_relu3_4,image_feats['relu3_4'])
 
         pfeat_relu4_4 = F.leaky_relu(self.bn5(self.conv5(pfeat_relu3_4))) 
-        # pfeat_relu4_4 = adain_pointcloud(pfeat_relu4_4,image_feats['relu4_4'])
+        pfeat_relu4_4 = adain_pointcloud(pfeat_relu4_4,image_feats['relu4_4'])
 
         x = F.leaky_relu(self.dbn5(self.deconv5(pfeat_relu4_4)))
         x = F.leaky_relu(self.dbn4(self.deconv4(x)))
