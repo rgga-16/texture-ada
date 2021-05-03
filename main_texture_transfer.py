@@ -31,7 +31,7 @@ def main():
     args = args_.parse_arguments()
 
     # Setup generator model 
-    model = FeedForward()
+    model = ProposedModel()
 
     data = json.load(open(args.uv_style_pairs))
     uv_style_pairs = data['uv_style_pairs']
