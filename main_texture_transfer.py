@@ -52,12 +52,16 @@ def main():
     else: 
         raise ValueError('Style images directory was not specified in terminal or in UV-Style pairs json file..')
     
+
+    n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
+
     # Setup dataset for training
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture',
+    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
                                 style_size=args.style_size,
                                 set='test')
+    fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
     #                                 style_files=uv_style_pairs.values())
     # train_size, val_size, test_size = round(0.60 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__())
@@ -81,7 +85,7 @@ def main():
         pass
 
     # Setup dataloader for training
-    n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
+    
     train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
@@ -107,7 +111,6 @@ def main():
 
     # Test on all Filipino Designer Furniture textures
     #######################################
-    fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     for j,texture in enumerate(fil_dataloader):
         test_texture(model,texture,gen_path,os.path.join(output_folder,j))
     #######################################
