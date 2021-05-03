@@ -39,5 +39,7 @@ def parse_arguments():
                         help='Number of points to sample for pointcloud (structure transfer)')
     parser.add_argument('--multiprocess', type=bool,default=False,
                         help='To use multiple cpu cores for the dataloader or not')
+    parser.add_argument('--checkpoint_path', type=str,default=None,
+                        help='Path to checkpoint model to resume training, if any.')
 
     return parser.parse_args()

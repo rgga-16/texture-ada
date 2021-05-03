@@ -52,3 +52,13 @@ class ProposedModel(BaseModel):
         self.loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
+    
+    def get_state_dict(self):
+        return {
+            'model_state_dict':self.net.state_dict(),
+            'optimizer_state_dict':self.optimizer.state_dict(),
+        }
+
+    def load_state_dict(self,state_dict):
+        self.net.load_state_dict(state_dict['model_state_dict'])
+        self.optimizer.load_state_dict(state_dict['optimizer_state_dict'])

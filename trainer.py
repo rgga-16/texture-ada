@@ -20,18 +20,25 @@ from helpers import image_utils
 def train_texture(model,train_loader,val_loader):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
-
+    start_epoch=0
     best_model_wts = copy.deepcopy(model.net.state_dict())
     best_val_loss = np.inf 
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     
+    if args.checkpoint_path is not None: 
+        checkpoint = torch.load(args.checkpoint_path)
+        model.load_state_dict(checkpoint)
+        start_epoch = checkpoint['epoch']+1
+        best_model_wts=checkpoint['best_net_weights']
+        best_val_loss=checkpoint['best_val_loss']
+        print(f'Checkpoint found. Resuming training from epoch {start_epoch+1}..\n')
+
     train_loss_history=[]
     val_loss_history = []
     epoch_chkpts=[]
     writer = SummaryWriter(f'runs/{os.path.dirname(args.output_dir)}')
-
-    for epoch in range(epochs):
+    for epoch in range(start_epoch,epochs):
         print(f'Epoch {epoch+1}/{epochs}')
         print('='*10)
         for phase in ['Train','Val']:
@@ -49,7 +56,6 @@ def train_texture(model,train_loader,val_loader):
             for i,texture in enumerate(dataloader):
                 model.set_input(texture)
                 # Get output
-                enable_grad=phase.casefold()=='train'
                 with torch.set_grad_enabled(phase.casefold()=='train'):
                     output = model.forward()
                     loss = model.get_losses()
@@ -73,18 +79,24 @@ def train_texture(model,train_loader,val_loader):
 
             if phase.casefold()=='val' and epoch_loss < best_val_loss:
                 best_val_loss = epoch_loss
-                best_model_wts = copy.deepcopy(model.net.state_dict())
-
-                model_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_chkpt.pth')
-                torch.save(best_model_wts,model_path)
-                print(f'Checkpoint saved in {model_path}')
+                best_model_wts = copy.deepcopy(model.net.state_dict()) 
+                print(f'Found best net params at Epoch {epoch+1}')         
+        
+        state_dict = model.get_state_dict()
+        state_dict['epoch']=epoch 
+        state_dict['best_net_weights']=best_model_wts
+        state_dict['best_val_loss']=best_val_loss
+        checkpoint_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_chkpt.pt')
+        torch.save(state_dict,checkpoint_path)
+        print(f'Checkpoint saved in {checkpoint_path}')
+        
         epoch_chkpts.append(epoch)
         print('='*10)
         print('')        
 
     gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
     torch.save(best_model_wts,gen_path)
-    print('Final Model saved in {}\n'.format(gen_path))
+    print('Final model saved in {}\n'.format(gen_path))
 
     losses_file = 'losses.png'
     losses_path = os.path.join(args.output_dir,losses_file)
