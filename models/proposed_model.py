@@ -10,12 +10,16 @@ import style_transfer as st
 
 class ProposedModel(BaseModel):
     def __init__(self,ch_in=3, ch_step=64, ch_out=3,n_samples=6) -> None:
-        super().__init__()
+        
 
-        self.net = Pyramid2D_adain(ch_in,ch_step,ch_out,n_samples).to(self.device)
+        net = Pyramid2D_adain(ch_in,ch_step,ch_out,n_samples)
         self.lr = D.LR()
-        self.optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        self.criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss()
+
+        super().__init__(net,optimizer,criterion_loss)
+        self.net = self.net.to(self.device)
+        self.criterion_loss = self.criterion_loss.to(self.device)
     
     def train(self):
         self.net.train()
@@ -53,12 +57,4 @@ class ProposedModel(BaseModel):
         self.optimizer.step()
         self.optimizer.zero_grad()
     
-    def get_state_dict(self):
-        return {
-            'model_state_dict':self.net.state_dict(),
-            'optimizer_state_dict':self.optimizer.state_dict(),
-        }
-
-    def load_state_dict(self,state_dict):
-        self.net.load_state_dict(state_dict['model_state_dict'])
-        self.optimizer.load_state_dict(state_dict['optimizer_state_dict'])
+    

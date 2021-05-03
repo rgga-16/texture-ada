@@ -10,12 +10,13 @@ import style_transfer as st
 
 class AdaIN_Autoencoder(BaseModel):
     def __init__(self) -> None:
-        super().__init__()
+        
 
-        self.net = Network_AdaIN().to(self.device)
+        net = Network_AdaIN().to(self.device)
         self.lr = D.LR()
-        self.optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        self.criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss().to(self.device)
+        super().__init__(net,optimizer,criterion_loss)
     
     def train(self):
         self.net.train()

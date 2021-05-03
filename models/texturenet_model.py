@@ -9,7 +9,7 @@ import style_transfer as st
 
 class TextureNet(BaseModel):
     def __init__(self,version:str='vanilla',ch_in=3, ch_step=8, ch_out=3,n_samples=6) -> None:
-        super().__init__()
+        
 
         assert version.casefold() in ['custom','vanilla']
 
@@ -18,10 +18,13 @@ class TextureNet(BaseModel):
         elif version.casefold() =='custom':
             net = Pyramid2D_custom(ch_in,ch_step,ch_out,n_samples)
 
-        self.net = net.to(self.device)
+        
         self.lr = D.LR()
-        self.optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        self.criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss()
+        super().__init__(net,optimizer,criterion_loss)
+        self.criterion_loss = self.criterion_loss.to(self.device)
+        self.net = self.net.to(self.device)
     
     def train(self):
         self.net.train()

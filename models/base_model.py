@@ -8,8 +8,21 @@ from defaults import DEFAULTS as D
 from abc import ABC, abstractmethod
 
 class BaseModel(ABC):
-    def __init__(self):
+    def __init__(self,net,optimizer,criterion_loss):
         self.device = D.DEVICE()
+        self.net = net
+        self.optimizer = optimizer
+        self.criterion_loss = criterion_loss
+    
+    def get_state_dict(self):
+        return {
+            'model_state_dict':self.net.state_dict(),
+            'optimizer_state_dict':self.optimizer.state_dict(),
+        }
+
+    def load_state_dict(self,state_dict):
+        self.net.load_state_dict(state_dict['model_state_dict'])
+        self.optimizer.load_state_dict(state_dict['optimizer_state_dict'])
 
     @abstractmethod
     def set_input(self):

@@ -10,12 +10,13 @@ import style_transfer as st
 
 class FeedForward(BaseModel):
     def __init__(self,ch_in=3, ch_out=3,n_resblocks=5) -> None:
-        super().__init__()
+        
 
-        self.net = FeedForwardNetwork(ch_in,ch_out,n_resblocks).to(self.device)
+        net = FeedForwardNetwork(ch_in,ch_out,n_resblocks).to(self.device)
         self.lr = D.LR()
-        self.optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        self.criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss().to(self.device)
+        super().__init__(net,optimizer,criterion_loss)
     
     def train(self):
         self.net.train()
