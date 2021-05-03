@@ -55,6 +55,9 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
+    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture',
+                                style_size=args.style_size,
+                                set='test')
     # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
     #                                 style_files=uv_style_pairs.values())
     # train_size, val_size, test_size = round(0.60 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__())
@@ -102,6 +105,14 @@ def main():
         test_texture(model,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
     #######################################
 
+    # Test on all Filipino Designer Furniture textures
+    #######################################
+    fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    for j,texture in enumerate(fil_dataloader):
+        test_texture(model,texture,gen_path,os.path.join(output_folder,j))
+    #######################################
+    
+    
     # INSERT RENDERING MODULE HERE
     #######################################
 

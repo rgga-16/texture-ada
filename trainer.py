@@ -15,8 +15,6 @@ import style_transfer as st
 
 from helpers import image_utils
 
-
-
 def train_texture(model,train_loader,val_loader):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
