@@ -17,9 +17,9 @@ from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
 def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=False):
 
-    earth_movers_distance_loss = emd.emdModule()
-    emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
-    emd_loss = torch.mean(emd_loss)
+    # earth_movers_distance_loss = emd.emdModule()
+    # emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
+    # emd_loss = torch.mean(emd_loss)
 
     if (D.DEVICE().type=='cuda'):
         # Link: https://github.com/ThibaultGROUEIX/ChamferDistancePytorch 
@@ -30,9 +30,9 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
     chamfer_loss = (dist_forward.mean(dim=-1)+dist_backward.mean(dim=-1)).mean()
     if is_eval:
         f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
-        return chamfer_loss+emd_loss,f_score,precision,recall
+        return chamfer_loss,f_score,precision,recall
   
-    return chamfer_loss+emd_loss
+    return chamfer_loss
 
 
 class GraphProjection(nn.Module):
