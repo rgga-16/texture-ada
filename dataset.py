@@ -67,16 +67,21 @@ class Describable_Textures_Dataset(Dataset):
 
 class Styles_Dataset(Dataset):
 
-    def __init__(self, style_dir, style_size, style_files):
+    def __init__(self, style_dir, style_size, style_files=None,set=None):
         super().__init__()
 
         self.style_dir = style_dir 
         self.style_size = style_size 
         self.style_files = []
-        self.set=''
-        
-        for s in style_files:
-            self.style_files.append(os.path.join(self.style_dir,s))
+        self.set=set
+
+        # If no particular files are specified, load all files from the style_dir
+        if style_files is None:
+            for s in os.listdir(self.style_dir):
+                self.style_files.append(os.path.join(self.style_dir,s))
+        else:
+            for s in style_files:
+                self.style_files.append(os.path.join(self.style_dir,s))
     
     def __len__(self):
         return len(self.style_files)
