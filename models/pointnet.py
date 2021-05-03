@@ -204,23 +204,23 @@ class Pointnet_Autoencoder2(nn.Module):
         pointcloud = pointcloud.permute(0,2,1)
         assert pointcloud.dim()==3
 
-        x = F.relu(self.bn1(self.conv1(pointcloud))) 
-        pfeat_relu1_2 = F.relu(self.bn2(self.conv2(x))) 
+        x = F.leaky_relu(self.bn1(self.conv1(pointcloud))) 
+        pfeat_relu1_2 = F.leaky_relu(self.bn2(self.conv2(x))) 
         pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
 
-        pfeat_relu2_2 = F.relu(self.bn3(self.conv3(pfeat_relu1_2))) 
+        pfeat_relu2_2 = F.leaky_relu(self.bn3(self.conv3(pfeat_relu1_2))) 
         pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
 
-        pfeat_relu3_4 = F.relu(self.bn4(self.conv4(pfeat_relu2_2))) 
+        pfeat_relu3_4 = F.leaky_relu(self.bn4(self.conv4(pfeat_relu2_2))) 
         pfeat_relu3_4 = adain_pointcloud(pfeat_relu3_4,image_feats['relu3_4'])
 
-        pfeat_relu4_4 = F.relu(self.bn5(self.conv5(pfeat_relu3_4))) 
+        pfeat_relu4_4 = F.leaky_relu(self.bn5(self.conv5(pfeat_relu3_4))) 
         pfeat_relu4_4 = adain_pointcloud(pfeat_relu4_4,image_feats['relu4_4'])
 
-        x = F.relu(self.dbn5(self.deconv5(pfeat_relu4_4)))
-        x = F.relu(self.dbn4(self.deconv4(x)))
-        x = F.relu(self.dbn3(self.deconv3(x)))
-        x = F.relu(self.dbn2(self.deconv2(x)))
+        x = F.leaky_relu(self.dbn5(self.deconv5(pfeat_relu4_4)))
+        x = F.leaky_relu(self.dbn4(self.deconv4(x)))
+        x = F.leaky_relu(self.dbn3(self.deconv3(x)))
+        x = F.leaky_relu(self.dbn2(self.deconv2(x)))
         output =self.deconv1(x)
 
 
