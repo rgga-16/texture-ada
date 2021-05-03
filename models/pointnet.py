@@ -17,10 +17,6 @@ from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
 def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=False):
 
-    # earth_movers_distance_loss = emd.emdModule()
-    # emd_loss,_ = earth_movers_distance_loss(predicted_pointcloud,real_pointcloud,0.05,3000)
-    # emd_loss = torch.mean(emd_loss)
-
     if (D.DEVICE().type=='cuda'):
         # Link: https://github.com/ThibaultGROUEIX/ChamferDistancePytorch 
         dist_forward,dist_backward,_,_ = dist_chamfer_3D.chamfer_3DDist()(predicted_pointcloud,real_pointcloud)
@@ -152,6 +148,8 @@ class Pointnet_Autoencoder(nn.Module):
         x = F.relu(self.bn1(self.conv1(pointcloud))) 
         pfeat_relu1_2 = F.relu(self.bn2(self.conv2(x))) 
         pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
+
+        self.graph_projection()
 
         pfeat_relu2_2 = F.relu(self.bn3(self.conv3(pfeat_relu1_2))) 
         pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
