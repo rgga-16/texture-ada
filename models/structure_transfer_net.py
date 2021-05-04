@@ -74,7 +74,7 @@ class Pointnet_Autoencoder2(nn.Module):
 
         projected_pcds=self.graph_projection(np.array([256,256]), image_feats.values(),output,image)
         
-        projected_pcds = (projected_pcds*256//1)
+        projected_pcds = (projected_pcds*256)
       
         # pcd_silhouettes = []
         # for ppcd in projected_pcds:
