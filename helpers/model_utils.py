@@ -43,7 +43,22 @@ class RandomRotate(object):
             [
                 [math.cos(theta),-math.sin(theta),0],
                 [math.sin(theta),math.cos(theta),0], 
-                [0,0,1]
+                [0,0,1],
+            ],device=D.DEVICE())
+
+        pointcloud = torch.matmul(pointcloud,rot_matrix)
+        return pointcloud
+
+class Y_Rotate(object):
+    def __init__(self, theta):
+        self.theta=theta
+    
+    def __call__(self,pointcloud):
+        rot_matrix = torch.tensor(
+            [
+                [math.cos(self.theta),0,math.sin(self.theta)],
+                [0,1,0],
+                [-math.sin(self.theta),0,math.cos(self.theta)], 
             ],device=D.DEVICE())
 
         pointcloud = torch.matmul(pointcloud,rot_matrix)
@@ -82,7 +97,7 @@ def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
     transformer = transforms.Compose([
         SamplePoints(n_points),
         NormalizePointcloud(),
-        # RandomRotate(),
+        Y_Rotate(10)
         # AddNoise()
     ])
 

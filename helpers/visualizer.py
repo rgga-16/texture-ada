@@ -81,7 +81,7 @@ def visualize_rotate(data):
     return fig
 
 def display_pointcloud(pointcloud):
-    xs,ys,zs = np.array(pointcloud.squeeze().cpu()).T
+    xs,ys,zs = np.array(pointcloud.squeeze().detach().cpu()).T
     data=[go.Scatter3d(x=xs, y=ys, z=zs,
                                    mode='markers')]
     # fig = visualize_rotate(data)

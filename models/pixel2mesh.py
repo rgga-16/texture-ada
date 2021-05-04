@@ -57,10 +57,10 @@ class Pixel2MeshModel(nn.Module):
         self.gcn_3 = GraphConvBottleneck(6,self.features_dim+self.hidden_dim,self.hidden_dim,
                                         self.last_hidden_dim,init_shape.adj_mat[2])
         
-        # self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.unpool_idx[0])
-        # self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.unpool_idx[1])
-        self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.edges[0])
-        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.edges[0])
+        self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.unpool_idx[0])
+        self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.unpool_idx[1])
+        # self.g_unpooling_1 = GraphUnpoolingLayer(init_shape.edges[0])
+        # self.g_unpooling_2 = GraphUnpoolingLayer(init_shape.edges[0])
         
 
         self.projection = GraphProjection(mesh_pos=mesh_pos,
