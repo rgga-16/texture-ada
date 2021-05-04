@@ -1,8 +1,8 @@
 
 
 import matplotlib.pyplot as plt
+import torchvision 
 from torchvision import transforms
-import torch
 
 from defaults import DEFAULTS as D
 
@@ -58,17 +58,26 @@ def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
     image = postprocessor(np.uint8(tensor_*225))
     return image
 
-
-# Show image
-def show_images(images,show=True,save_path=None):
-    f, axs = plt.subplots(1,len(images),figsize=(15,15))
-    for img, ax in zip(images,axs):
-        ax.imshow(img)
-        ax.axis('off')
-    if show:
-        plt.show()
+def show_images(images,save_path=None,normalize=True):
+    img_grid = torchvision.utils.make_grid(images,normalize=normalize)
+    plt.axis('off')
+    plt.imshow(img_grid.cpu().permute(1,2,0))
+    plt.show()
     if save_path:
         plt.savefig(save_path)
+    
+    plt.clf()
+
+# # Show image
+# def show_images(images,show=True,save_path=None):
+#     f, axs = plt.subplots(1,len(images),figsize=(15,15))
+#     for img, ax in zip(images,axs):
+#         ax.imshow(img)
+#         ax.axis('off')
+#     if show:
+#         plt.show()
+#     if save_path:
+#         plt.savefig(save_path)
 
 # Loads a single image
 def load_image(filename,mode="RGBA"):
