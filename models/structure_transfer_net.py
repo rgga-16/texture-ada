@@ -81,14 +81,14 @@ class Pointnet_Autoencoder2(nn.Module):
             xs = torch.clamp((xs*256).long(),min=0,max=256-1)
             ys = torch.clamp((ys*256).long(),min=0,max=256-1)
             ps = torch.ones_like(xs)
-            img = torch.zeros((256,256),device=xs.device).long()
+            img = torch.zeros((256,256),device=xs.device,requires_grad=True).long()
             xmin,xmax = torch.min(xs),torch.max(xs)
             ymin,ymax = torch.min(ys),torch.max(ys)
             img.index_put_((xs,ys),ps,accumulate=False)
             img.t_()
             img = img.expand(1,-1,-1)
             pcd_silhouettes.append(img.float())
-        pcd_silhouettes=torch.stack(pcd_silhouettes,0)
+        pcd_silhouettes=torch.stack(pcd_silhouettes,0).requires_grad_(True)
 
         output = output.permute(0,2,1)
         return output,pcd_silhouettes
