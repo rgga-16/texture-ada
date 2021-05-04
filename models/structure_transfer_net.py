@@ -74,24 +74,27 @@ class Pointnet_Autoencoder2(nn.Module):
 
         projected_pcds=self.graph_projection(np.array([256,256]), image_feats.values(),output,image)
         
-        pcd_silhouettes = []
-        for ppcd in projected_pcds:
-            xs = ppcd[0,:]
-            ys = ppcd[1,:]
-            xs = torch.clamp((xs*256).long(),min=0,max=256-1)
-            ys = torch.clamp((ys*256).long(),min=0,max=256-1)
-            ps = torch.ones_like(xs)
-            img = torch.zeros((256,256),device=xs.device,requires_grad=True).long()
-            xmin,xmax = torch.min(xs),torch.max(xs)
-            ymin,ymax = torch.min(ys),torch.max(ys)
-            img.index_put_((xs,ys),ps,accumulate=False)
-            img.t_()
-            img = img.expand(1,-1,-1)
-            pcd_silhouettes.append(img.float())
-        pcd_silhouettes=torch.stack(pcd_silhouettes,0).requires_grad_(True)
+        projected_pcds = (projected_pcds*256//1)
+      
+        # pcd_silhouettes = []
+        # for ppcd in projected_pcds:
+        #     xs = ppcd[0,:]
+        #     ys = ppcd[1,:]
+        #     xs = torch.clamp((xs*256).long(),min=0,max=256-1)
+        #     ys = torch.clamp((ys*256).long(),min=0,max=256-1)
+        #     ps = torch.ones_like(xs)
+        #     img = torch.zeros((256,256),device=xs.device).long()
+        #     xmin,xmax = torch.min(xs),torch.max(xs)
+        #     ymin,ymax = torch.min(ys),torch.max(ys)
+        #     img.index_put_((xs,ys),ps,accumulate=False)
+        #     img.t_()
+        #     img = img.expand(1,-1,-1)
+        #     pcd_silhouettes.append(img.float())
+        # pcd_silhouettes=torch.stack(pcd_silhouettes,0)
 
         output = output.permute(0,2,1)
-        return output,pcd_silhouettes
+        projected_pcds = projected_pcds.permute(0,2,1)
+        return output,projected_pcds
 
 class GraphProjection(nn.Module):
     """Graph Projection layer, which pool 2D features to mesh
