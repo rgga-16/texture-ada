@@ -8,14 +8,11 @@ from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
-from models.feedforward_model import FeedForward
-from models.texturenet_model import TextureNet
-from models.adain_model import AdaIN_Autoencoder
-from models.proposed_model import ProposedModel
+from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
 import style_transfer as st
 from trainer import train_texture
 from tester import test_texture
-
+from models.structure_transfer_net import Pointnet_Autoencoder2
 import numpy as np
 import multiprocessing
 
@@ -61,7 +58,8 @@ def main():
     fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
                                 style_size=args.style_size,
                                 set='test')
-    fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    fil_dataloader = DataLoader(fil_dataset,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    fil_testloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     # fil_dataset = Styles_Dataset(style_dir=style_dir,style_size=args.style_size,
     #                                 style_files=uv_style_pairs.values())
     # train_size, val_size, test_size = round(0.60 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__()),round(0.20 * fil_dataset.__len__())
@@ -92,27 +90,27 @@ def main():
 
     # Training. Returns path of the generator weights.
     # gen_path=train_texture(generator=net,feat_extractor=feat_extractor,train_loader=train_loader,val_loader=val_loader)
-    gen_path=train_texture(model,train_loader=train_loader,val_loader=val_loader)
+    gen_path=train_texture(model,train_loader=fil_dataloader,val_loader=fil_dataloader)
 
     # Test on DTD Test Set
     #######################################
-    for i, texture in enumerate(test_loader):
-        output_path = os.path.join(output_folder,'{}.png'.format(i))
-        test_texture(model,texture,gen_path,output_path)
+    # for i, texture in enumerate(test_loader):
+    #     output_path = os.path.join(output_folder,'{}.png'.format(i))
+    #     test_texture(model,texture,gen_path,output_path)
     
     # Test on Furniture pairngs
     #######################################
-    test_files = uv_style_pairs.items()
-    for uv_file,style_file in test_files:
-        uv = image_utils.load_image(os.path.join(uv_dir,uv_file),mode='L')
-        texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
-        test_texture(model,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
+    # test_files = uv_style_pairs.items()
+    # for uv_file,style_file in test_files:
+    #     uv = image_utils.load_image(os.path.join(uv_dir,uv_file),mode='L')
+    #     texture = image_utils.image_to_tensor(image_utils.load_image(os.path.join(style_dir,style_file),mode='RGB'),phase='test',image_size=args.style_size)
+    #     test_texture(model,texture,gen_path,os.path.join(output_folder,uv_file),mask=uv)
     #######################################
 
     # Test on all Filipino Designer Furniture textures
     #######################################
-    for j,texture in enumerate(fil_dataloader):
-        test_texture(model,texture,gen_path,os.path.join(output_folder,j))
+    for j,texture in enumerate(fil_testloader):
+        test_texture(model,texture,gen_path,os.path.join(output_folder,str(j)))
     #######################################
     
     
