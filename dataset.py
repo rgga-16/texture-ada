@@ -67,7 +67,7 @@ class Describable_Textures_Dataset(Dataset):
 
 class Styles_Dataset(Dataset):
 
-    def __init__(self, style_dir, style_size, style_files=None,set=None):
+    def __init__(self, style_dir, style_size, style_files=None,set=None,lower_size=None):
         super().__init__()
 
         self.style_dir = style_dir 
@@ -82,6 +82,9 @@ class Styles_Dataset(Dataset):
         else:
             for s in style_files:
                 self.style_files.append(os.path.join(self.style_dir,s))
+        
+        if lower_size:
+            self.style_files = self.style_files[:lower_size]
     
     def __len__(self):
         return len(self.style_files)
