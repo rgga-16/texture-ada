@@ -12,7 +12,6 @@ from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoenco
 import style_transfer as st
 from trainer import train_texture
 from tester import test_texture
-from models.structure_transfer_net import Pointnet_Autoencoder2
 import numpy as np
 import multiprocessing
 
