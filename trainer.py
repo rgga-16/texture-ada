@@ -5,9 +5,6 @@ import os, copy
 
 import torchvision
 
-from models.adain_model import AdaIN_Autoencoder
-from models.texturenet_model import TextureNet
-
 import args as args_
 from defaults import DEFAULTS as D
 from helpers import logger
