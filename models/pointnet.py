@@ -221,6 +221,7 @@ class Tnet(nn.Module):
         self.bn3 = nn.BatchNorm1d(1024)
         self.bn4 = nn.BatchNorm1d(512)
         self.bn5 = nn.BatchNorm1d(256)
+
        
     def forward(self, input):
         # input.shape == (bs,3,n)
@@ -233,8 +234,11 @@ class Tnet(nn.Module):
         pool = nn.MaxPool1d(xb.size(-1))(xb) #pool = (bs,1024,1)
         flat = nn.Flatten(1)(pool) #flat = (1,1024)
 
-        xb = F.relu(self.bn4(self.fc1(flat))) #xb = (1,512)
-        xb = F.relu(self.bn5(self.fc2(xb))) #xb = (1,256)
+        # xb = F.relu(self.bn4(self.fc1(flat))) #xb = (1,512)
+        # xb = F.relu(self.bn5(self.fc2(xb))) #xb = (1,256)
+
+        xb = F.relu(self.fc1(flat)) #xb = (1,512)
+        xb = F.relu(self.fc2(xb)) #xb = (1,256)
         
         # Bias of the 3x3 matrix. initialize as identity
         init = torch.eye(self.k, requires_grad=True).repeat(bs,1,1) #init=(1,3,3)
