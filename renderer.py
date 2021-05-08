@@ -14,7 +14,7 @@ def render_gif(renderer,save_path='./render.gif'):
     
     dir_name = os.path.dirname(save_path)
     try:
-        os.mkdir(dir_name)
+        os.makedirs(dir_name,exist_ok=True)
     except FileExistsError:
         pass
         
@@ -26,6 +26,10 @@ def render_gif(renderer,save_path='./render.gif'):
 
     return
 
+
+def render_model(meshes_dir,textures_dir, mesh_texture_file_pairs,uv_test_sizes):
+
+    return
 
 if __name__ == '__main__':
     
@@ -51,43 +55,16 @@ if __name__ == '__main__':
     # }
 
     # # office chair
-    meshes_dir = './inputs/shape_samples/office_chair'
-    textures_dir = 'outputs/output_images/[04-21-21 12-07-53]'
-    uv_maps_dir = 'inputs/uv_maps/office chair/cube_project'
+    meshes_dir = './inputs/3d_models/shapenet/dining_chair_3'
+    textures_dir = 'outputs/output_images/[05-06-21 17-19-51]/ProposedModel'
+    uv_maps_dir = 'inputs/uv_maps/dining_chair_3_1/cube_project'
     mesh_texture_file_pairs = {
         "backseat.obj":"backseat_uv.png",
-        "arms.obj":"arms_uv.png",
-        "feet.obj":"feet_uv.png",
-        "seat.obj":"seat_uv.png"
+        "left_arm.obj":"left_arm_uv.png",
+        "right_arm.obj":"right_arm_uv.png",
+        "seat.obj":"seat_uv.png",
+        "body.obj":"body_uv.png"
     }
-    
-    # lounge sofa
-    # meshes_dir = './inputs/shape_samples/lounge_sofa'
-    # # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/lounge_sofa/[04-08-21 09-00-56] Johnson (w-o fg weight)'
-    # textures_dir = 'outputs/output_images/[04-14-21 06-28-05] Ulyanov-Adain - Multistyle (w-o IN layers) 2'
-    # mesh_texture_file_pairs = {
-    #     'left_arm.obj':'left_arm_uv.png',
-    #     'right_arm.obj':'right_arm_uv.png',
-    #     'left_backseat.obj':'left_backseat_uv.png',
-    #     'mid_backseat.obj':'mid_backseat_uv.png',
-    #     'right_backseat.obj':'right_backseat_uv.png',
-    #     'left_base.obj':'left_base_uv.png',
-    #     'right_base.obj':'right_base_uv.png',
-    #     'left_seat.obj':'left_seat_uv.png',
-    #     'mid_seat.obj':'mid_seat_uv.png',
-    #     'right_seat.obj':'right_seat_uv.png',
-    # }
-
-    # # round table
-    # meshes_dir = './inputs/shape_samples/round_table/models'
-    # textures_dir = 'outputs/output_images/Pyramid2D_with_instnorm/round_table/[03-24-21 05-32-44] round table - uv map config 1A'
-    # mesh_texture_file_pairs = {
-    #     'tabletop.obj':'tabletop_uv.png',
-    #     'botleft_leg.obj':'botleft_leg_uv.png',
-    #     'botright_leg.obj':'botright_leg_uv.png',
-    #     'topleft_leg.obj':'topleft_leg_uv.png',
-    #     'topright_leg.obj':'topright_leg_uv.png',
-    # }
 
     # for size in [256, 512, 768, 1024]:
     for size in [256]:
@@ -101,4 +78,4 @@ if __name__ == '__main__':
             renderer.apply_texture(obj,'CUBE_PROJECT',texture_path)
 
         # renderer.render(save_path='//render_round_table_colorless_{}.png'.format(size))
-        render_gif(renderer,save_path='./outputs/renders/blender/office_chair/[04-21-21 12-07-53]/render_officechair_{}.gif'.format(size))
+        render_gif(renderer,save_path='./outputs/renders/blender/office_chair/[04-21-21 06-17-40]/render_officechair_{}.gif'.format(size))

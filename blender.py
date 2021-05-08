@@ -26,9 +26,9 @@ def parse_arguments():
 
 def unwrap_method(method:str):
         if method.lower()=='SMART_PROJECT'.lower():
-            bpy.ops.uv.smart_project()
+            bpy.ops.uv.smart_project(correct_aspect=True,scale_to_bounds=True)
         elif method.lower()=='UNWRAP'.lower():
-            bpy.ops.uv.unwrap()
+            bpy.ops.uv.unwrap(correct_aspect=True)
         elif method.lower()=='CUBE_PROJECT'.lower():
             bpy.ops.uv.cube_project(cube_size=5.0, 
                         correct_aspect=True, 
@@ -36,10 +36,10 @@ def unwrap_method(method:str):
                         scale_to_bounds=True) 
         elif method.lower()=='CYLINDER_PROJECT'.lower():
             bpy.ops.uv.cylinder_project(direction='VIEW_ON_EQUATOR', 
-                            align='POLAR_ZX', radius=1.0, correct_aspect=True, 
+                            align='POLAR_ZX', radius=5.0, correct_aspect=True, 
                             clip_to_bounds=True, scale_to_bounds=True)
         elif method.lower()=='SPHERE_PROJECT'.lower():
-            bpy.ops.uv.sphere_project
+            bpy.ops.uv.sphere_project(clip_to_bounds=True,correct_aspect=True, scale_to_bounds=True)
             pass
         elif method.lower()=='LIGHTMAP_PACK'.lower():
             bpy.ops.uv.lightmap_pack(PREF_CONTEXT='ALL_FACES')
@@ -51,6 +51,8 @@ def unwrap_method(method:str):
 class BlenderRenderer():
 
     def __init__(self):
+
+        self.set_gpu()
         # Add scene
         self.create_scene()
         # Add a camera
@@ -60,6 +62,14 @@ class BlenderRenderer():
 
         self.objects=[]
 
+    def set_gpu(self):
+        bpy.context.scene.render.engine = 'CYCLES'
+        bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
+        bpy.context.preferences.addons['cycles'].preferences.get_devices()
+        bpy.context.preferences.addons['cycles'].preferences.devices[0].use= True
+        bpy.context.scene.cycles.device = 'CPU'
+        bpy.ops.preferences.addon_enable(module="render_auto_tile_size")
+        bpy.context.scene.ats_settings.is_enabled = True
 
     def create_scene(self):
         self.scene = bpy.context.scene
@@ -76,6 +86,10 @@ class BlenderRenderer():
 
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete(use_global=False)
+    
+    def clear(self):
+        bpy.ops.object.delete({"selected_objects": self.objects})
+        self.objects=[]
 
     def setup_camera(self,
                     location=(0.0,0.3,1.3),
@@ -127,6 +141,7 @@ class BlenderRenderer():
 
     def save_uv_map(self,obj,unwrap_method_,save_file='//uv_map.png'):
         # Apply Smart uv project from object
+        bpy.ops.object.select_all(action='DESELECT')
         bpy.context.view_layer.objects.active=obj
         obj.select_set(True)
         selected = bpy.context.selected_objects
@@ -136,7 +151,7 @@ class BlenderRenderer():
 
         obj.select_set(False)
 
-        bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(256,256),opacity=1.0)
+        bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(512,512),opacity=1.0)
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
         
@@ -174,12 +189,24 @@ class BlenderRenderer():
         return
     
     def render(self,save_path='//render.png'):
+        # bpy.context.scene.cycles.device = 'GPU'
         print('Rendering image')
         bpy.context.scene.render.film_transparent = True
         self.scene.render.filepath = save_path
         bpy.ops.render.render(write_still=True)
+    
+    def bake_texture(self,obj,unwrap_method_,texture):
+        bpy.context.scene.cycles.device = 'CPU'
+        # Select object
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active=obj
+        
 
-    def apply_texture(self,object,unwrap_method_,texture):
+        # Get uv map of obj
+        bpy.ops.object.mode_set(mode="EDIT")
+        obj.select_set(True)
+        unwrap_method(unwrap_method_)
+
         # Load texture as texture_image node
         image = bpy.data.images.load(texture,check_existing=True)
 
@@ -192,58 +219,75 @@ class BlenderRenderer():
         texture_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
         texture_image.image = image 
         mat.node_tree.links.new(bsdf.inputs['Base Color'],texture_image.outputs['Color'])
-        object.data.materials.clear()
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+        texture_image.select=True 
+        mat.node_tree.nodes.active=texture_image
 
-        object.data.materials.append(mat)
-        
-        bpy.context.view_layer.objects.active=object
-        object.select_set(True)
-        bpy.ops.object.mode_set(mode="EDIT")
+        # Bake
+        bpy.ops.object.bake(type='DIFFUSE',pass_filter={'COLOR'},margin=32)
 
-        unwrap_method(unwrap_method_)
-        object.select_set(False)
-
-        # if os.path.basename(texture)=='uv_map_base_chair-1_masked.png':
-        #     bpy.ops.uv.unwrap()
-        #     object.select_set(False)
-        # else: 
-        #     bpy.ops.uv.smart_project()
-        #     # bpy.ops.uv.unwrap()
-        #     object.select_set(False)
-
+        texture_image.select=False
+        obj.select_set(False ) 
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
+
+
+        return 
+
+    # def apply_texture(self,object,unwrap_method_,texture):
+    #     # Load texture as texture_image node
+    #     image = bpy.data.images.load(texture,check_existing=True)
+
+    #     # Load object material's Principal BSDF node
+    #     mat = bpy.data.materials.new(name='Material')
+    #     mat.use_nodes=True     
+    #     bsdf = mat.node_tree.nodes["Principled BSDF"]
+
+    #     # Link texture_image's node Color to BSDF node BaseColor
+    #     texture_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    #     texture_image.image = image 
+    #     mat.node_tree.links.new(bsdf.inputs['Base Color'],texture_image.outputs['Color'])
+    #     object.data.materials.clear()
+
+    #     object.data.materials.append(mat)
+        
+    #     bpy.context.view_layer.objects.active=object
+    #     object.select_set(True)
+    #     bpy.ops.object.mode_set(mode="EDIT")
+
+    #     unwrap_method(unwrap_method_)
+    #     object.select_set(False)
+
+    #     bpy.ops.object.mode_set(mode="OBJECT")
+    #     bpy.ops.object.select_all(action='DESELECT')
 
 if __name__ == '__main__':
     renderer = BlenderRenderer()
-
+    # INSERT PARAMS HERE
     mesh = "model_modified.obj"
     uv = "hello"
     mode = "MULTI"
-    unwrap_method_='cube_project'
-    mesh_dir = "inputs/shape_samples/office_chair"
-    uv_dir = "inputs/uv_maps/office_chair/{}".format(unwrap_method_)
+    shapes_dir = "inputs/3d_models/shapenet"
+    
+    unwrap_methods=['unwrap','cube_project','cylinder_project','sphere_project']
+    
+    for f in os.listdir(shapes_dir): 
+        if os.path.isfile(os.path.join(shapes_dir,f)):
+            continue
+        mesh_dir = os.path.join(shapes_dir,f)
+        for unwrap_method_ in unwrap_methods:
+            uv_dir = os.path.join(mesh_dir,'uvs',unwrap_method_)
+            # uv_dir = "./inputs/uv_maps/{}/{}".format(os.path.basename(mesh_dir),unwrap_method_)
+            try:
+                os.makedirs(uv_dir)
+            except FileExistsError:
+                pass
 
-    if mode=='SINGLE':
-        mesh_path =os.path.join(mesh_dir,mesh)
-        renderer.load_object(mesh_path)
-        selected = [obj_ for obj_ in bpy.context.selected_objects if obj_.type=='MESH']
-        bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.select_all(action='DESELECT')
-        try:
-            os.mkdir(uv_dir)
-        except FileExistsError:
-            pass
-        for obj in selected:
-            name = obj.name
-            uv_path = os.path.join(uv_dir,'{}_uv.png'.format(name))
-            renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
-    else:
-        for mesh_file in os.listdir(mesh_dir):
-            ext = os.path.splitext(mesh_file)[-1].lower()
-            if ext in ['.obj']:
-                mesh_path = os.path.join(mesh_dir,mesh_file)
-                obj = renderer.load_object(mesh_path)
-                # renderer.recalculate_normals(obj)
-                uv_path = str(p.Path.cwd() / uv_dir / '{}_uv.png'.format(mesh_file[:-4]))
-                renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
+            for mesh_file in os.listdir(mesh_dir):
+                ext = os.path.splitext(mesh_file)[-1].lower()
+                if ext in ['.obj'] and mesh_file != 'model.obj':
+                    mesh_path = os.path.join(mesh_dir,mesh_file)
+                    obj = renderer.load_object(mesh_path)
+                    uv_path = str(p.Path.cwd() / uv_dir / '{}_uv.png'.format(mesh_file[:-4]))
+                    renderer.save_uv_map(obj,unwrap_method_,save_file=uv_path)
