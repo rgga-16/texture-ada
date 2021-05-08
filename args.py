@@ -22,7 +22,9 @@ def parse_arguments():
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate of texture transfer network')
     parser.add_argument('--style_size', type=int, default=D.IMSIZE.get(),
-                        help='Size of input style images')
+                        help='Size of input style image')
+    parser.add_argument('--content_size', type=int, default=D.IMSIZE.get(),
+                        help='Size of input content image')
     parser.add_argument('--uv_train_sizes', type=int, nargs="*",default=[64,128,254],
                         help='Sizes of input uv map images during training')
     parser.add_argument('--uv_test_sizes', type=int, nargs="*",default=[512,768,1024],

@@ -13,12 +13,32 @@ import numpy as np
 from torch.utils.data import DataLoader
 import os, copy, time, datetime ,json, matplotlib.pyplot as plt
 
-def test_texture(model:BaseModel,texture,model_path,output_path,mask=None):
+def evaluate_texture(model:BaseModel,test_loader):
+    args = args_.parse_arguments()
+
+    assert isinstance(model,BaseModel)
+    model.eval()
+
+    w = args.uv_test_sizes[0]
+    running_dist=0.0
+    running_loss=0.0
+    for i,texture in enumerate(test_loader):
+        model.set_input(texture)
+        with torch.set_grad_enabled(False):
+            output=model.forward()
+            loss,wdist=model.get_losses()
+            running_dist+=wdist*texture.shape[0]
+            running_loss+=loss*texture.shape[0]
+    
+    eval_wdist = running_dist/test_loader.dataset.__len__()
+    eval_loss = running_loss/test_loader.dataset.__len__()
+    return eval_loss,eval_wdist
+
+def predict_texture(model:BaseModel,texture,output_path,mask=None):
     args = args_.parse_arguments()
 
     assert isinstance(model,BaseModel)
 
-    model.net.load_state_dict(torch.load(model_path))
     model.eval()
     
     w = args.uv_test_sizes[0]
@@ -32,11 +52,6 @@ def test_texture(model:BaseModel,texture,model_path,output_path,mask=None):
     output_path_ = '{}_{}.png'.format(output_path,w)
     output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
 
-    # img_grid = torchvision.utils.make_grid(torch.cat((texture,output),dim=0),normalize=True)
-    # plt.axis('off')
-    # plt.imshow(img_grid.cpu().permute(1,2,0))
-    # plt.savefig(f'{output_path}_compare.png')
-    # plt.clf()
     
     if mask is not None:
         mask = mask.resize(output_image.size) if mask.size != output_image.size else ...

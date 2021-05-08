@@ -12,7 +12,7 @@ from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoenco
 from models.networks.texturenet import Pyramid2D_adain2
 import style_transfer as st
 from trainer import train_texture
-from tester import test_texture
+from tester import predict_texture,evaluate_texture
 import numpy as np
 import multiprocessing
 
@@ -40,9 +40,9 @@ def main():
     test_set = DTD('test')
     ####################
 
-    train_loader = DataLoader(train_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    val_loader = DataLoader(val_set,batch_size=8,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    test_loader = DataLoader(test_set,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    train_loader = DataLoader(train_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    val_loader = DataLoader(val_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    test_loader = DataLoader(test_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     
     
     # Filipino furniture
@@ -71,22 +71,18 @@ def main():
         # record time elapsed and configurations
         time_elapsed = time.time() - start 
 
+        model.net.load_state_dict(torch.load(gen_path))
+
         # Test on DTD Test Set
         ######################################
-        tlosses=0
-        twdists=0
-        for i, texture in enumerate(test_loader):
-            output_path = os.path.join(output_folder,f'DTD_{i}.png')
-            test_texture(model,texture,gen_path,output_path)
-        avg_tloss_dtd = tlosses/test_loader.dataset.__len__()
-        avg_twdists_dtd = twdists/test_loader.dataset.__len__()
+        avg_tloss_dtd,avg_twdists_dtd=evaluate_texture(model,test_loader)
 
         # Test on all Filipino Designer Furniture textures
         #######################################
         tlosses=0
         twdists=0
         for j,texture in enumerate(fil_dataloader):
-            test_loss,test_wdist = test_texture(model,texture,gen_path,os.path.join(output_folder,f'FDF_{j}.png'))
+            test_loss,test_wdist = predict_texture(model,texture,gen_path,os.path.join(output_folder,f'FDF_{j}.png'))
             tlosses+=test_loss
             twdists+=test_wdist
         avg_tloss = tlosses / fil_dataloader.dataset.__len__()
@@ -100,7 +96,9 @@ def main():
                         Train_Time='{:.2f}s'.format(time_elapsed),
                         Model_Name=model.__class__.__name__,
                         Seed = torch.seed(),
+                        Average_CovMatrix_TestLoss_DTD = avg_tloss_dtd,
                         Average_CovMatrix_TestLoss_FDF = avg_tloss,
+                        Average_WassDist_DTD=avg_twdists_dtd,
                         Average_WassDist_FDF=avg_twdists)
         print("="*10)
         print("Transfer completed. Outputs saved in {}".format(output_folder))
