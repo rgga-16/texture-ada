@@ -49,15 +49,14 @@ def predict_texture(model:BaseModel,texture,output_path,mask=None):
         output = model.forward()
         loss,wdist = model.get_losses()
 
-    output_path_ = '{}_{}.png'.format(output_path,w)
     output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
 
     
     if mask is not None:
         mask = mask.resize(output_image.size) if mask.size != output_image.size else ...
         output_image.putalpha(mask)
-    output_image.save(output_path_,'PNG')
-    print('Saving image as {}'.format(output_path_))
+    output_image.save(output_path,'PNG')
+    print('Saving image as {}'.format(output_path))
     return loss,wdist
 
 
