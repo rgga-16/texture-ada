@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import copy
+import numpy as np
 
 from helpers import image_utils
 from defaults import DEFAULTS as D
@@ -42,6 +43,12 @@ def gram_matrix(tensor):
     gram = torch.mm(features,features.t())
     return gram / (h*w)
 
+def get_mean(tensor):
+    b,c,w,h = tensor.shape
+    feats = tensor.view(b,c,h*w)
+    mean=torch.mean(feats,dim=2,keepdim=True)
+    return mean 
+
 def covariance_matrix(tensor):
     b,c,w,h = tensor.shape
     feats = tensor.view(b,c,h*w)
@@ -51,9 +58,9 @@ def covariance_matrix(tensor):
     covariance = torch.matmul(feats,torch.transpose(feats,-2,-1))
     return covariance / (h*w)
 
-def variance_aware_adaptive_weighting(tensor):
+# def variance_aware_adaptive_weighting(tensor):
 
-    return
+#     return
 
 
 # def weighted_style_rep(tensor):
@@ -65,9 +72,24 @@ def variance_aware_adaptive_weighting(tensor):
 #     return w_style
 
 
-def sliced_wasserstein_loss():
+# def sliced_wasserstein_loss():
 
-    pass
+#     pass
+
+'''
+Code borrowed from: https://github.com/VinceMarron/style_transfer/blob/master/why_wasserstein.ipynb
+'''
+def gaussian_wasserstein_distance(mean1,cov1,mean2,cov2):
+    mean1 = mean1.detach().cpu().numpy()
+    cov1 = cov1.detach().cpu().numpy()
+    mean2 = mean2.detach().cpu().numpy()
+    cov2 = cov2.detach().cpu().numpy()
+    mean_diff = np.sum((mean1-mean2)**2)
+    var_components = np.trace(cov1+cov2)
+    #need to round to prevent eigenvalues very close to zero from becoming negative
+    var_overlap = np.sum(np.sqrt(np.round(np.linalg.eigvals(np.matmul(cov1,cov2)),5)))
+    
+    return  np.sqrt(mean_diff+var_components-2*var_overlap)
 
 class ContentLoss(nn.Module): 
 
