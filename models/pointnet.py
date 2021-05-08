@@ -90,9 +90,6 @@ class Pointnet_Autoencoder(nn.Module):
         return output
 
 
-
-
-
 class Pointnet_UpconvAutoencoder(nn.Module):
     def __init__(self,n_points,point_dim=3):
         super(Pointnet_UpconvAutoencoder,self).__init__()
@@ -224,12 +221,6 @@ class Tnet(nn.Module):
         self.bn3 = nn.BatchNorm1d(1024)
         self.bn4 = nn.BatchNorm1d(512)
         self.bn5 = nn.BatchNorm1d(256)
-        
-        # self.bn1 = nn.InstanceNorm1d(64)
-        # self.bn2 = nn.InstanceNorm1d(128)
-        # self.bn3 = nn.InstanceNorm1d(1024)
-        # self.bn4 = nn.InstanceNorm1d(512)
-        # self.bn5 = nn.InstanceNorm1d(256)
        
     def forward(self, input):
         # input.shape == (bs,3,n)
@@ -241,8 +232,6 @@ class Tnet(nn.Module):
 
         pool = nn.MaxPool1d(xb.size(-1))(xb) #pool = (bs,1024,1)
         flat = nn.Flatten(1)(pool) #flat = (1,1024)
-        # xb = F.relu(self.fc1(flat)) #xb = (1,512)
-        # xb = F.relu(self.fc2(xb)) #xb = (1,256)
 
         xb = F.relu(self.bn4(self.fc1(flat))) #xb = (1,512)
         xb = F.relu(self.bn5(self.fc2(xb))) #xb = (1,256)
@@ -273,10 +262,8 @@ class PointNet_Classifier(nn.Module):
         # Assume n_points=3000
         # Get global feature vector from input
         xb, matrix3x3, matrix64x64 = self.transform(input) #input(1,3,3000)=>xb(1,1024)
-        xb = F.relu(self.fc1(xb)) #xb(1,1024) => xb(1,512)
-        xb = F.relu(self.dropout(self.fc2(xb))) #xb(1,512) => xb(1,256)
-        # xb = F.relu(self.bn1(self.fc1(xb))) #xb(1,1024) => xb(1,512)
-        # xb = F.relu(self.bn2(self.dropout(self.fc2(xb)))) #xb(1,512) => xb(1,256)
+        xb = F.relu(self.bn1(self.fc1(xb))) #xb(1,1024) => xb(1,512)
+        xb = F.relu(self.bn2(self.dropout(self.fc2(xb)))) #xb(1,512) => xb(1,256)
         output = self.fc3(xb) #xb(1,256) => output(1,10)
         # logsoftmax puts values in the range [-inf,0)
         return self.logsoftmax(output), matrix3x3, matrix64x64

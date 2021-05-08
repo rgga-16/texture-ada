@@ -6,16 +6,47 @@ from matplotlib import pyplot as plt
 from torch.nn import functional as F
 import torchvision
 from defaults import DEFAULTS as D
-from losses import adaptive_instance_normalization,adain_pointcloud
+from ops import adaptive_instance_normalization,adain_pointcloud
 from helpers.visualizer import display_pointcloud
+from models.pointnet import Transformer
+from models.networks.vgg import VGG19
 
-from kaolin.metrics.pointcloud import chamfer_distance
+
 import cv2
-# from chamferdist import ChamferDistance
-if D.DEVICE().type=='cuda':
-    from external_libs.emd import emd_module as emd
-    from external_libs.ChamferDistancePytorch.chamfer3D import dist_chamfer_3D
-from external_libs.ChamferDistancePytorch import chamfer_python, fscore
+
+
+
+class Pointnet_Autoencoder3(nn.Module):
+    def __init__(self,n_points,point_dim=3):
+        super(Pointnet_Autoencoder3,self).__init__()
+        self.n_points = n_points 
+        self.point_dim = point_dim
+        self.image_encoder = VGG19()
+        self.pointcloud_encoder = Transformer()
+
+        
+    
+
+    def forward(self,pointcloud,image):
+        # Change pointcloud to shape (batch_size,3,n_points)
+        assert pointcloud.dim()==3
+        pointcloud = pointcloud.permute(0,2,1)
+
+        image_feats = self.image_encoder(image,layers={'28' : 'conv5_1'})['conv5_1']
+        image_feats = nn.Flatten().to(D.DEVICE())(image_feats)
+        image_feats = nn.Linear(image_feats.shape[-1],self.n_points*self.point_dim).to(D.DEVICE())(image_feats)
+        
+        
+        pcd_feat,_,_ = self.pointcloud_encoder(pointcloud)
+        pcd_feat = nn.Linear(pcd_feat.shape[-1],self.n_points*self.point_dim).to(D.DEVICE())(pcd_feat)
+        norm_feat = adain_pointcloud(pcd_feat.unsqueeze(-1),image_feats.unsqueeze(-1))
+        output = norm_feat.view(-1,self.point_dim,self.n_points)
+        output = torch.tanh(output)/2.0
+
+        output = output.permute(0,2,1)
+        return output
+
+
 
 class Pointnet_Autoencoder2(nn.Module):
     def __init__(self,n_points,point_dim=3,n_feats=960):
