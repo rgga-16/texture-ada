@@ -1,27 +1,26 @@
-from models.networks.texturenet import Pyramid2D_adain
+from models.networks.texturenet import Pyramid2D_adain,Pyramid2D_adain2
 from models.networks.adain import Network_AdaIN
 from models.networks.feedforward import FeedForwardNetwork
 from models.networks.texturenet import Pyramid2D,Pyramid2D_custom
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from args import parse_arguments
 
 from models.base_model import BaseModel
 from defaults import DEFAULTS as D
 import style_transfer as st
+import ops 
 
 class ProposedModel(BaseModel):
-    def __init__(self,ch_in=3, ch_step=64, ch_out=3,n_samples=6) -> None:
+    def __init__(self) -> None:
         
-
-        net = Pyramid2D_adain(ch_in,ch_step,ch_out,n_samples)
+        net = Pyramid2D_adain2(3,64,3)
         self.lr = D.LR()
         optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
         criterion_loss = nn.MSELoss()
 
         super().__init__(net,optimizer,criterion_loss)
-        self.net = self.net.to(self.device)
-        self.criterion_loss = self.criterion_loss.to(self.device)
     
     def train(self):
         self.net.train()
@@ -33,8 +32,12 @@ class ProposedModel(BaseModel):
     
     def set_input(self, style):
         self.batch_size = style.shape[0]
+        args = parse_arguments()
         
-        s = D.IMSIZE.get()
+        if self.net.training:
+            s = args.uv_train_sizes[0]
+        else:
+            s = args.uv_test_sizes[0]
         content = [torch.rand(self.batch_size,3,sz,sz,device=self.device).detach() for sz in [s, s//2,s//4,s//8,s//16,s//32]]
 
         self.style = style.clone().detach().to(self.device)
@@ -52,6 +55,18 @@ class ProposedModel(BaseModel):
             diff = self.criterion_loss(output_feats[s],style_feats[s])
             style_loss += D.SL_WEIGHTS.get()[s] * diff
         self.loss = style_loss
+
+        if not self.net.training: 
+            style_means,style_covs = st.get_means_and_covs(self.style)
+            output_means,output_covs = st.get_means_and_covs(self.output)
+
+            wass_dist = 0
+            for s in D.STYLE_LAYERS.get().values():
+                wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
+                wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+            self.wasserstein_distance = wass_dist
+            
+            return self.loss.item(),self.wasserstein_distance
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -64,11 +79,13 @@ class FeedForward(BaseModel):
     def __init__(self,ch_in=3, ch_out=3,n_resblocks=5) -> None:
         
 
-        net = FeedForwardNetwork(ch_in,ch_out,n_resblocks).to(self.device)
+        net = FeedForwardNetwork(ch_in,ch_out,n_resblocks)
         self.lr = D.LR()
-        optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss()
         super().__init__(net,optimizer,criterion_loss)
+        self.net = self.net.to(self.device)
+        self.criterion_loss = self.criterion_loss.to(self.device)
     
     def train(self):
         self.net.train()
@@ -97,6 +114,20 @@ class FeedForward(BaseModel):
             diff = self.criterion_loss(output_feats[s],style_feats[s])
             style_loss += D.SL_WEIGHTS.get()[s] * diff
         self.loss = style_loss
+        
+        if not self.net.training: 
+            style_means,style_covs = st.get_means_and_covs(self.style)
+            output_means,output_covs = st.get_means_and_covs(self.output)
+
+            wass_dist = 0
+            for s in D.STYLE_LAYERS.get().values():
+                wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
+                wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+            self.wasserstein_distance = wass_dist
+            
+            return self.loss.item(),self.wasserstein_distance
+        
+        
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -108,11 +139,13 @@ class AdaIN_Autoencoder(BaseModel):
     def __init__(self) -> None:
         
 
-        net = Network_AdaIN().to(self.device)
+        net = Network_AdaIN()
         self.lr = D.LR()
-        optimizer = torch.optim.Adam(self.net.parameters(),lr=self.lr)
-        criterion_loss = nn.MSELoss().to(self.device)
+        optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
+        criterion_loss = nn.MSELoss()
         super().__init__(net,optimizer,criterion_loss)
+        self.net = self.net.to(self.device)
+        self.criterion_loss = self.criterion_loss.to(self.device)
     
     def train(self):
         self.net.train()
@@ -146,6 +179,18 @@ class AdaIN_Autoencoder(BaseModel):
             diff = self.criterion_loss(output_feats[s],style_feats[s])
             style_loss += D.SL_WEIGHTS.get()[s] * diff
         self.loss = style_loss
+
+        if not self.net.training: 
+            style_means,style_covs = st.get_means_and_covs(self.style)
+            output_means,output_covs = st.get_means_and_covs(self.output)
+
+            wass_dist = 0
+            for s in D.STYLE_LAYERS.get().values():
+                wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
+                wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+            self.wasserstein_distance = wass_dist
+            
+            return self.loss.item(),self.wasserstein_distance
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -199,6 +244,17 @@ class TextureNet(BaseModel):
             diff = self.criterion_loss(output_feats[s],style_feats[s])
             style_loss += D.SL_WEIGHTS.get()[s] * diff
         self.loss = style_loss
+        if not self.net.training: 
+            style_means,style_covs = st.get_means_and_covs(self.style)
+            output_means,output_covs = st.get_means_and_covs(self.output)
+
+            wass_dist = 0
+            for s in D.STYLE_LAYERS.get().values():
+                wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
+                wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+            self.wasserstein_distance = wass_dist
+            
+            return self.loss.item(),self.wasserstein_distance
         return self.loss.item()
 
     def optimize_parameters(self):

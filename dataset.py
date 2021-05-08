@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
+from seeder import SEED
 
 import os,h5py, scipy.io , itertools
 from helpers import image_utils

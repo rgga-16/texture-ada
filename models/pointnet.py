@@ -5,7 +5,7 @@ import numpy as np
 from torch.nn import functional as F
 import torchvision
 from defaults import DEFAULTS as D
-from losses import adaptive_instance_normalization,adain_pointcloud
+from ops import adaptive_instance_normalization,adain_pointcloud
 
 from kaolin.metrics.pointcloud import chamfer_distance
 # from chamferdist import ChamferDistance
@@ -29,9 +29,6 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
         return chamfer_loss,f_score,precision,recall
   
     return chamfer_loss
-
-
-
 
 
 class Pointnet_Autoencoder(nn.Module):

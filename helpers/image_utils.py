@@ -30,6 +30,10 @@ def image_to_tensor(image,phase:str,image_size=D.IMSIZE.get(),device=D.DEVICE(),
                    transforms.Resize((image_size,image_size)),
                     transforms.ToTensor(),
                 ]),
+        'default': transforms.Compose([
+                   transforms.Resize((image_size,image_size)),
+                    transforms.ToTensor(),
+                ]),
     }
     tensor = transformer[phase](image)
 

@@ -10,9 +10,9 @@ from abc import ABC, abstractmethod
 class BaseModel(ABC):
     def __init__(self,net,optimizer,criterion_loss):
         self.device = D.DEVICE()
-        self.net = net
+        self.net = net.to(self.device)
         self.optimizer = optimizer
-        self.criterion_loss = criterion_loss
+        self.criterion_loss = criterion_loss.to(self.device)
     
     def get_state_dict(self):
         return {

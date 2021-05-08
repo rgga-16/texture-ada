@@ -5,7 +5,7 @@ import torchvision
 from torchvision import models
 from torchvision import transforms
 
-import losses
+import ops
 import models
 from models.networks.vgg import VGG19
 import args as args_
@@ -47,6 +47,24 @@ def filter_k_feature_maps(raw_feature_maps,k):
     thing = feature_maps.view(feature_maps.shape[0],-1)
     return feature_maps.unsqueeze_(0)
 
+def get_means_and_covs(tensor,model=VGG19(),style_layers:dict = D.STYLE_LAYERS.get()):
+    means = {}
+    covs = {} 
+    x=tensor
+
+    if isinstance(model,VGG19):
+        model = model.features
+
+    for name, layer in model._modules.items():
+        x=layer(x)
+
+        if name in style_layers.keys():
+            means[style_layers[name]] = ops.get_mean(x)
+            covs[style_layers[name]] = ops.covariance_matrix(x)
+        
+    return means,covs
+
+
 
 def get_features(tensor,model=VGG19() ,is_style=False,
                 content_layers:dict = D.CONTENT_LAYERS.get(), 
@@ -62,12 +80,12 @@ def get_features(tensor,model=VGG19() ,is_style=False,
         x=layer(x)
 
         if name in style_layers.keys():
-            # features[style_layers[name]] = losses.gram_matrix(x)
+            # features[style_layers[name]] = ops.gram_matrix(x)
             # if is_style:
             #     _,c,_,_ = x.shape
             #     k = round(0.05 * c) 
             #     x = filter_k_feature_maps(x,c)
-            features[style_layers[name]] = losses.covariance_matrix(x)
+            features[style_layers[name]] = ops.covariance_matrix(x)
         
         if name in content_layers.keys():
             features[content_layers[name]] = x
