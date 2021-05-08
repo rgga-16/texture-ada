@@ -17,15 +17,17 @@ import cv2
 
 
 class Pointnet_Autoencoder3(nn.Module):
-    def __init__(self,n_points,point_dim=3):
+    def __init__(self,n_points,proto_imfeat=131072,point_dim=3):
         super(Pointnet_Autoencoder3,self).__init__()
         self.n_points = n_points 
         self.point_dim = point_dim
+        self.imfeat_dim = proto_imfeat
         self.image_encoder = VGG19()
         self.pointcloud_encoder = Transformer()
 
-        
-    
+        self.flatten = nn.Flatten()
+        self.im_linear = nn.Linear(self.imfeat_dim,(self.n_points*self.point_dim//2))
+        self.pcd_linear = nn.Linear(1024, (self.n_points*self.point_dim//2))
 
     def forward(self,pointcloud,image):
         # Change pointcloud to shape (batch_size,3,n_points)
@@ -33,14 +35,14 @@ class Pointnet_Autoencoder3(nn.Module):
         pointcloud = pointcloud.permute(0,2,1)
 
         image_feats = self.image_encoder(image,layers={'28' : 'conv5_1'})['conv5_1']
-        image_feats = nn.Flatten().to(D.DEVICE())(image_feats)
-        image_feats = nn.Linear(image_feats.shape[-1],self.n_points*self.point_dim).to(D.DEVICE())(image_feats)
+        image_feats = self.flatten(image_feats)
+        image_feats = self.im_linear(image_feats)
         
         
         pcd_feat,_,_ = self.pointcloud_encoder(pointcloud)
-        pcd_feat = nn.Linear(pcd_feat.shape[-1],self.n_points*self.point_dim).to(D.DEVICE())(pcd_feat)
-        norm_feat = adain_pointcloud(pcd_feat.unsqueeze(-1),image_feats.unsqueeze(-1))
-        output = norm_feat.view(-1,self.point_dim,self.n_points)
+        pcd_feat = self.pcd_linear(pcd_feat)
+        # norm_feat = adain_pointcloud(pcd_feat.unsqueeze(-1),image_feats.unsqueeze(-1))
+        output = pcd_feat.view(-1,self.point_dim,self.n_points)
         output = torch.tanh(output)/2.0
 
         output = output.permute(0,2,1)
