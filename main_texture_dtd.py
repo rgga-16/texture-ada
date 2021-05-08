@@ -40,9 +40,9 @@ def main():
     test_set = DTD('test')
     ####################
 
-    train_loader = DataLoader(train_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    val_loader = DataLoader(val_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    test_loader = DataLoader(test_set,batch_size=16,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    train_loader = DataLoader(train_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    val_loader = DataLoader(val_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    test_loader = DataLoader(test_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     
     
     # Filipino furniture
