@@ -18,6 +18,10 @@ def train_texture(model,train_loader,val_loader):
     start_epoch=0
     best_model_wts = copy.deepcopy(model.net.state_dict())
     best_val_loss = np.inf 
+    train_loss_history=[]
+    val_loss_history = []
+    wdist_history = []
+    epoch_chkpts=[]
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim,mode='min',patience=10,verbose=True)
     
@@ -27,12 +31,13 @@ def train_texture(model,train_loader,val_loader):
         start_epoch = checkpoint['epoch']+1
         best_model_wts=checkpoint['best_net_weights']
         best_val_loss=checkpoint['best_val_loss']
+        train_loss_history=checkpoint['train_loss_history'] 
+        val_loss_history=checkpoint['val_loss_history'] 
+        wdist_history=checkpoint['wdist_history'] 
+        epoch_chkpts=checkpoint['epoch_chkpts']
         print(f'Checkpoint found. Resuming training from epoch {start_epoch+1}..\n')
 
-    train_loss_history=[]
-    val_loss_history = []
-    wdist_history = []
-    epoch_chkpts=[]
+    
     writer = SummaryWriter(f'runs/{os.path.dirname(args.output_dir)}')
     for epoch in range(start_epoch,epochs):
         print(f'Epoch {epoch+1}/{epochs}')
@@ -91,16 +96,22 @@ def train_texture(model,train_loader,val_loader):
                 best_val_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.net.state_dict()) 
                 print(f'Found best net params at Epoch {epoch+1}')         
-        
+        epoch_chkpts.append(epoch)
+
+
         state_dict = model.get_state_dict()
         state_dict['epoch']=epoch 
         state_dict['best_net_weights']=best_model_wts
         state_dict['best_val_loss']=best_val_loss
+        state_dict['train_loss_history'] = train_loss_history
+        state_dict['val_loss_history'] = val_loss_history
+        state_dict['wdist_history'] = wdist_history
+        state_dict['epoch_chkpts']=epoch_chkpts
         checkpoint_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_chkpt.pt')
         torch.save(state_dict,checkpoint_path)
         print(f'Checkpoint saved in {checkpoint_path}')
         
-        epoch_chkpts.append(epoch)
+        
         print('='*10)
         print('')        
 
