@@ -95,9 +95,15 @@ class FeedForward(BaseModel):
     
     def set_input(self, style,content=None):
         self.batch_size = style.shape[0]
+        args = parse_arguments()
+        
+        if self.net.training:
+            s = args.uv_train_sizes[0]
+        else:
+            s = args.uv_test_sizes[0]
 
         if content is None: 
-            content = torch.rand(style.shape[0],3,D.IMSIZE.get(),D.IMSIZE.get())
+            content = torch.rand(style.shape[0],3,s,s)
 
         self.style = style.clone().detach().to(self.device)
         self.content = content.clone().detach().to(self.device)
@@ -158,9 +164,15 @@ class AdaIN_Autoencoder(BaseModel):
         # self.net.decoder.eval()
     
     def set_input(self, style, content=None):
+        args = parse_arguments()
+        
+        if self.net.training:
+            s = args.uv_train_sizes[0]
+        else:
+            s = args.uv_test_sizes[0]
         
         if content is None: 
-            content = torch.rand(style.shape[0],3,D.IMSIZE.get(),D.IMSIZE.get())
+            content = torch.rand(style.shape[0],3,s,s)
         
         assert style.shape == content.shape 
         self.batch_size = style.shape[0]
@@ -225,8 +237,13 @@ class TextureNet(BaseModel):
     
     def set_input(self, style):
         self.batch_size = style.shape[0]
+        args = parse_arguments()
         
-        s = D.IMSIZE.get()
+        if self.net.training:
+            s = args.uv_train_sizes[0]
+        else:
+            s = args.uv_test_sizes[0]
+        
         content = [torch.rand(self.batch_size,3,sz,sz,device=self.device,requires_grad=False).detach() for sz in [s, s//2,s//4,s//8,s//16,s//32]]
 
         self.style = style.clone().detach().to(self.device)

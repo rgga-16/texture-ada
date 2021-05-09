@@ -24,7 +24,7 @@ def evaluate_texture(model:BaseModel,test_loader):
     running_loss=0.0
     for i,texture in enumerate(test_loader):
         model.set_input(texture)
-        with torch.set_grad_enabled(False):
+        with torch.no_grad():
             output=model.forward()
             loss,wdist=model.get_losses()
             running_dist+=wdist*texture.shape[0]
@@ -34,7 +34,7 @@ def evaluate_texture(model:BaseModel,test_loader):
     eval_loss = running_loss/test_loader.dataset.__len__()
     return eval_loss,eval_wdist
 
-def predict_texture(model:BaseModel,texture,output_path,mask=None):
+def predict_texture(model:BaseModel,texture,output_path):
     args = args_.parse_arguments()
 
     assert isinstance(model,BaseModel)
@@ -51,10 +51,6 @@ def predict_texture(model:BaseModel,texture,output_path,mask=None):
 
     output_image = image_utils.tensor_to_image(output,image_size=args.output_size)
 
-    
-    if mask is not None:
-        mask = mask.resize(output_image.size) if mask.size != output_image.size else ...
-        output_image.putalpha(mask)
     output_image.save(output_path,'PNG')
     print('Saving image as {}'.format(output_path))
     return loss,wdist
