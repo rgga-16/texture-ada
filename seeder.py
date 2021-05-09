@@ -8,9 +8,7 @@ def init_fn(worker_id):
 
 
 global SEED 
-SEED=42
-
-
+SEED=32
 torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)  # if you are using multi-GPU.

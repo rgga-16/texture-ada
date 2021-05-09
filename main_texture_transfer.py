@@ -39,7 +39,7 @@ def main():
     fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-    models = [AdaIN_Autoencoder(),ProposedModel()]
+    models = [ProposedModel()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
