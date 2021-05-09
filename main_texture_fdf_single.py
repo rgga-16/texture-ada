@@ -33,7 +33,7 @@ def main():
     ####################
     fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
                                 style_size=round(args.style_size),
-                                set='default',lower_size=2)
+                                set='default')
 
     models = [ProposedModel(),AdaIN_Autoencoder(),TextureNet(),FeedForward()]
     for model in models:
