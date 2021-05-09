@@ -64,9 +64,9 @@ class ProposedModel(BaseModel):
             for s in D.STYLE_LAYERS.get().values():
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
                 wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
-            self.wasserstein_distance = wass_dist
+            self.wasserstein_distance = torch.mean(wass_dist)
             
-            return self.loss.item(),self.wasserstein_distance
+            return self.loss.item(),self.wasserstein_distance.item()
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -123,9 +123,9 @@ class FeedForward(BaseModel):
             for s in D.STYLE_LAYERS.get().values():
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
                 wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
-            self.wasserstein_distance = wass_dist
+            self.wasserstein_distance = torch.mean(wass_dist)
             
-            return self.loss.item(),self.wasserstein_distance
+            return self.loss.item(),self.wasserstein_distance.item()
         
         
         return self.loss.item()
@@ -188,9 +188,9 @@ class AdaIN_Autoencoder(BaseModel):
             for s in D.STYLE_LAYERS.get().values():
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
                 wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
-            self.wasserstein_distance = wass_dist
+            self.wasserstein_distance = torch.mean(wass_dist)
             
-            return self.loss.item(),self.wasserstein_distance
+            return self.loss.item(),self.wasserstein_distance.item()
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -252,9 +252,9 @@ class TextureNet(BaseModel):
             for s in D.STYLE_LAYERS.get().values():
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
                 wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
-            self.wasserstein_distance = wass_dist
+            self.wasserstein_distance = torch.mean(wass_dist)
             
-            return self.loss.item(),self.wasserstein_distance
+            return self.loss.item(),self.wasserstein_distance.item()
         return self.loss.item()
 
     def optimize_parameters(self):

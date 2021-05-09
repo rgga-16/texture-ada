@@ -81,16 +81,26 @@ def covariance_matrix(tensor):
 Code borrowed from: https://github.com/VinceMarron/style_transfer/blob/master/why_wasserstein.ipynb
 '''
 def gaussian_wasserstein_distance(mean1,cov1,mean2,cov2):
-    mean1 = mean1.detach().cpu().numpy()
-    cov1 = cov1.detach().cpu().numpy()
-    mean2 = mean2.detach().cpu().numpy()
-    cov2 = cov2.detach().cpu().numpy()
-    mean_diff = np.sum((mean1-mean2)**2)
-    var_components = np.trace(cov1+cov2)
-    #need to round to prevent eigenvalues very close to zero from becoming negative
-    var_overlap = np.sum(np.sqrt(np.round(np.linalg.eigvals(np.matmul(cov1,cov2)),5)))
+    mean1=mean1.detach()
+    cov1 = cov1.detach()
+    mean2= mean2.detach()
+    cov2 = cov2.detach()
+
+    # mean1_np = mean1.cpu().numpy()
+    # cov1_np = cov1.cpu().numpy()
+    # mean2_np= mean2.cpu().numpy()
+    # cov2_np = cov2.cpu().numpy()
+
+    # mean_diff = np.sum((mean1_np-mean2_np)**2)
+    # var_components = np.trace(cov1_np+cov2_np)
+    # #need to round to prevent eigenvalues very close to zero from becoming negative
+    # var_overlap = np.sum(np.sqrt(np.linalg.eigvals(np.matmul(cov1_np,cov2_np))))
+
+    mean_diff_pt = torch.sum((mean1-mean2)**2)
+    var_components_pt = cov1.diagonal(offset=0,dim1=-1,dim2=-2).sum(-1)
+    var_overlap_pt = torch.sum(torch.sqrt(torch.linalg.eigvals(torch.matmul(cov1,cov2))))
     
-    return  np.sqrt(mean_diff+var_components-2*var_overlap)
+    return  torch.sqrt(mean_diff_pt+var_components_pt-2*var_overlap_pt)
 
 class ContentLoss(nn.Module): 
 
