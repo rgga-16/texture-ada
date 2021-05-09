@@ -23,7 +23,7 @@ class BaseModel(ABC):
     def load_state_dict(self,state_dict):
         self.net.load_state_dict(state_dict['model_state_dict'])
         self.optimizer.load_state_dict(state_dict['optimizer_state_dict'])
-
+    
     @abstractmethod
     def set_input(self):
         pass
