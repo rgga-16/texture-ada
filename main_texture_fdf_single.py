@@ -33,9 +33,9 @@ def main():
     ####################
     fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
                                 style_size=round(args.style_size),
-                                set='default')
+                                set='default',lower_size=17)
 
-    models = [ProposedModel(),AdaIN_Autoencoder(),TextureNet(),FeedForward()]
+    models = [TextureNet(),FeedForward()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -77,8 +77,10 @@ def main():
 
             # Generate final texture
             #######################################    
-            for _,texture in enumerate(single_loader):
-                predict_texture(model_,texture,os.path.join(output_folder,f'FDF_{i}.png'))
+            for j,texture in enumerate(single_loader):
+                filename = single_dataset.style_files[j]
+                filename = os.path.splitext(os.path.basename(filename))[0]
+                predict_texture(model_,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
             #######################################
         avg_train_time/=fil_dataset.__len__()
         avg_test_time/=fil_dataset.__len__()
