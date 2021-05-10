@@ -226,7 +226,7 @@ class Pyramid2D_adain2(nn.Module):
         y = self.cb1_1(z[5]) # z[5]=(3x8x8) => y=(8x8x8)
         y = self.up1(y) # y=(8x8x8) => y=(8x16x16)
 
-        y = adaptive_instance_normalization(y,style_feats['relu1_2'])
+        y = adaptive_instance_normalization(y,style_feats['relu1_1'])
 
         # z[4]=(3x16x16) => (8x16x16)
         # y cat z[4] => y=(16x16x16)
@@ -235,7 +235,7 @@ class Pyramid2D_adain2(nn.Module):
         y = self.cb2_2(y) # y=(16x16x16) => (16x16x16)
         y = self.up2(y) # y=(16x32x32)
 
-        y = adaptive_instance_normalization(y,style_feats['relu2_2'])
+        y = adaptive_instance_normalization(y,style_feats['relu2_1'])
 
         # z[3]=(3x32x32) => (8x32x32)
         # y cat z[3] => (24x32x32)
@@ -250,7 +250,7 @@ class Pyramid2D_adain2(nn.Module):
 
         y = self.cb4_2(y) # y=(32x64x64) => (32x64x64)
 
-        y = adaptive_instance_normalization(y,style_feats['relu3_4'])
+        y = adaptive_instance_normalization(y,style_feats['relu3_1'])
 
         y = self.up4(y) # y=(32x128x128)
 

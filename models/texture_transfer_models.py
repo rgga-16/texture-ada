@@ -184,12 +184,26 @@ class AdaIN_Autoencoder(BaseModel):
         return self.output
     
     def get_losses(self):
-        style_feats = st.get_features(self.style)
-        output_feats = st.get_features(self.output)
+        # adain_style_layers = {
+        #     '1': 'relu1_1',   # Style layers
+        #     '6': 'relu2_1',
+        #     '11' : 'relu3_1',
+        #     '20' : 'relu4_1',
+        # }
+
+        # asl_weights = {
+        #     layer: 0.25 for layer in adain_style_layers.values()
+        # }
+
+        adain_style_layers = D.STYLE_LAYERS.get()
+        asl_weights = D.SL_WEIGHTS.get()
+
+        style_feats = st.get_features(self.style,style_layers=adain_style_layers)
+        output_feats = st.get_features(self.output,style_layers=adain_style_layers)
         style_loss=0
-        for s in D.STYLE_LAYERS.get().values():
+        for s in adain_style_layers.values():
             diff = self.criterion_loss(output_feats[s],style_feats[s])
-            style_loss += D.SL_WEIGHTS.get()[s] * diff
+            style_loss += asl_weights[s] * diff
         self.loss = style_loss
 
         if not self.net.training: 
@@ -197,9 +211,9 @@ class AdaIN_Autoencoder(BaseModel):
             output_means,output_covs = st.get_means_and_covs(self.output)
 
             wass_dist = 0
-            for s in D.STYLE_LAYERS.get().values():
+            for s in adain_style_layers.values():
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
-                wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+                wass_dist += asl_weights[s] * wdist 
             self.wasserstein_distance = torch.mean(wass_dist)
             
             return self.loss.item(),self.wasserstein_distance.item()

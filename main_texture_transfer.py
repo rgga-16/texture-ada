@@ -31,7 +31,7 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    bs=4
+    bs=2
     fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
                                 style_size=round(args.style_size),
                                 set='default')
@@ -39,7 +39,7 @@ def main():
     fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-    models = [ProposedModel()]
+    models = [ProposedModel(),AdaIN_Autoencoder()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -67,7 +67,9 @@ def main():
         #######################################    
 
         for j,texture in enumerate(fil_dataloader):
-            predict_texture(model,texture,os.path.join(output_folder,f'FDF_{j}.png'))
+            filename = fil_dataset.style_files[j]
+            filename = os.path.splitext(os.path.basename(filename))[0]
+            predict_texture(model,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
 
         #######################################
 
@@ -86,16 +88,6 @@ def main():
         print("="*10)
         print("Transfer completed. Outputs saved in {}".format(output_folder))
 
-    # Test on DTD Test Set
-    #######################################
-    # for i, texture in enumerate(test_loader):
-    #     output_path = os.path.join(output_folder,'{}.png'.format(i))
-    #     test_texture(model,texture,gen_path,output_path)
-    
-    
-
-   
-    
     
     # INSERT RENDERING MODULE HERE
     #######################################
