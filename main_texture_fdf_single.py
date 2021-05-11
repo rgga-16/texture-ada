@@ -35,7 +35,7 @@ def main():
                                 style_size=round(args.style_size),
                                 set='default',lower_size=17)
 
-    models = [TextureNet(),FeedForward()]
+    models = [ProposedModel()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -49,8 +49,8 @@ def main():
         
         avg_train_time=0
         avg_test_time=0
-        avg_tloss =0
-        avg_twdists=0
+        tlosses = {}
+        twdists= {}
         for i in range(0,fil_dataset.__len__()):
             model_ = model.__class__()
             texture_file = fil_dataset.style_files[i]
@@ -72,8 +72,8 @@ def main():
             tloss,twdist=evaluate_texture(model_,single_loader)
             avg_test_time += time.time()-start_test
 
-            avg_tloss+=tloss 
-            avg_twdists+=twdist 
+            tlosses[os.path.basename(texture_file)]=tloss 
+            twdists[os.path.basename(texture_file)]=twdist 
 
             # Generate final texture
             #######################################    
@@ -84,8 +84,11 @@ def main():
             #######################################
         avg_train_time/=fil_dataset.__len__()
         avg_test_time/=fil_dataset.__len__()
-        avg_tloss /=fil_dataset.__len__()
-        avg_twdists/=fil_dataset.__len__()
+
+        tlosses_l = np.array(list(tlosses.values()))
+        twdists_l = np.array(list(twdists.values()))
+        avg_tloss = np.mean(tlosses_l)
+        avg_twdists = np.mean(twdists_l)
 
         log_file = 'configs.txt'
             
@@ -94,6 +97,8 @@ def main():
                         Avg_Test_Time=f'{avg_test_time:.2f}s',
                         Model_Name=model_.__class__.__name__,
                         Seed = SEED,
+                        Test_Losses = tlosses,
+                        WassDists = twdists,
                         Average_CovMatrix_TestLoss = avg_tloss,
                         Average_WassDist=avg_twdists,
                         batch_size=1)

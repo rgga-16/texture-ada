@@ -36,19 +36,19 @@ class DEFAULTS(Enum):
         layer: 1.0 for layer in CONTENT_LAYERS.values()
     }
 
-    # STYLE_LAYERS = {
-    #     '3': 'relu1_2',   # Style layers
-    #     '8': 'relu2_2',
-    #     '13' : 'relu3_4',
-    #     '26' : 'relu4_4',
-    # }
-
     STYLE_LAYERS = {
-        '1': 'relu1_1',   # Style layers
-        '6': 'relu2_1',
-        '11' : 'relu3_1',
-        '20' : 'relu4_1',
+        '3': 'relu1_2',   # Style layers
+        '8': 'relu2_2',
+        '13' : 'relu3_4',
+        '26' : 'relu4_4',
     }
+
+    # STYLE_LAYERS = {
+    #     '1': 'relu1_1',   # Style layers
+    #     '6': 'relu2_1',
+    #     '11' : 'relu3_1',
+    #     '20' : 'relu4_1',
+    # }
     SL_WEIGHTS = {
         layer: 0.25 for layer in STYLE_LAYERS.values()
     }

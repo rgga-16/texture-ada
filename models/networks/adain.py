@@ -17,7 +17,7 @@ Code borrowed from: https://github.com/naoto0804/pytorch-AdaIN
 class Network_AdaIN(nn.Module):
     def __init__(self):
         super(Network_AdaIN,self).__init__()
-        self.encoder = nn.Sequential(*list(VGG19().features.children())[:21]).eval()
+        self.encoder = nn.Sequential(*list(VGG19().features.children())[:27]).eval()
 
         for param in self.encoder.parameters():
             param.requires_grad = False
