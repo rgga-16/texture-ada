@@ -95,7 +95,7 @@ def main():
         logger.log_args(os.path.join(output_folder,log_file),
                         Train_Time='{:.2f}s'.format(avg_train_time),
                         Avg_Test_Time=f'{avg_test_time:.2f}s',
-                        Model_Name=model_.__class__.__name__,
+                        Model_Name=model_.net.__class__.__name__,
                         Seed = SEED,
                         Test_Losses = tlosses,
                         WassDists = twdists,
