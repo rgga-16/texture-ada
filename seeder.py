@@ -5,6 +5,7 @@ import random
 
 def init_fn(worker_id):
     np.random.seed(int(SEED))
+    random.seed(int(SEED))
 
 
 global SEED 
