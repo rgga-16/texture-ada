@@ -51,6 +51,7 @@ def unwrap_method(method:str):
 class BlenderRenderer():
 
     def __init__(self):
+        
 
         self.set_gpu()
         # Add scene
@@ -76,6 +77,7 @@ class BlenderRenderer():
         self.scene.render.resolution_x = 512
         self.scene.render.resolution_y = 512
 
+
         self.scene.render.image_settings.file_format = 'PNG'
         self.scene.render.image_settings.quality = 100
         self.scene.render.image_settings.color_mode = 'RGBA'
@@ -94,6 +96,7 @@ class BlenderRenderer():
     def setup_camera(self,
                     location=(0.0,0.3,1.3),
                     rotation=(math.radians(-15),math.radians(0),math.radians(0))):
+        
 
         bpy.ops.object.camera_add()
         self.camera = bpy.data.objects['Camera']
@@ -123,6 +126,8 @@ class BlenderRenderer():
         selected = bpy.context.selected_objects
 
         obj = bpy.context.selected_objects.pop()
+        obj.location = (0.0,0.0,0.0)
+
 
         obj.rotation_euler = (math.radians(0),
                             math.radians(270),
@@ -136,8 +141,6 @@ class BlenderRenderer():
     def rotate_object(self,obj,rotation):
         obj.rotation_euler = rotation
         return obj
-    
-    
 
     def save_uv_map(self,obj,unwrap_method_,save_file='//uv_map.png'):
         # Apply Smart uv project from object
@@ -156,6 +159,18 @@ class BlenderRenderer():
         bpy.ops.object.select_all(action='DESELECT')
         
         return
+    
+    def render_single(self, rotation=None):
+
+        if rotation:
+            for obj in self.objects:
+                self.rotate_object(obj,rotation=rotation)
+        
+        render_filename = 'render.png'
+        save_path = str(p.Path.cwd() / render_filename)
+        self.render(save_path=save_path)
+
+        return save_path
         
     
     def render_multiple(self,step=15):
