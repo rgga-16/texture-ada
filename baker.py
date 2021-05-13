@@ -8,7 +8,7 @@ import json
 from PIL import Image
 
 if __name__ == '__main__':
-    chair_textures = './inputs/uv_style_pairs/chair_texture_2.json'
+    chair_textures = './inputs/uv_style_pairs/chair_texture_plain.json'
 
     data = json.load(open(chair_textures))
     chair_dirs = data['chair_dir']
@@ -48,7 +48,8 @@ if __name__ == '__main__':
             os.makedirs(save_dir,exist_ok=True)
         except FileExistsError:
             pass
-        save_path = os.path.join(save_dir,f'{os.path.basename(chair_dir)}.gif')
-        r.render_gif(renderer,save_path=save_path)
+        save_path = os.path.join(save_dir,f'{os.path.basename(chair_dir)}.png')
+        # r.render_gif(renderer,save_path=save_path)
+        r.render_image(renderer,rotation_angle=-120,save_path=save_path)
         renderer.clear()
   
