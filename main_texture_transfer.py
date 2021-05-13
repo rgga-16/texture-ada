@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader,random_split
 
 import args as args_
 
+import seeder
 from seeder import SEED, init_fn
 from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
@@ -39,7 +40,7 @@ def main():
     fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-    models = [AdaIN_Autoencoder()]
+    models = [ProposedModel()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -66,9 +67,10 @@ def main():
         # Test on all Filipino Designer Furniture textures
         #######################################    
 
-        for j,texture in enumerate(fil_dataloader):
-            filename = fil_dataset.style_files[j]
-            filename = os.path.splitext(os.path.basename(filename))[0]
+        # for j,texture in enumerate(fil_dataloader):
+        for j in range(0,fil_dataset.__len__()):
+            texture = fil_dataset.__getitem__(j)
+            filename = os.path.splitext(os.path.basename(fil_dataset.style_files[j]))[0]
             predict_texture(model,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
 
         #######################################
