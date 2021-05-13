@@ -3,6 +3,25 @@ import pathlib as p
 from blender import BlenderRenderer
 
 from PIL import Image
+import math 
+
+def render_image(renderer,rotation_angle=0,save_path='./render.png'):
+
+    rotation=(math.radians(0), math.radians(rotation_angle),math.radians(0))
+
+    path = renderer.render_single(rotation)
+    render_file = Image.open(path)
+    
+    dir_name = os.path.dirname(save_path)
+    try:
+        os.makedirs(dir_name,exist_ok=True)
+    except FileExistsError:
+        pass
+    render_file.save(save_path)
+
+    os.remove(path)
+
+    return 
 
 
 def render_gif(renderer,save_path='./render.gif'):
