@@ -17,6 +17,17 @@ class NormalizePointcloud(object):
         pointcloud = pointcloud - torch.mean(pointcloud,dim=1)
         pointcloud /= torch.max(torch.linalg.norm(pointcloud,dim=2))
         return pointcloud
+    
+class NormalizePointcloudMinMax(object):
+    def __call__(self, pointcloud):
+        assert pointcloud.dim()==3 and pointcloud.shape[2]==3
+        min = torch.min(pointcloud,dim=1,keepdim=True)[0]
+        max = torch.max(pointcloud,dim=1,keepdim=True)[0]
+        pointcloud = pointcloud-min
+        pointcloud = pointcloud / max 
+        return pointcloud
+
+
 
 class SamplePoints(object):
     def __init__(self,n_points):
@@ -97,7 +108,7 @@ def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
     transformer = transforms.Compose([
         SamplePoints(n_points),
         NormalizePointcloud(),
-        Y_Rotate(10)
+        # Y_Rotate(10)
         # AddNoise()
     ])
 
