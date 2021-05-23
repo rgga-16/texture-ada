@@ -1,12 +1,12 @@
 {
     "chair_dir": "./inputs/3d_models/shapenet/chairs",
-    "texture_dir": "./inputs/style_images/filipino_designer_furniture_textures/synthetic/2",
+    "texture_dir": "./inputs/style_images/filipino_designer_furniture_textures/synthetic/3",
     "chair_texture_pairs" : {
-        "backseat":"10.png",
-        "arm":"23.png",
+        "backseat":"6.png",
+        "arm":"14.png",
         "foot":"28.png",
         "feet":"28.png",
-        "base":"22.png",
+        "base":"33.png",
         "body":"5.png",
         "seat":"12.png",
         "armrest":"23.png"
