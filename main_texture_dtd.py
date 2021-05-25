@@ -82,7 +82,9 @@ def main():
         tlosses=0
         twdists=0
         for j,texture in enumerate(fil_dataloader):
-            test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'FDF_{j}.png'))
+            filename = fil_dataset.style_files[j]
+            filename = os.path.splitext(os.path.basename(filename))[0]
+            test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
             tlosses+=test_loss
             twdists+=test_wdist
         avg_tloss = tlosses / fil_dataloader.dataset.__len__()
