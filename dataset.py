@@ -79,7 +79,7 @@ class Styles_Dataset(Dataset):
         # If no particular files are specified, load all files from the style_dir
         if style_files is None:
             for s in os.listdir(self.style_dir):
-                if os.path.isfile(os.path.join(self.style_dir,s)):
+                if os.path.isfile(os.path.join(self.style_dir,s)) and os.path.splitext(os.path.join(self.style_dir,s))[1] in ['.png','.jpg']:
                     self.style_files.append(os.path.join(self.style_dir,s))
         else:
             for s in style_files:
