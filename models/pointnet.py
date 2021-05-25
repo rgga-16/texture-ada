@@ -15,8 +15,7 @@ if D.DEVICE().type=='cuda':
 from external_libs.ChamferDistancePytorch import chamfer_python, fscore
 
 
-def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=False):
-
+def pointcloud_chamfer_dist(predicted_pointcloud,real_pointcloud):
     if (D.DEVICE().type=='cuda'):
         # Link: https://github.com/ThibaultGROUEIX/ChamferDistancePytorch 
         dist_forward,dist_backward,_,_ = dist_chamfer_3D.chamfer_3DDist()(predicted_pointcloud,real_pointcloud)
@@ -24,11 +23,22 @@ def pointcloud_autoencoder_loss(predicted_pointcloud,real_pointcloud,is_eval=Fal
         dist_forward,dist_backward,_,_ = chamfer_python.distChamfer(predicted_pointcloud,real_pointcloud)
     # # Averaging is doen to get the mean chamfer_loss in the batch of pointclouds.
     chamfer_loss = (dist_forward.mean(dim=-1)+dist_backward.mean(dim=-1)).mean()
-    if is_eval:
-        f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
-        return chamfer_loss,f_score,precision,recall
-  
+    
+    # if is_eval:
+    #     f_score,precision,recall = fscore.fscore(dist_forward,dist_backward)
+    #     return chamfer_loss,f_score,precision,recall
+    
     return chamfer_loss
+
+
+def pointcloud_emd(predicted_pointcloud,real_pointcloud):
+
+    emd_ = emd.emdModule()
+    emd_loss,_ = emd_(predicted_pointcloud,real_pointcloud,0.05,3000)
+    emd_loss = emd_loss.mean()
+    
+   
+    return emd_loss
 
 
 class Pointnet_Autoencoder(nn.Module):
@@ -68,8 +78,6 @@ class Pointnet_Autoencoder(nn.Module):
         pfeat_relu1_2 = F.relu(self.bn2(self.conv2(x))) 
         pfeat_relu1_2 = adain_pointcloud(pfeat_relu1_2,image_feats['relu1_2'])
 
-        
-
         pfeat_relu2_2 = F.relu(self.bn3(self.conv3(pfeat_relu1_2))) 
         pfeat_relu2_2 = adain_pointcloud(pfeat_relu2_2,image_feats['relu2_2'])
 
@@ -84,6 +92,8 @@ class Pointnet_Autoencoder(nn.Module):
         x = F.relu(self.dbn3(self.deconv3(x)))
         x = F.relu(self.dbn2(self.deconv2(x)))
         output =self.deconv1(x)
+
+        
 
 
         output = output.permute(0,2,1)
