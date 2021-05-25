@@ -12,7 +12,7 @@ import style_transfer as st
 
 from helpers import image_utils
 
-def train_texture(model,train_loader,val_loader):
+def train_texture(model,train_loader,val_loader,output_folder=None):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
     start_epoch=0
@@ -115,12 +115,21 @@ def train_texture(model,train_loader,val_loader):
         print('='*10)
         print('')        
 
-    gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
+    
+    
+    if output_folder is not None:
+        gen_path = os.path.join(output_folder,f'{model.net.__class__.__name__}_final.pth')
+    else: 
+        gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
     torch.save(best_model_wts,gen_path)
     print('Final model saved in {}\n'.format(gen_path))
 
     losses_file = f'losses_{model.net.__class__.__name__}.png'
-    losses_path = os.path.join(args.output_dir,losses_file)
+    
+    if output_folder is not None:
+        losses_path = os.path.join(output_folder,losses_file)
+    else: 
+        losses_path = os.path.join(args.output_dir,losses_file)
     logger.log_losses(train_loss_history,val_loss_history,epoch_chkpts,losses_path)
     print('Loss history saved in {}'.format(losses_path))
     writer.close()

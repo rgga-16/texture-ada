@@ -27,10 +27,14 @@ def main():
 
     args = args_.parse_arguments()
 
-    n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
+    cats = args.tamura_categories
 
-    for cat in ['contrast','directionality','linelikeness','regularity','roughness']:
+    n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
+    # cats=['coarseness','contrast','directionality','linelikeness','regularity','roughness']
+    for cat in cats:
+        print(f'Category: {cat}')
         for set in ['high','low']:
+            print(f'Set: {set}')
             style_dir = os.path.join(args.style_dir,cat,set)
 
             # Setup dataset for training
@@ -56,7 +60,7 @@ def main():
 
                 # Training. Returns path of the generator weights.
                 start=time.time()
-                gen_path=train_texture(model,train_loader=fil_trainloader,val_loader=fil_trainloader)
+                gen_path=train_texture(model,train_loader=fil_trainloader,val_loader=fil_trainloader,output_folder=output_folder)
                 time_elapsed = time.time() - start 
 
                 model.net.load_state_dict(torch.load(gen_path))

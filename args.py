@@ -45,5 +45,7 @@ def parse_arguments():
                         help='Path to checkpoint model to resume training, if any.')
     parser.add_argument('--model_path', type=str,default=None,
                         help='Path to model.')
+    parser.add_argument('--tamura_categories', type=str, nargs="*",default=['coarseness','contrast','directionality','linelikeness','regularity','roughness'],
+                        help='Tamura categories. for the multi texture transfer categorical')
 
     return parser.parse_args()
