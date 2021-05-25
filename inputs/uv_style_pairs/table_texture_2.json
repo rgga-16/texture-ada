@@ -1,0 +1,10 @@
+{
+    "chair_dir": "./inputs/3d_models/shapenet/tables",
+    "texture_dir": "inputs/style_images/filipino_designer_furniture_textures/synthetic/3",
+    "chair_texture_pairs" : {
+        "top":"28.png",
+        "base":"25.png",
+        "foot":"31.png",
+        "drawer":"6.png"
+    }
+}

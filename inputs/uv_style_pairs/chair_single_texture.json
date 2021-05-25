@@ -1,0 +1,12 @@
+{
+    "chair_dir": "./inputs/3d_models/shapenet/temp",
+    "texture_dir": [
+        "./outputs/results/single_texture/32/TextureNet",
+        "./outputs/results/single_texture/32/AdaIN_Autoencoder",
+        "./outputs/results/single_texture/32/FeedForward",
+        "./outputs/results/single_texture/32/ProposedModel",
+        "./outputs/results/single_texture/32/ProposedModel (old)/ProposedModel (old)",
+        "./inputs/style_images/filipino_designer_furniture_textures"
+    ]
+
+}

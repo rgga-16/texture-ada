@@ -1,9 +1,0 @@
-{
-    
-    "uv_dir": "./inputs/uv_maps/dining_chair_3/cube_project",
-    "style_dir": "./inputs/style_images/filipino_designer_furniture_textures",
-    "uv_style_pairs" : {
-        "body_uv.png":"selma-41.png"
-    }
-
-}
