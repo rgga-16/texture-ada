@@ -33,7 +33,7 @@ def main():
     # Filipino furniture
     ####################
     bs=2
-    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
+    fil_dataset = Styles_Dataset(style_dir=args.style_dir,
                                 style_size=round(args.style_size),
                                 set='default')
     fil_trainloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)                            
