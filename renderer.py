@@ -5,9 +5,11 @@ from blender import BlenderRenderer
 from PIL import Image
 import math 
 
-def render_image(renderer,rotation_angle=0,save_path='./render.png'):
+def render_image(renderer,rotation=None,save_path='./render.png'):
 
-    rotation=(math.radians(0), math.radians(rotation_angle),math.radians(0))
+    
+    # if rotation_angle:
+    #     rotation=(math.radians(0), math.radians(rotation_angle),math.radians(0))
 
     path = renderer.render_single(rotation)
     render_file = Image.open(path)
@@ -23,12 +25,29 @@ def render_image(renderer,rotation_angle=0,save_path='./render.png'):
 
     return 
 
+def gen_frame(im):
+    alpha = im.getchannel('A')
+
+    # Convert the image into P mode but only use 255 colors in the palette out of 256
+    im = im.convert('RGB').convert('P', palette=Image.ADAPTIVE, colors=255)
+
+    # Set all pixel values below 128 to 255 , and the rest to 0
+    mask = Image.eval(alpha, lambda a: 255 if a <=128 else 0)
+
+    # Paste the color of index 255 and use alpha as a mask
+    im.paste(255, mask)
+
+    # The transparency index is 255
+    im.info['transparency'] = 255
+
+    return im
 
 def render_gif(renderer,save_path='./render.gif'):
     still_files = renderer.render_multiple()
     stills = []
     for sf in still_files:
         s = Image.open(sf)
+        s = gen_frame(s)
         stills.append(s)
     
     dir_name = os.path.dirname(save_path)
@@ -38,7 +57,7 @@ def render_gif(renderer,save_path='./render.gif'):
         pass
         
     
-    stills[0].save(save_path,save_all=True,append_images=stills[1:],duration=200,loop=0)
+    stills[0].save(save_path,save_all=True,append_images=stills[1:],duration=200,loop=0,disposal=2)
 
     for f in still_files:
         os.remove(f)

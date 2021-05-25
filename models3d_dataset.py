@@ -70,7 +70,7 @@ class Pix3D_Paired(Pix3D):
 
         pointclouds=[]
         images=[]
-
+        masks=[]
         for sample in [sample1,sample2]:
             model_path = os.path.join(self.root_dir,sample['model'])
             image_path = os.path.join(self.root_dir,sample['img'])
@@ -87,9 +87,10 @@ class Pix3D_Paired(Pix3D):
 
             # Preprocess image
             image_tensor = image_utils.image_to_tensor(masked_img,phase='test',image_size=256)[:3,...]
-
+            mask_tensor = image_utils.image_to_tensor(mask,phase='test',image_size=256,normalize=False)
+            masks.append(mask_tensor.squeeze())
             pointclouds.append(pointcloud.squeeze())
             images.append(image_tensor.squeeze())
 
-        return pointclouds[0],images[0],pointclouds[1],images[1]
+        return pointclouds[0],images[0],masks[0],pointclouds[1],images[1],masks[1]
 
