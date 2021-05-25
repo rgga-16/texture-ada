@@ -210,7 +210,7 @@ def train_structure(model,train_loader,val_loader):
         state_dict['epoch']=epoch 
         state_dict['best_net_weights']=best_model_wts
         state_dict['best_val_loss']=best_val_loss
-        checkpoint_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_chkpt.pt')
+        checkpoint_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_chkpt.pt')
         torch.save(state_dict,checkpoint_path)
         print(f'Checkpoint saved in {checkpoint_path}')
         

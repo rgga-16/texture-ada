@@ -13,9 +13,9 @@ import style_transfer as st
 import ops 
 
 class ProposedModel(BaseModel):
-    def __init__(self) -> None:
+    def __init__(self,net=Pyramid2D_adain2(3,64,3)) -> None:
         
-        net = Pyramid2D_adain2(3,64,3)
+        net = net
         self.lr = D.LR()
         optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
         criterion_loss = nn.MSELoss()
