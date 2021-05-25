@@ -20,6 +20,10 @@ import matplotlib.pyplot as plt
 
 from distutils.dir_util import copy_tree
 
+from skimage.feature import greycomatrix
+
+from shutil import copyfile
+
 
 def compute_coarseness(img,kmax=5):
     w=img.shape[0]
@@ -105,16 +109,78 @@ def compute_directionality(img):
         deltav[hi][w-1] = img[hi+1][w-1] - img[hi][w-1]
     
     # get deltag
-    deltag = (torch.abs(deltah) + torch.abs(deltav)) / 2
+    deltag = (torch.abs(deltah) + torch.abs(deltav)) / 2.0
+    deltag_vec = torch.flatten(deltag)
 
     # get theta
-    theta = (torch.arctan(deltav/deltah)) + (np.pi/2)
+    for hi in range(h):
+        for wi in range(w):
+            if (deltah[hi][wi] == 0 and deltav[hi][wi] == 0):
+                theta[hi][wi] = 0
+            elif(deltah[hi][wi] == 0):
+                theta[hi][wi] = np.pi
+            else:
+                theta[hi][wi] = (np.arctan(deltav[hi][wi]/deltah[hi][wi])) + (np.pi/2.0)
+    theta_vec = torch.flatten(theta)
+
+    n = 16
+    hd = torch.zeros(n)
+    # t=12 
+    t = torch.mean(deltag_vec).item()
+
+    counti=0
+    for k in range(n):
+        countk = 0 
+        for dg in range(deltag_vec.shape[0]):
+            if (deltag_vec[dg] >= t) and (theta_vec[dg] >= (((2*k-1) * np.pi) /(2*n))) and (theta_vec[dg]  < (((2*k+1)* np.pi)/(2*n))):
+                countk+=1
+                counti+=1
+        hd[k]=countk
+    hd = hd / counti
+    hd_max_index = np.argmax(hd)
+    fdir = 0
+    for ni in range(n):
+        fdir += np.power((ni - hd_max_index), 2) * hd[ni]
+    # r = 1/n
+    # fdir = 1 - r*n
+
+    return fdir
+
+
+def compute_linelikeness(img):
+    w=img.shape[0]
+    h=img.shape[1]
+    img_ = np.uint8(img.detach().cpu().numpy()*225)
+    coocurrence_matrix = greycomatrix(img_,distances=[1],levels=w,angles=[0])
     print()
 
-    
+
+
+
+    return 
+
+def compute_roughness(fcrs,fcon):
+    return fcrs+fcon
+
 
 style_dir= './inputs/style_images/filipino_designer_furniture_textures/grayscale'
 
+categories = [
+    'coarseness',
+    'contrast',
+    'directionality',
+    # 'linelikeliness',
+    # 'regularity',
+    'roughness'
+]
+
+
+
+
+coarses = {}
+contrasts = {}
+directions = {}
+roughs = {}
 
 for f in os.listdir(style_dir):
     input_path = os.path.join(style_dir,f)
@@ -125,8 +191,58 @@ for f in os.listdir(style_dir):
 
     img_tensor = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='L'),phase='default',normalize=False)
     img_tensor.squeeze_()
-    # coarseness = compute_coarseness(img_tensor)
-    # contrast = compute_contrast(img_tensor)
-    compute_directionality(img_tensor)
-    # print(f'{f} coarseness: {coarseness:.3f}')
+    linelikeness = compute_linelikeness(img_tensor)
+    coarseness = compute_coarseness(img_tensor)
+    contrast = compute_contrast(img_tensor)
+    directionality = compute_directionality(img_tensor)
 
+    roughness = compute_roughness(coarseness,contrast)
+
+    coarses[f]=coarseness
+    contrasts[f]=contrast
+    directions[f]=directionality
+    roughs[f]=roughness
+    
+
+
+mean_coarse = np.mean(list(coarses.values()))
+mean_contrast = np.mean(list(contrasts.values()))
+mean_direction = np.mean(list(directions.values()))
+mean_rough = np.mean(list(roughs.values()))
+
+for cat in categories:
+    high_dir = os.path.join(style_dir,'categories',cat,'high')
+    low_dir = os.path.join(style_dir,'categories',cat,'low')
+
+    try:
+        os.makedirs(high_dir,exist_ok=True)
+        os.makedirs(low_dir,exist_ok=True)
+    except FileExistsError:
+        pass
+
+for f in os.listdir(style_dir):
+    input_path = os.path.join(style_dir,f)
+    if os.path.isdir(input_path):
+        continue
+    if (os.path.splitext(input_path)[1] not in ['.png']):
+        continue 
+    
+    if coarses[f] > mean_coarse:
+        copyfile(input_path, os.path.join(style_dir,'categories/coarseness/high',f)) 
+    else: 
+        copyfile(input_path, os.path.join(style_dir,'categories/coarseness/low',f)) 
+    
+    if contrasts[f] > mean_contrast:
+        copyfile(input_path, os.path.join(style_dir,'categories/contrast/high',f)) 
+    else: 
+        copyfile(input_path, os.path.join(style_dir,'categories/contrast/low',f)) 
+    
+    if directions[f] > mean_direction:
+        copyfile(input_path, os.path.join(style_dir,'categories/directionality/high',f)) 
+    else: 
+        copyfile(input_path, os.path.join(style_dir,'categories/directionality/low',f)) 
+    
+    if roughs[f] > mean_rough:
+        copyfile(input_path, os.path.join(style_dir,'categories/roughness/high',f)) 
+    else: 
+        copyfile(input_path, os.path.join(style_dir,'categories/roughness/low',f)) 
