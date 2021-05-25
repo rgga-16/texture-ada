@@ -44,23 +44,72 @@ def image_to_tensor(image,phase:str,image_size=D.IMSIZE.get(),device=D.DEVICE(),
 
     return tensor.to(device)
 
+def white_to_transparency_gradient(img):
+    x = np.asarray(img.convert('RGBA')).copy()
+
+    x[:, :, 3] = (255 - x[:, :, :3].mean(axis=2)).astype(np.uint8)
+
+    return Image.fromarray(x)
+
+def white_to_transparency(img):
+    x = np.asarray(img.convert('RGBA')).copy()
+
+    x[:, :, 3] = (255 * (x[:, :, :3] != 255).any(axis=2)).astype(np.uint8)
+
+    return Image.fromarray(x)
+
+def white_to_transparency_threshold(img,threshold=100,dist=5):
+    x = np.asarray(img.convert('RGBA')).copy()
+    r,g,b,a=np.rollaxis(x,axis=-1)   
+
+    mask=((r>threshold)
+        & (g>threshold)
+        & (b>threshold)
+        & (np.abs(r-g)<dist)
+        & (np.abs(r-b)<dist)
+        & (np.abs(g-b)<dist)
+        )
+    x[mask,3]=0
+
+    return Image.fromarray(x,mode='RGBA')
+
+def round_to_white(img_arr,minval=200):
+    x = img_arr.copy()
+
+    r1,g1,b1 = minval,minval,minval
+    r2,g2,b2 = 255,255,255
+    r,g,b = x[:,:,0], x[:,:,1], x[:,:,2]
+    mask = (r>=r1) & (g>=g1) & (b>=b1)
+    x[:,:,:3][mask] = [r2,g2,b2]
+
+    # x[x>=minval]=255
+    print()
+    return x
+
 # Converts tensor to an image
-def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True):
+def tensor_to_image(tensor,image_size=D.IMSIZE.get(),denorm=True,mode='RGB'):
 
     postprocessor = transforms.Compose([
-        transforms.ToPILImage(),
+        transforms.ToPILImage(mode=mode),
         transforms.Resize((image_size,image_size)),
     ])
     
-    tensor_ = tensor.detach().cpu().numpy().squeeze(0)
+    # tensor_ = tensor.detach().cpu().numpy().squeeze(0)
+    tensor_ = tensor.detach().cpu().numpy()
     tensor_ = np.transpose(tensor_,(1,2,0))
 
     if denorm:
         temp = tensor_[...,:3]
         tensor_[...,:3] = temp * np.array(D.NORM_STD.get()) + np.array(D.NORM_MEAN.get())
 
-    image = postprocessor(np.uint8(tensor_*225))
+    
+    preimage = np.uint8(tensor_*225)
+    # preimage = round_to_white(preimage,130)
+    image = postprocessor(preimage)
+    # image = white_to_transparency(image)
     return image
+
+
 
 def show_images(images,save_path=None,normalize=True):
     img_grid = torchvision.utils.make_grid(images,normalize=normalize)
@@ -72,16 +121,6 @@ def show_images(images,save_path=None,normalize=True):
     
     plt.clf()
 
-# # Show image
-# def show_images(images,show=True,save_path=None):
-#     f, axs = plt.subplots(1,len(images),figsize=(15,15))
-#     for img, ax in zip(images,axs):
-#         ax.imshow(img)
-#         ax.axis('off')
-#     if show:
-#         plt.show()
-#     if save_path:
-#         plt.savefig(save_path)
 
 # Loads a single image
 def load_image(filename,mode="RGBA"):

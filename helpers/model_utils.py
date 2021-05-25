@@ -108,7 +108,7 @@ def mesh_to_pointcloud(vertices,faces,n_points=3000,device=D.DEVICE()):
     transformer = transforms.Compose([
         SamplePoints(n_points),
         NormalizePointcloud(),
-        # Y_Rotate(10)
+        Y_Rotate(67.5)
         # AddNoise()
     ])
 
@@ -127,6 +127,15 @@ def pointcloud_to_mesh_poisson(pointcloud,depth=5):
     mesh = mesh.crop(pointcloud.get_axis_aligned_bounding_box())
     mesh.compute_vertex_normals()
     return mesh
+
+def pointcloud_to_mesh_ballpivot(pointcloud, radii = [0.005, 0.01, 0.02, 0.04]):
+    pointcloud.normals = o3d.utility.Vector3dVector(np.zeros((1,3)))
+    pointcloud.estimate_normals()
+    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pointcloud,o3d.utility.DoubleVector(radii))
+    mesh = mesh.crop(pointcloud.get_axis_aligned_bounding_box())
+    mesh.compute_vertex_normals()
+    return mesh 
+
 
 def pointcloud_kaolin_to_open3d(pointcloud):
     pointcloud_o3d = o3d.geometry.PointCloud()
