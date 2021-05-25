@@ -107,7 +107,10 @@ def train_texture(model,train_loader,val_loader,output_folder=None):
         state_dict['val_loss_history'] = val_loss_history
         state_dict['wdist_history'] = wdist_history
         state_dict['epoch_chkpts']=epoch_chkpts
-        checkpoint_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_chkpt.pt')
+        if output_folder is not None:
+            checkpoint_path = os.path.join(output_folder,f'{model.__class__.__name__}_chkpt.pt')
+        else:
+            checkpoint_path = os.path.join(args.output_dir,f'{model.__class__.__name__}_chkpt.pt')
         torch.save(state_dict,checkpoint_path)
         print(f'Checkpoint saved in {checkpoint_path}')
         
