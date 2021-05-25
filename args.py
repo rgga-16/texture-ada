@@ -43,5 +43,7 @@ def parse_arguments():
                         help='To use multiple cpu cores for the dataloader or not')
     parser.add_argument('--checkpoint_path', type=str,default=None,
                         help='Path to checkpoint model to resume training, if any.')
+    parser.add_argument('--model_path', type=str,default=None,
+                        help='Path to model.')
 
     return parser.parse_args()
