@@ -1,4 +1,5 @@
 
+from random import seed
 import torch
 from torch.utils.data import DataLoader,random_split
 
@@ -25,6 +26,8 @@ def main():
     
     device = D.DEVICE()
 
+    seeder.set_seed(SEED)
+
     args = args_.parse_arguments()
 
     cats = args.tamura_categories
@@ -33,7 +36,7 @@ def main():
     # cats=['coarseness','contrast','directionality','linelikeness','regularity','roughness']
     for cat in cats:
         print(f'Category: {cat}')
-        for set in ['low']:
+        for set in ['high']:
             print(f'Set: {set}')
             style_dir = os.path.join(args.style_dir,cat,set)
 
@@ -46,13 +49,21 @@ def main():
             fil_trainloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)                            
             fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-            models = [AdaIN_Autoencoder()]
+            # gens = [
+            #     'Pyramid2D_adain2_final.pth',
+            #     'Pyramid2D_adain_final.pth',
+            #     'Network_AdaIN_final.pth'
+            # ]
+            
+            models = [ProposedModel()]
+            i=0
             for model in models:
                 print(f'Running using model {model.net.__class__.__name__}')
 
                 # Create output folder
                 # This will store the model, output images, loss history chart and configurations log
                 output_folder = os.path.join(style_dir,'synthetic', f'{model.net.__class__.__name__}')
+                
                 try:
                     os.makedirs(output_folder,exist_ok=True)
                 except FileExistsError:
@@ -60,6 +71,7 @@ def main():
 
                 # Training. Returns path of the generator weights.
                 start=time.time()
+                # gen_path = os.path.join(style_dir,'synthetic',gens[i])
                 gen_path=train_texture(model,train_loader=fil_trainloader,val_loader=fil_trainloader,output_folder=output_folder)
                 time_elapsed = time.time() - start 
 
@@ -92,6 +104,7 @@ def main():
                                 batch_size=bs)
                 print("="*10)
                 print("Transfer completed. Outputs saved in {}".format(output_folder))
+                i+=1
 
     
     # INSERT RENDERING MODULE HERE
