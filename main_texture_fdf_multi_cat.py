@@ -46,7 +46,7 @@ def main():
             fil_trainloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)                            
             fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-            models = [ProposedModel(net=Pyramid2D_adain(3,64,3))]
+            models = [AdaIN_Autoencoder()]
             for model in models:
                 print(f'Running using model {model.net.__class__.__name__}')
 
