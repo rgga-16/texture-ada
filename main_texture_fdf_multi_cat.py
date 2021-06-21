@@ -36,7 +36,7 @@ def main():
     # cats=['coarseness','contrast','directionality','linelikeness','regularity','roughness']
     for cat in cats:
         print(f'Category: {cat}')
-        for set in ['low']:
+        for set in ['high', 'low']:
             print(f'Set: {set}')
             style_dir = os.path.join(args.style_dir,cat,set)
 
@@ -55,7 +55,7 @@ def main():
             #     'Network_AdaIN_final.pth'
             # ]
             
-            models = [AdaIN_Autoencoder()]
+            models = [ProposedModel(), ProposedModel(net=Pyramid2D_adain(3,64,3)), AdaIN_Autoencoder()]
             i=0
             for model in models:
                 print(f'Running using model {model.net.__class__.__name__}')
