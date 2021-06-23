@@ -1,3 +1,12 @@
+'''
+Pytorch implementation of the paper 
+"Improved Texture Networks: Maximizing Quality and Diversity in Feed-forward Stylization and Texture Synthesis" by Ulyanov et al. (2016)
+
+
+Code borrowed from: https://github.com/JorgeGtz/TextureNets_implementation 
+'''
+
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
