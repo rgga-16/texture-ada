@@ -59,24 +59,6 @@ def covariance_matrix(tensor):
     covariance = torch.matmul(feats,torch.transpose(feats,-2,-1))
     return covariance / (h*w)
 
-# def variance_aware_adaptive_weighting(tensor):
-
-#     return
-
-
-# def weighted_style_rep(tensor):
-#     b,c,w,h = tensor.shape
-#     feats = tensor.view(b*c,h*w)
-#     var = torch.var(feats,dim=1,keepdim=True)
-    
-#     w_style = (1.0/var.inverse()) * covariance_matrix(tensor)
-#     return w_style
-
-
-# def sliced_wasserstein_loss():
-
-#     pass
-
 '''
 Code borrowed from: https://github.com/VinceMarron/style_transfer/blob/master/why_wasserstein.ipynb
 '''
@@ -85,16 +67,6 @@ def gaussian_wasserstein_distance(mean1,cov1,mean2,cov2):
     cov1 = cov1.detach()
     mean2= mean2.detach()
     cov2 = cov2.detach()
-
-    # mean1_np = mean1.cpu().numpy()
-    # cov1_np = cov1.cpu().numpy()
-    # mean2_np= mean2.cpu().numpy()
-    # cov2_np = cov2.cpu().numpy()
-
-    # mean_diff = np.sum((mean1_np-mean2_np)**2)
-    # var_components = np.trace(cov1_np+cov2_np)
-    # #need to round to prevent eigenvalues very close to zero from becoming negative
-    # var_overlap = np.sum(np.sqrt(np.linalg.eigvals(np.matmul(cov1_np,cov2_np))))
 
     mean_diff_pt = torch.sum((mean1-mean2)**2)
     var_components_pt = cov1.diagonal(offset=0,dim1=-1,dim2=-2).sum(-1)

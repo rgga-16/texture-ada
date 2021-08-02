@@ -24,11 +24,7 @@ def main():
     
     device = D.DEVICE()
     
-    
     args = args_.parse_arguments()
-
-    
-
     n_workers = multiprocessing.cpu_count()//2 if args.multiprocess else 0
 
     # Setup datasets
