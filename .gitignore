@@ -7,13 +7,17 @@ outputs/*
 archive/*
 dextr/*
 external_libs/*
+runs
 inputs/bunny
+inputs/archive
 notes
-
+uvs
 *.txt
 *.pyc
 *.pth
+*.pt
 .vscode/settings.json
+.gitmodules
 
 toy.py 
 yes.py 
