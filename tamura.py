@@ -56,7 +56,10 @@ def compute_coarseness(img,kmax=5):
     return fcrs 
 
 def compute_contrast(img,n=0.25):
+    img = img*225
+    img = img.type(torch.uint8)
     img_flat = torch.flatten(img)
+    img_flat = img.type(torch.float)
     mean = torch.mean(img_flat)
     v = torch.var(img_flat)
 
@@ -70,6 +73,9 @@ def compute_contrast(img,n=0.25):
 def compute_directionality(img):
     w=img.shape[0]
     h=img.shape[1]
+
+    img = img*225
+    img = img.type(torch.uint8)
 
     deltah = torch.zeros([w,h])
     deltav = torch.zeros([w,h])
@@ -125,8 +131,7 @@ def compute_directionality(img):
 
     n = 16
     hd = torch.zeros(n)
-    # t=12 
-    t = torch.mean(deltag_vec).item()
+    t=12 
 
     counti=0
     for k in range(n):
@@ -169,8 +174,8 @@ categories = [
     'coarseness',
     'contrast',
     'directionality',
-    # 'linelikeliness',
-    # 'regularity',
+    'linelikeliness',
+    'regularity',
     'roughness'
 ]
 
@@ -200,10 +205,10 @@ for f in os.listdir(style_dir):
 
     coarses[f]=coarseness
     contrasts[f]=contrast
-    directions[f]=directionality
     roughs[f]=roughness
+    directions[f]=directionality
     
-
+sorteds = dict(sorted(directions.items(), key=lambda item: item[1]))
 
 mean_coarse = np.mean(list(coarses.values()))
 mean_contrast = np.mean(list(contrasts.values()))
