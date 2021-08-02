@@ -100,13 +100,6 @@ def main():
                         Average_WassDist_FDF=avg_twdists)
         print("="*10)
         print("Transfer completed. Outputs saved in {}".format(output_folder))
-
-    
-    
-    
-
-   
-    
     
     # INSERT RENDERING MODULE HERE
     #######################################
