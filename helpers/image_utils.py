@@ -11,9 +11,15 @@ import numpy as np
 
 import os 
 
+def make_dir(dir_path):
+    try:
+        os.makedirs(dir_path)
+    except FileExistsError:
+        pass
+
 
 # Preprocesses image and converts it to a Tensor
-def image_to_tensor(image,phase:str,image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
+def image_to_tensor(image,phase:str='default',image_size=D.IMSIZE.get(),device=D.DEVICE(),normalize=True):
     transformer = {
         'train': transforms.Compose([
                     transforms.RandomResizedCrop((image_size,image_size)),
