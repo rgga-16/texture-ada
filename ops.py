@@ -6,6 +6,7 @@ import numpy as np
 
 from helpers import image_utils
 from defaults import DEFAULTS as D
+from models.networks.vgg import VGG19
 
 def calc_mean_std(feat, eps=1e-5):
     # eps is a small value added to the variance to avoid divide-by-zero.
@@ -74,31 +75,40 @@ def gaussian_wasserstein_distance(mean1,cov1,mean2,cov2):
     
     return  torch.sqrt(mean_diff_pt+var_components_pt-2*var_overlap_pt)
 
-class ContentLoss(nn.Module): 
 
-    def __init__(self,target):
-        super(ContentLoss, self).__init__()
-        # we 'detach' the target content from the tree used
-        # to dynamically compute the gradient: this is a stated value,
-        # not a variable. Otherwise the forward method of the criterion
-        # will throw an error.
-        self.target = target.detach()
+def get_means_and_covs(tensor,model=VGG19(),style_layers:dict = D.STYLE_LAYERS.get()):
+    means = {}
+    covs = {} 
+    x=tensor
 
-    def forward(self,input):
-        self.loss= F.mse_loss(input,self.target)
+    if isinstance(model,VGG19):
+        model = model.features
+
+    for name, layer in model._modules.items():
+        x=layer(x)
+
+        if name in style_layers.keys():
+            means[style_layers[name]] = get_mean(x)
+            covs[style_layers[name]] = covariance_matrix(x)
         
-        return input 
+    return means,covs
 
-class StyleLoss(nn.Module):
+def get_features(tensor,model=VGG19(),
+                content_layers:dict = D.CONTENT_LAYERS.get(), 
+                style_layers:dict = D.STYLE_LAYERS.get()):
 
-    def __init__(self,target_feature):
-        super(StyleLoss,self).__init__()
+    features = {}
+    x=tensor
 
-        self.target = gram_matrix(target_feature).detach()
+    if isinstance(model,VGG19):
+        model = model.features
 
-    def forward(self, input):
-        g = gram_matrix(input)
-        self.loss = F.mse_loss(g,self.target)
+    for name, layer in model._modules.items():
+        x=layer(x)
 
-        return input
-
+        if name in style_layers.keys():
+            features[style_layers[name]] = covariance_matrix(x)
+        
+        if name in content_layers.keys():
+            features[content_layers[name]] = x
+    return features
