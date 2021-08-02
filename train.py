@@ -8,7 +8,6 @@ import torchvision
 import args as args_
 from defaults import DEFAULTS as D
 from helpers import logger
-import style_transfer as st
 
 from helpers import image_utils
 
