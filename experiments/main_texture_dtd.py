@@ -10,7 +10,6 @@ from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
 from models.networks.texturenet import Pyramid2D_adain2
-import style_transfer as st
 from trainer import train_texture
 from tester import predict_texture,evaluate_texture
 import numpy as np
