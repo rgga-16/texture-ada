@@ -4,13 +4,12 @@ from torch.utils.data import DataLoader,random_split
 
 import args as args_
 
-from seeder import SEED, init_fn
-from dataset import Describable_Textures_Dataset as DTD, Styles_Dataset
+from helpers.seeder import SEED, init_fn
+from data.dataset import Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
 from models.networks.texturenet import Pyramid2D_adain2
-import style_transfer as st
 from trainer import train_texture
 from tester import predict_texture, evaluate_texture
 import numpy as np
