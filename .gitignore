@@ -1,5 +1,6 @@
 
-data/*
+data/3d-models
+data/images
 __pycache__/*
 __pycache__
 .vscode/*
