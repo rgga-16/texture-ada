@@ -1,0 +1,37 @@
+---
+SEEDS: [32,64,128,256]
+
+DATA:
+  TEXTURES_DIR: './data/images/dtd'
+  MODELS3D_DIR: './inputs/3d_models/shapenet'
+  AUGMENTATION:
+    IMSIZE: 256
+    NORM_MEAN : [0.485,0.456,0.406]
+    NORM_STD : [0.229,0.224,0.225]
+  
+MODEL:
+  WEIGHTS_DIR: './models/weights'
+  CHECKPOINTS_DIR : './models/checkpoints'
+  VGG19:
+    STYLE_LAYERS: 
+      '3': 'relu1_2'
+      '8': 'relu2_2'
+      '13' : 'relu3_4'
+      '26' : 'relu4_4'
+    SL_WEIGHTS: 
+      'relu1_2': 0.25
+      'relu2_2': 0.25
+      'relu3_4' : 0.25
+      'relu4_4' : 0.25
+    CONTENT_LAYERS:
+      '22' : 'relu4_2'
+    CL_WEIGHTS:
+      'relu4_2' : 1.0
+
+TRAIN:
+  BATCH_SIZE: 2
+  EPOCHS: 500
+  LR: 1e-4
+
+EVALUATE:
+  OUTPUT_DIR: './outputs/'
