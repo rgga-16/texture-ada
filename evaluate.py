@@ -3,13 +3,15 @@ from torch.utils.data import DataLoader
 import torchvision
 import args as args_
 
-from dataset import UV_Style_Paired_Dataset
+from data.dataset import UV_Style_Paired_Dataset,Styles_Dataset
 from defaults import DEFAULTS as D
-from helpers import logger, image_utils 
+from helpers import logger, image_utils
+from helpers.seeder import init_fn, set_seed
 from models.base_model import BaseModel
-import style_transfer as st
+from models.texture_transfer_models import ProposedModel
 
 import numpy as np
+import multiprocessing
 from torch.utils.data import DataLoader
 import os, copy, time, datetime ,json, matplotlib.pyplot as plt
 
@@ -139,7 +141,7 @@ def main():
             logger.log_args(os.path.join(output_folder,log_file),
                             Sample_Test_Time=f'{avg_testtime:.2f}s',
                             Model_Name=model.__class__.__name__,
-                            Seed = SEED,
+                            Seed = seed,
                             Average_CovMatrix_TestLoss = avg_loss,
                             Average_WassDist=avg_wdist,
                             batch_size=bs)
