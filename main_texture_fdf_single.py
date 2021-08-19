@@ -9,9 +9,9 @@ from data.dataset import Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
-from models.networks.texturenet import Pyramid2D_adain2
-from trainer import train_texture
-from tester import predict_texture, evaluate_texture
+from models.networks.texturenet import Pyramid2D_adain2, Pyramid2D_adain
+from train import train_texture
+from evaluate import predict_texture, evaluate_texture
 import numpy as np
 import multiprocessing
 
@@ -30,11 +30,11 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
+    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/fdf_textures',
                                 style_size=round(args.style_size),
-                                set='default',lower_size=17)
+                                set='default')
 
-    models = [ProposedModel()]
+    models = [ProposedModel(net=Pyramid2D_adain(3,64,3))]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -51,10 +51,10 @@ def main():
         tlosses = {}
         twdists= {}
         for i in range(0,fil_dataset.__len__()):
-            model_ = model.__class__()
+            model_ = model.__class__(net=Pyramid2D_adain(3,64,3))
             texture_file = fil_dataset.style_files[i]
-
-            single_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
+            print(f'Synthesizing from texture {texture_file}')
+            single_dataset = Styles_Dataset(style_dir='./inputs/style_images/fdf_textures',
                                             style_size=round(args.style_size),set='default',
                                             style_files=[os.path.basename(texture_file)])
 
@@ -79,7 +79,7 @@ def main():
             for j,texture in enumerate(single_loader):
                 filename = single_dataset.style_files[j]
                 filename = os.path.splitext(os.path.basename(filename))[0]
-                predict_texture(model_,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
+                predict_texture(model_,texture,os.path.join(output_folder,f'{filename}.png'))
             #######################################
         avg_train_time/=fil_dataset.__len__()
         avg_test_time/=fil_dataset.__len__()

@@ -14,7 +14,7 @@ from torchvision import models, transforms
 
 from defaults import DEFAULTS as D
 import copy
-from ops import adaptive_instance_normalization
+from ops.ops import adaptive_instance_normalization
 from models.networks.vgg import VGG19
 
 class Conv_block2D(nn.Module):

@@ -19,7 +19,7 @@ def set_seed(seed):
 
 
 global SEED 
-SEED=32
+SEED=512
 set_seed(SEED)
 
 

@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 from models.networks.vgg import VGG19
 from models.networks.texturenet import Pyramid2D
-from ops import adaptive_instance_normalization
+from ops.ops import adaptive_instance_normalization
 
 
 """

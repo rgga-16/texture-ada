@@ -9,8 +9,8 @@ from args import parse_arguments
 
 from models.base_model import BaseModel
 from defaults import DEFAULTS as D
-import style_transfer as st
-import ops 
+import ops.ops as ops 
+from ops.ops import get_features, get_means_and_covs
 
 class ProposedModel(BaseModel):
     def __init__(self,net=Pyramid2D_adain2(3,64,3)) -> None:
@@ -48,8 +48,8 @@ class ProposedModel(BaseModel):
         return self.output
     
     def get_losses(self):
-        style_feats = st.get_features(self.style)
-        output_feats = st.get_features(self.output)
+        style_feats = get_features(self.style)
+        output_feats = get_features(self.output)
         style_loss=0
         for s in D.STYLE_LAYERS.get().values():
             diff = self.criterion_loss(output_feats[s],style_feats[s])
@@ -57,8 +57,8 @@ class ProposedModel(BaseModel):
         self.loss = style_loss
 
         if not self.net.training: 
-            style_means,style_covs = st.get_means_and_covs(self.style)
-            output_means,output_covs = st.get_means_and_covs(self.output)
+            style_means,style_covs = get_means_and_covs(self.style)
+            output_means,output_covs = get_means_and_covs(self.output)
 
             wass_dist = 0
             for s in D.STYLE_LAYERS.get().values():
@@ -113,8 +113,8 @@ class FeedForward(BaseModel):
         return self.output
     
     def get_losses(self):
-        style_feats = st.get_features(self.style)
-        output_feats = st.get_features(self.output)
+        style_feats = get_features(self.style)
+        output_feats = get_features(self.output)
         style_loss=0
         for s in D.STYLE_LAYERS.get().values():
             diff = self.criterion_loss(output_feats[s],style_feats[s])
@@ -122,8 +122,8 @@ class FeedForward(BaseModel):
         self.loss = style_loss
         
         if not self.net.training: 
-            style_means,style_covs = st.get_means_and_covs(self.style)
-            output_means,output_covs = st.get_means_and_covs(self.output)
+            style_means,style_covs = get_means_and_covs(self.style)
+            output_means,output_covs = get_means_and_covs(self.output)
 
             wass_dist = 0
             for s in D.STYLE_LAYERS.get().values():
@@ -198,8 +198,8 @@ class AdaIN_Autoencoder(BaseModel):
         adain_style_layers = D.STYLE_LAYERS.get()
         asl_weights = D.SL_WEIGHTS.get()
 
-        style_feats = st.get_features(self.style,style_layers=adain_style_layers)
-        output_feats = st.get_features(self.output,style_layers=adain_style_layers)
+        style_feats = get_features(self.style,style_layers=adain_style_layers)
+        output_feats = get_features(self.output,style_layers=adain_style_layers)
         style_loss=0
         for s in adain_style_layers.values():
             diff = self.criterion_loss(output_feats[s],style_feats[s])
@@ -207,8 +207,8 @@ class AdaIN_Autoencoder(BaseModel):
         self.loss = style_loss
 
         if not self.net.training: 
-            style_means,style_covs = st.get_means_and_covs(self.style)
-            output_means,output_covs = st.get_means_and_covs(self.output)
+            style_means,style_covs = get_means_and_covs(self.style)
+            output_means,output_covs = get_means_and_covs(self.output)
 
             wass_dist = 0
             for s in adain_style_layers.values():
@@ -268,16 +268,16 @@ class TextureNet(BaseModel):
         return self.output
     
     def get_losses(self):
-        style_feats = st.get_features(self.style)
-        output_feats = st.get_features(self.output)
+        style_feats = get_features(self.style)
+        output_feats = get_features(self.output)
         style_loss=0
         for s in D.STYLE_LAYERS.get().values():
             diff = self.criterion_loss(output_feats[s],style_feats[s])
             style_loss += D.SL_WEIGHTS.get()[s] * diff
         self.loss = style_loss
         if not self.net.training: 
-            style_means,style_covs = st.get_means_and_covs(self.style)
-            output_means,output_covs = st.get_means_and_covs(self.output)
+            style_means,style_covs = get_means_and_covs(self.style)
+            output_means,output_covs = get_means_and_covs(self.output)
 
             wass_dist = 0
             for s in D.STYLE_LAYERS.get().values():
