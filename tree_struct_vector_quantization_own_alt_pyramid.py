@@ -75,22 +75,25 @@ def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_siz
     else:
         prev_N = torch.zeros(3,n_parent_size,n_parent_size,device=D.DEVICE())
     
-    curr_N = curr_N.reshape(curr_N.shape[0],-1)
-    prev_N = prev_N.reshape(prev_N.shape[0],-1)
+    # curr_N = curr_N.reshape(curr_N.shape[0],-1)
+    # prev_N = prev_N.reshape(prev_N.shape[0],-1)
     
-    N = torch.cat((curr_N,prev_N),dim=-1)
-    return N
+    # N = torch.cat((curr_N,prev_N),dim=-1)
+    return curr_N,prev_N
 
 def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size):
     neighborhoods=[]
+    neighborhood_pyrs=[]
     image = pyramid[level]
     _,h,w = image.shape 
 
     for r in range(h):
         for c in range(w):
-            neighborhoods.append(get_neighborhood_pyramid(r,c,pyramid,level,n_size,n_parent_size))
-
-    return neighborhoods
+            curr_N, prev_N = get_neighborhood_pyramid(r,c,pyramid,level,n_size,n_parent_size)
+            neighborhood_pyrs.append(torch.cat((curr_N.reshape(curr_N.shape[0],-1),prev_N.reshape(prev_N.shape[0],-1)),dim=-1))
+            neighborhoods.append(curr_N)
+    
+    return torch.stack(neighborhood_pyrs),torch.stack(neighborhoods)
 
 def get_neighborhoods(image,n_size):
     neighborhoods=[]
@@ -140,13 +143,17 @@ def tvsq(input_path, output_path,n_size,n_levels):
 
     _,o_h,o_w = output_texture.shape 
     for l in range(n_levels):
-        neighborhoods = get_neighborhood_pyramids(input_texture_pyramid,l,n_size,parent_size)
-        neighborhoods = torch.stack(neighborhoods)
+        neighborhoods_pyr,neighborhoods = get_neighborhood_pyramids(input_texture_pyramid,l,n_size,parent_size)
         for o_r in range(o_h):
             print(f'Rows {o_r} of {o_h-1}')
             for o_c in range(o_w):
-                N_o = get_neighborhood_pyramid(o_r,o_c,output_texture_pyramid,l,n_size,parent_size)
-                dists = F.pairwise_distance(N_o.reshape(1,-1),neighborhoods.reshape(neighborhoods.shape[0],-1),p=2,keepdim=True)
+                curr_N,prev_N = get_neighborhood_pyramid(o_r,o_c,output_texture_pyramid,l,n_size,parent_size)
+                curr_N = curr_N.reshape(curr_N.shape[0],-1)
+                prev_N = prev_N.reshape(prev_N.shape[0],-1)
+                
+                N_o = torch.cat((curr_N,prev_N),dim=-1)
+
+                dists = F.pairwise_distance(N_o.reshape(1,-1),neighborhoods_pyr.reshape(neighborhoods_pyr.shape[0],-1),p=2,keepdim=True)
                 best_idx = torch.argmin(dists)
                 best_match = neighborhoods[best_idx]
 
