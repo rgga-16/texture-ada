@@ -23,7 +23,7 @@ def build_gaussian_pyramid(image,n_levels):
         blurred_im = gaussian_blur(im)
         downsampled_im = F.interpolate(blurred_im,scale_factor=0.5)
         im = downsampled_im
-        pyramid.append(im.squeeze())
+        pyramid.insert(0,im.squeeze())
 
     return pyramid
 
