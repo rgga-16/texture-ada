@@ -65,13 +65,19 @@ def get_neighborhood(curr_row,curr_col,image,n_size):
 
     neighborhood = image[:,top_idx:bot_idx+1,left_idx:right_idx+1]
     neighborhood = F.pad(neighborhood,(left_pad,right_pad,top_pad,bot_pad),value=0)
+    
+    if neighborhood.shape[1] > n_h:
+        neighborhood = neighborhood[:,:n_h,:]
+    
+    if neighborhood.shape[2] > n_w:
+        neighborhood = neighborhood[:,:,:n_w]
+    
     return neighborhood
 
 def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_size):
     curr_N = get_neighborhood(curr_row,curr_col,pyramid[level],n_size)
     if level > 0:
         prev_N = get_neighborhood(curr_row,curr_col,pyramid[level-1],n_parent_size)
-        print()
     else:
         prev_N = torch.zeros(3,n_parent_size,n_parent_size,device=D.DEVICE())
     
@@ -148,10 +154,8 @@ def tvsq(input_path, output_path,n_size,n_levels):
             print(f'Rows {o_r} of {o_h-1}')
             for o_c in range(o_w):
                 curr_N,prev_N = get_neighborhood_pyramid(o_r,o_c,output_texture_pyramid,l,n_size,parent_size)
-                curr_N = curr_N.reshape(curr_N.shape[0],-1)
-                prev_N = prev_N.reshape(prev_N.shape[0],-1)
-                
-                N_o = torch.cat((curr_N,prev_N),dim=-1)
+
+                N_o = torch.cat((curr_N.reshape(curr_N.shape[0],-1),prev_N.reshape(prev_N.shape[0],-1)),dim=-1)
 
                 dists = F.pairwise_distance(N_o.reshape(1,-1),neighborhoods_pyr.reshape(neighborhoods_pyr.shape[0],-1),p=2,keepdim=True)
                 best_idx = torch.argmin(dists)
