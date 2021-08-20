@@ -175,7 +175,7 @@ def main():
     n_size=5
     output = tvsq('./inputs/style_images/fdf_textures/12.png',None,n_size=n_size,n_levels=4)
     out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save(f'output_{n_size}.png')
+    out_im.save(f'output_{n_size}_alt_pyramid.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
