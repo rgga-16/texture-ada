@@ -121,9 +121,10 @@ def tvsq(input_path, output_path,n_size,n_levels):
 def main():
 
     start = timer()
-    output = tvsq('./inputs/style_images/fdf_textures/12.png',None,n_size=45,n_levels=4)
+    n_size=21
+    output = tvsq('./inputs/style_images/fdf_textures/12.png',None,n_size=n_size,n_levels=4)
     out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save('output.png')
+    out_im.save(f'output_{n_size}.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
