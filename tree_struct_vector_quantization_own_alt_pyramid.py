@@ -77,9 +77,14 @@ def get_neighborhood(curr_row,curr_col,image,n_size):
 def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_size):
     curr_N = get_neighborhood(curr_row,curr_col,pyramid[level],n_size)
     if level > 0:
-        prev_N = get_neighborhood(curr_row,curr_col,pyramid[level-1],n_parent_size)
+        _,curr_h,curr_w = pyramid[level].shape
+        _,parent_h,parent_w = pyramid[level-1].shape
+        parent_row = int(round((curr_row/curr_h) * parent_h))
+        parent_col = int(round((curr_col/curr_w) * parent_w))
+        prev_N = get_neighborhood(parent_row,parent_col,pyramid[level-1],n_parent_size)
     else:
         prev_N = torch.zeros(3,n_parent_size,n_parent_size,device=D.DEVICE())
+
     
     # curr_N = curr_N.reshape(curr_N.shape[0],-1)
     # prev_N = prev_N.reshape(prev_N.shape[0],-1)
@@ -130,26 +135,20 @@ def tvsq(input_path, output_path,n_size,n_levels):
     else:
         parent_size = math.ceil(n_size/2)
     
-    input_texture = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),normalize=False)
-    output_texture = torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).detach()
+    input_texture = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)
+    output_texture = torch.zeros(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).detach()
 
     input_texture_pyramid = build_gaussian_pyramid(input_texture,n_levels=n_levels)
     output_texture_pyramid = build_gaussian_pyramid(output_texture,n_levels=n_levels)
-    
-    # input_texture = torch.rand(1,9,9,device=D.DEVICE())
-    # output_texture = torch.rand(1,9,9,device=D.DEVICE())
-    
-    # neighborhoods = get_neighborhoods(input_texture,n_size)
-    # neighborhoods = torch.stack(neighborhoods)
 
     if type(n_size) is tuple:
         n_h, n_w = n_size
     else: 
         n_h = n_w =  n_size
-
-    _,o_h,o_w = output_texture.shape 
+   
     for l in range(n_levels):
         neighborhoods_pyr,neighborhoods = get_neighborhood_pyramids(input_texture_pyramid,l,n_size,parent_size)
+        _,o_h,o_w = output_texture_pyramid[l].shape 
         for o_r in range(o_h):
             print(f'Rows {o_r} of {o_h-1}')
             for o_c in range(o_w):
@@ -162,24 +161,28 @@ def tvsq(input_path, output_path,n_size,n_levels):
                 best_match = neighborhoods[best_idx]
 
                 pixel = get_central_pixel(best_match,n_size)
-                output_texture[:,o_r,o_c]=pixel
+                output_texture_pyramid[l][:,o_r,o_c]=pixel
 
                 # Insert best match into output texture
+        output = image_utils.tensor_to_image(output_texture_pyramid[l],denorm=False)
+        output.show()
+        print()
 
-    
-    # input_texture_pyramid = build_gaussian_pyramid(input_texture,n_levels=n_levels)
+
+    final_output = output_texture_pyramid[-1]
 
 
-    return output_texture
+    return final_output
 
 
 def main():
 
     start = timer()
-    n_size=5
-    output = tvsq('./inputs/style_images/fdf_textures/12.png',None,n_size=n_size,n_levels=4)
+    n_size=48
+    n_lvls=1
+    output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
     out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save(f'output_{n_size}_alt_pyramid.png')
+    out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
