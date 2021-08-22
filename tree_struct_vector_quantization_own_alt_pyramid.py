@@ -79,8 +79,10 @@ def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_siz
     if level > 0:
         _,curr_h,curr_w = pyramid[level].shape
         _,parent_h,parent_w = pyramid[level-1].shape
-        parent_row = int(round((curr_row/curr_h) * parent_h))
-        parent_col = int(round((curr_col/curr_w) * parent_w))
+        # parent_row = int(round((curr_row/curr_h) * parent_h))
+        # parent_col = int(round((curr_col/curr_w) * parent_w))
+        parent_row = curr_row//2
+        parent_col = curr_col//2
         prev_N = get_neighborhood(parent_row,parent_col,pyramid[level-1],n_parent_size)
     else:
         prev_N = torch.zeros(3,n_parent_size,n_parent_size,device=D.DEVICE())
@@ -105,6 +107,23 @@ def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size):
             neighborhoods.append(curr_N)
     
     return torch.stack(neighborhood_pyrs),torch.stack(neighborhoods)
+
+def find_best_match(G_a,G_s,L,x_s,y_s):
+    N_best = None; C=None 
+    N_s = build_neighborhood(G_s,L,x_s,y_s)
+
+    _,h_a,w_a = G_a[L].shape
+    for y_a in range(h_a):
+        for x_a in range(w_a):
+            N_a = build_neighborhood(G_a,L,x_a,y_a)
+            pass 
+    return
+
+def build_neighborhood(G_s,L,x_s,y_s):
+    # NEIGHBORHOOD OF OUTPUT PIXEL SHOULD ONLY HAVE PREVIOUSLY DETERMINED PIXEL VALUES. undiscovered values
+    # should be removed.
+    return
+
 
 def get_neighborhoods(image,n_size):
     neighborhoods=[]
