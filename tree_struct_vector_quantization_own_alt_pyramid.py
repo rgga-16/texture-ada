@@ -13,6 +13,14 @@ import args as args_
 import random, numpy as np, os, math
 from timeit import default_timer as timer
 
+def get_n_h_and_n_w(n_size):
+    if type(n_size) is tuple:
+        n_h, n_w = n_size
+    else: 
+        n_h = n_w =  n_size
+    
+    return n_h,n_w
+
 def build_gaussian_pyramid(image,n_levels):
 
     gaussian_blur = GaussianBlur(kernel_size=(5,5))
@@ -26,8 +34,6 @@ def build_gaussian_pyramid(image,n_levels):
         pyramid.insert(0,im.squeeze())
 
     return pyramid
-
-
 
 def get_neighborhood(curr_row,curr_col,image,n_size):
     _,im_h,im_w = image.shape
@@ -64,6 +70,7 @@ def get_neighborhood(curr_row,curr_col,image,n_size):
         right_idx = im_w-1    
 
     neighborhood = image[:,top_idx:bot_idx+1,left_idx:right_idx+1]
+    neighborhood[:,curr_row,curr_col]=0
     neighborhood = F.pad(neighborhood,(left_pad,right_pad,top_pad,bot_pad),value=0)
     
     if neighborhood.shape[1] > n_h:
@@ -108,18 +115,21 @@ def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size):
     
     return torch.stack(neighborhood_pyrs),torch.stack(neighborhoods)
 
-def find_best_match(G_a,G_s,L,x_s,y_s):
+def find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size):
     N_best = None; C=None 
-    N_s = build_neighborhood(G_s,L,x_s,y_s)
+    N_s_child = build_neighborhood(G_s,L,x_s,y_s,n_size)
 
     _,h_a,w_a = G_a[L].shape
     for y_a in range(h_a):
         for x_a in range(w_a):
-            N_a = build_neighborhood(G_a,L,x_a,y_a)
+            N_a = build_neighborhood(G_a,L,x_a,y_a,n_size)
             pass 
     return
 
-def build_neighborhood(G_s,L,x_s,y_s):
+def build_neighborhood(G_s,L,x_s,y_s,n_size):
+
+    n_h,n_w = get_n_h_and_n_w(n_size)
+
     # NEIGHBORHOOD OF OUTPUT PIXEL SHOULD ONLY HAVE PREVIOUSLY DETERMINED PIXEL VALUES. undiscovered values
     # should be removed.
     return
