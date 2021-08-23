@@ -114,27 +114,40 @@ def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size):
     
     return torch.stack(neighborhood_pyrs),torch.stack(neighborhoods)
 
-def find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size):
+def find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size,N_a_list,Cs):
     N_a_best = None; C=None 
-    N_s_child = build_neighborhood(G_s,L,x_s,y_s,n_size,exclude_center_pixel=True)
+    N_s = build_neighborhood(G_s,L,x_s,y_s,n_size,exclude_center_pixel=True)
     if(L-1 >= 0):
         N_s_parent = build_neighborhood(G_s,L-1,x_s//2,y_s//2,n_parent_size,exclude_center_pixel=False)
-        N_s_child = torch.cat((N_s_child,N_s_parent))
-    N_s_child = N_s_child.sum(0,keepdim=True)
+        N_s = torch.cat((N_s,N_s_parent))
+    N_s = N_s.sum(0,keepdim=True)
     
-    _,h_a,w_a = G_a[L].shape
-    for y_a in range(h_a):
-        for x_a in range(w_a):
-            N_a_child = build_neighborhood(G_a,L,x_a,y_a,n_size,exclude_center_pixel=False)
-            if(L-1 >= 0):
-                N_a_parent = build_neighborhood(G_a,L-1,x_a//2,y_a//2,n_parent_size,exclude_center_pixel=False)
-                N_a_child = torch.cat((N_a_child,N_a_parent))
-            N_a_child = N_a_child.sum(0,keepdim=True)
+    # N_a_list = [] #Get N_a_list after each level is introduced.
+    # Cs = []
+    
+    # _,h_a,w_a = G_a[L].shape
+    # for y_a in range(h_a):
+    #     for x_a in range(w_a):
+    #         N_a_child = build_neighborhood(G_a,L,x_a,y_a,n_size,exclude_center_pixel=False)
+    #         if(L-1 >= 0):
+    #             N_a_parent = build_neighborhood(G_a,L-1,x_a//2,y_a//2,n_parent_size,exclude_center_pixel=False)
+    #             N_a_child = torch.cat((N_a_child,N_a_parent))
+    #         N_a_child = N_a_child.sum(0)
+
+    #         N_a_list.append(N_a_child)
+    #         Cs.append(G_a[L][:,y_a,x_a])
             
-            diff = F.mse_loss(N_s_child,N_a_child,reduction='sum')
-            if(N_a_best is None or (diff < F.mse_loss(N_s_child,N_a_best,reduction='sum'))):
-                N_a_best = N_a_child 
-                C = G_a[L][:,y_a,x_a]
+            # diff = F.mse_loss(N_s_child,N_a_child,reduction='sum')
+            # if(N_a_best is None or (diff < F.mse_loss(N_s_child,N_a_best,reduction='sum'))):
+            #     N_a_best = N_a_child 
+            #     C = G_a[L][:,y_a,x_a]
+    
+    # N_a_list = torch.stack(N_a_list)
+    # N_s_child = N_s_child
+    dists = F.pairwise_distance(N_a_list,N_s,p=2)
+    best_idx = torch.argmin(dists)
+    C = Cs[best_idx]
+
     return C
 
 def build_neighborhood(G,L,x_g,y_g,n_size,exclude_center_pixel=True):
@@ -170,10 +183,6 @@ def build_neighborhood(G,L,x_g,y_g,n_size,exclude_center_pixel=True):
             else: 
                 N.append(G[L][:,y,x])
 
-    # NEIGHBORHOOD OF OUTPUT PIXEL SHOULD ONLY HAVE PREVIOUSLY DETERMINED PIXEL VALUES. undiscovered values
-    # should be removed.
-    #find a way to return neighborhood as shape (N,3)
-    # Use conditions if len(N) is 0,1 or more than 1
     if(len(N)==0):
         yes=torch.zeros(1,3,device=D.DEVICE())
     else:
@@ -234,11 +243,28 @@ def tvsq_new(input_path,output_path,n_size,n_levels):
 
     for L in range(n_levels):
         print(f'Level {L}')
+        _,h_a,w_a = G_a[L].shape
+        N_a_list = [] #Get N_a_list after each level is introduced.
+        C_candids = []
+
+        for y_a in range(h_a):
+            for x_a in range(w_a):
+                N_a = build_neighborhood(G_a,L,x_a,y_a,n_size,exclude_center_pixel=False)
+                if(L-1 >= 0):
+                    N_a_parent = build_neighborhood(G_a,L-1,x_a//2,y_a//2,n_parent_size,exclude_center_pixel=False)
+                    N_a = torch.cat((N_a,N_a_parent))
+                N_a = N_a.sum(0)
+
+                N_a_list.append(N_a)
+                C_candids.append(G_a[L][:,y_a,x_a])
+        
+        N_a_list = torch.stack(N_a_list)
+
         _,h_s,w_s = G_s[L].shape
         for y_s in range(h_s):
-            print(f'Row {y_s+1} of {h_s+1}')
+            print(f'Row {y_s+1} of {h_s}')
             for x_s in range(w_s):
-                C = find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size)
+                C = find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size,N_a_list,C_candids)
                 G_s[L][:,y_s,x_s]=C 
     final_I_s = G_s[-1]
     return final_I_s
@@ -295,10 +321,10 @@ def main():
     n_lvls=4
     input_path = './inputs/style_images/fdf_textures/23.png'
     output_path=None
-    tvsq_new(input_path,output_path,n_size,n_lvls)
+    output = tvsq_new(input_path,output_path,n_size,n_lvls)
     # output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
-    # out_im = image_utils.tensor_to_image(output,denorm=False)
-    # out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
+    out_im = image_utils.tensor_to_image(output,denorm=False)
+    out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
