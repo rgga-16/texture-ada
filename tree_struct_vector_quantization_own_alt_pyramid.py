@@ -70,7 +70,6 @@ def get_neighborhood(curr_row,curr_col,image,n_size):
         right_idx = im_w-1    
 
     neighborhood = image[:,top_idx:bot_idx+1,left_idx:right_idx+1]
-    neighborhood[:,curr_row,curr_col]=0
     neighborhood = F.pad(neighborhood,(left_pad,right_pad,top_pad,bot_pad),value=0)
     
     if neighborhood.shape[1] > n_h:
@@ -116,23 +115,71 @@ def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size):
     return torch.stack(neighborhood_pyrs),torch.stack(neighborhoods)
 
 def find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size):
-    N_best = None; C=None 
-    N_s_child = build_neighborhood(G_s,L,x_s,y_s,n_size)
-
+    N_a_best = None; C=None 
+    N_s_child = build_neighborhood(G_s,L,x_s,y_s,n_size,exclude_center_pixel=True)
+    if(L-1 >= 0):
+        N_s_parent = build_neighborhood(G_s,L-1,x_s//2,y_s//2,n_parent_size,exclude_center_pixel=False)
+        N_s_child = torch.cat((N_s_child,N_s_parent))
+    N_s_child = N_s_child.sum(0,keepdim=True)
+    
     _,h_a,w_a = G_a[L].shape
     for y_a in range(h_a):
         for x_a in range(w_a):
-            N_a = build_neighborhood(G_a,L,x_a,y_a,n_size)
-            pass 
-    return
+            N_a_child = build_neighborhood(G_a,L,x_a,y_a,n_size,exclude_center_pixel=False)
+            if(L-1 >= 0):
+                N_a_parent = build_neighborhood(G_a,L-1,x_a//2,y_a//2,n_parent_size,exclude_center_pixel=False)
+                N_a_child = torch.cat((N_a_child,N_a_parent))
+            N_a_child = N_a_child.sum(0,keepdim=True)
+            
+            diff = F.mse_loss(N_s_child,N_a_child,reduction='sum')
+            if(N_a_best is None or (diff < F.mse_loss(N_s_child,N_a_best,reduction='sum'))):
+                N_a_best = N_a_child 
+                C = G_a[L][:,y_a,x_a]
+    return C
 
-def build_neighborhood(G_s,L,x_s,y_s,n_size):
-
+def build_neighborhood(G,L,x_g,y_g,n_size,exclude_center_pixel=True):
+    N=[]
+    _,im_h,im_w = G[L].shape
+    
     n_h,n_w = get_n_h_and_n_w(n_size)
+    half_h = n_h//2
+    half_w = n_w//2
+
+    start_x = x_g - half_w
+    start_y = y_g - half_h 
+    end_x = x_g+half_w 
+    end_y = y_g+half_h 
+
+    if start_x < 0: 
+        start_x=0
+    if end_x > im_h:
+        end_x=im_w
+    if start_y < 0:
+        start_y=0
+    if end_y > im_h:
+        end_y=im_h
+
+    for y in range(start_y,end_y):
+        for x in range(start_x,end_x):
+            if G[L][0,y,x]<0:
+                continue 
+            elif x==x_g and y==y_g:
+                if exclude_center_pixel:
+                    continue 
+                else: N.append(G[L][:,y,x])
+            else: 
+                N.append(G[L][:,y,x])
 
     # NEIGHBORHOOD OF OUTPUT PIXEL SHOULD ONLY HAVE PREVIOUSLY DETERMINED PIXEL VALUES. undiscovered values
     # should be removed.
-    return
+    #find a way to return neighborhood as shape (N,3)
+    # Use conditions if len(N) is 0,1 or more than 1
+    if(len(N)==0):
+        yes=torch.zeros(1,3,device=D.DEVICE())
+    else:
+        yes= torch.stack(N)
+
+    return yes
 
 
 def get_neighborhoods(image,n_size):
@@ -156,7 +203,47 @@ def get_central_pixel(neighborhood, n_size):
 
     return neighborhood[:,half_h,half_w]
 
-def tvsq(input_path, output_path,n_size,n_levels):
+from matplotlib.pyplot import figure, imshow, axis
+from matplotlib.image import imread
+import matplotlib.pyplot as plt
+def showImagesHorizontally(images):
+    fig = figure()
+    number_of_files = len(images)
+    for i in range(number_of_files):
+        a=fig.add_subplot(1,number_of_files,i+1)
+        image = images[i]
+        imshow(image.permute(1,2,0).detach().cpu().numpy())
+        axis('off')
+    plt.show()
+
+def tvsq_new(input_path,output_path,n_size,n_levels):
+
+    if type(n_size) is tuple:
+        n_h,n_w = n_size 
+        n_parent_size = (math.ceil(n_h/2), math.ceil(n_w/2))
+    else:
+        n_parent_size = math.ceil(n_size/2)
+
+    I_a = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)   
+    I_s = torch.neg(torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE())).detach()
+
+    G_a = build_gaussian_pyramid(I_a,n_levels=n_levels)
+    G_s = build_gaussian_pyramid(I_s,n_levels=n_levels)
+
+    # showImagesHorizontally(G_a)
+
+    for L in range(n_levels):
+        print(f'Level {L}')
+        _,h_s,w_s = G_s[L].shape
+        for y_s in range(h_s):
+            print(f'Row {y_s+1} of {h_s+1}')
+            for x_s in range(w_s):
+                C = find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size)
+                G_s[L][:,y_s,x_s]=C 
+    final_I_s = G_s[-1]
+    return final_I_s
+
+def tvsq(input_path,n_size,n_levels):
     
     if type(n_size) is tuple:
         n_h,n_w = n_size 
@@ -165,15 +252,12 @@ def tvsq(input_path, output_path,n_size,n_levels):
         parent_size = math.ceil(n_size/2)
     
     input_texture = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)
-    output_texture = torch.zeros(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).detach()
+    output_texture = torch.neg(torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE())).detach()
 
     input_texture_pyramid = build_gaussian_pyramid(input_texture,n_levels=n_levels)
     output_texture_pyramid = build_gaussian_pyramid(output_texture,n_levels=n_levels)
 
-    if type(n_size) is tuple:
-        n_h, n_w = n_size
-    else: 
-        n_h = n_w =  n_size
+    build_neighborhood(input_texture_pyramid,-1,100,100,n_size,exclude_center_pixel=False)
    
     for l in range(n_levels):
         neighborhoods_pyr,neighborhoods = get_neighborhood_pyramids(input_texture_pyramid,l,n_size,parent_size)
@@ -207,11 +291,14 @@ def tvsq(input_path, output_path,n_size,n_levels):
 def main():
 
     start = timer()
-    n_size=48
-    n_lvls=1
-    output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
-    out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
+    n_size=5
+    n_lvls=4
+    input_path = './inputs/style_images/fdf_textures/23.png'
+    output_path=None
+    tvsq_new(input_path,output_path,n_size,n_lvls)
+    # output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
+    # out_im = image_utils.tensor_to_image(output,denorm=False)
+    # out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
