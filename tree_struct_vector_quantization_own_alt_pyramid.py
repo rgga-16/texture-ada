@@ -217,9 +217,9 @@ from matplotlib.image import imread
 import matplotlib.pyplot as plt
 def showImagesHorizontally(images):
     fig = figure()
-    number_of_files = len(images)
-    for i in range(number_of_files):
-        a=fig.add_subplot(1,number_of_files,i+1)
+    number_of_images = len(images)
+    for i in range(number_of_images):
+        a=fig.add_subplot(1,number_of_images,i+1)
         image = images[i]
         imshow(image.permute(1,2,0).detach().cpu().numpy())
         axis('off')
@@ -234,15 +234,15 @@ def tvsq_new(input_path,output_path,n_size,n_levels):
         n_parent_size = math.ceil(n_size/2)
 
     I_a = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)   
-    I_s = torch.neg(torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE())).detach()
-
+    I_s = torch.empty(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).fill_(-float('inf'))
+    
     G_a = build_gaussian_pyramid(I_a,n_levels=n_levels)
     G_s = build_gaussian_pyramid(I_s,n_levels=n_levels)
 
     # showImagesHorizontally(G_a)
 
     for L in range(n_levels):
-        print(f'Level {L}')
+        print(f'Level {L+1} of {n_levels}')
         _,h_a,w_a = G_a[L].shape
         N_a_list = [] #Get N_a_list after each level is introduced.
         C_candids = []
@@ -266,6 +266,9 @@ def tvsq_new(input_path,output_path,n_size,n_levels):
             for x_s in range(w_s):
                 C = find_best_match(G_a,G_s,L,x_s,y_s,n_size,n_parent_size,N_a_list,C_candids)
                 G_s[L][:,y_s,x_s]=C 
+    showImagesHorizontally(G_a)
+    showImagesHorizontally(G_s)
+    
     final_I_s = G_s[-1]
     return final_I_s
 
@@ -303,8 +306,7 @@ def tvsq(input_path,n_size,n_levels):
                 output_texture_pyramid[l][:,o_r,o_c]=pixel
 
                 # Insert best match into output texture
-        output = image_utils.tensor_to_image(output_texture_pyramid[l],denorm=False)
-        output.show()
+        showImagesHorizontally(output_texture_pyramid)
         print()
 
 
@@ -319,7 +321,7 @@ def main():
     start = timer()
     n_size=5
     n_lvls=4
-    input_path = './inputs/style_images/fdf_textures/23.png'
+    input_path = './inputs/style_images/fdf_textures/12.png'
     output_path=None
     output = tvsq_new(input_path,output_path,n_size,n_lvls)
     # output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
