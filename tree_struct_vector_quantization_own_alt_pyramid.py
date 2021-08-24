@@ -227,13 +227,15 @@ def showImagesHorizontally(images):
 
 def tvsq_new(input_path,output_path,n_size,n_levels):
 
-    if type(n_size) is tuple:
-        n_h,n_w = n_size 
-        n_parent_size = (math.ceil(n_h/2), math.ceil(n_w/2))
-    else:
-        n_parent_size = math.ceil(n_size/2)
+    # if type(n_size) is tuple:
+    #     n_h,n_w = n_size 
+    #     n_parent_size = (math.ceil(n_h/2), math.ceil(n_w/2))
+    # else:
+    #     n_parent_size = math.ceil(n_size/2)
+    n_parent_size = n_size
 
     I_a = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)   
+    # I_a_save = image_utils.tensor_to_image(I_a,image_size=128,denorm=False).save('I_a_smaller.png')
     I_s = torch.neg(torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE())).detach()
 
     G_a = build_gaussian_pyramid(I_a,n_levels=n_levels)
