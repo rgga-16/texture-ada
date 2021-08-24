@@ -272,9 +272,11 @@ def tvsq_new(input_path,output_path,n_size,n_levels):
     showImagesHorizontally(G_s)
     
     final_I_s = G_s[-1]
+    out_im = image_utils.tensor_to_image(final_I_s,denorm=False)
+    out_im.save(output_path)
     return final_I_s
 
-def tvsq(input_path,n_size,n_levels):
+def tvsq(input_path,output_path,n_size,n_levels):
     
     if type(n_size) is tuple:
         n_h,n_w = n_size 
@@ -287,8 +289,6 @@ def tvsq(input_path,n_size,n_levels):
 
     input_texture_pyramid = build_gaussian_pyramid(input_texture,n_levels=n_levels)
     output_texture_pyramid = build_gaussian_pyramid(output_texture,n_levels=n_levels)
-
-    build_neighborhood(input_texture_pyramid,-1,100,100,n_size,exclude_center_pixel=False)
    
     for l in range(n_levels):
         neighborhoods_pyr,neighborhoods = get_neighborhood_pyramids(input_texture_pyramid,l,n_size,parent_size)
@@ -314,21 +314,19 @@ def tvsq(input_path,n_size,n_levels):
 
     final_output = output_texture_pyramid[-1]
 
-
+    out_im = image_utils.tensor_to_image(final_output,denorm=False)
+    out_im.save(output_path)
     return final_output
 
 
 def main():
 
     start = timer()
-    n_size=5
-    n_lvls=4
-    input_path = './inputs/style_images/fdf_textures/12.png'
-    output_path=None
-    output = tvsq_new(input_path,output_path,n_size,n_lvls)
-    # output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=n_lvls)
-    out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save(f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png')
+    n_size=48
+    n_lvls=1
+    input_path = './inputs/style_images/fdf_textures/23.png'
+    output = tvsq_new(input_path,f'{os.path.basename(input_path[:-4])}_{n_size}_alt_pyramid_{n_lvls}lvls_new.png',n_size,n_lvls)
+    # output = tvsq(input_path,f'output_{n_size}_alt_pyramid_{n_lvls}lvls.png',n_size=n_size,n_levels=n_lvls)
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return
