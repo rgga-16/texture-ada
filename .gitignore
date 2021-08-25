@@ -13,7 +13,7 @@ inputs/bunny
 inputs/archive
 notes
 uvs
-*.txt
+
 *.pyc
 *.pth
 *.pt
