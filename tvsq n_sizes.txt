@@ -1,12 +1,35 @@
-2.png - 45
-3.png
-9.png
-12.png
-15.png
-16.png
-19.png
-28.png
-30.png
-31.png
-
-other fdf textures - 5
+0.png - 21 - ok
+1.png - 64 - meh
+2.png - 64 - meh
+3.png - 45 - meh
+4.png - 21
+5.png - 21 - ok
+6.png - 21 - ok
+7.png - 21 - ok
+8.png - 21 - meh
+9.png - 45
+10.png - 21
+11.png - 21 - meh
+12.png - 45 - ok
+13.png - 21
+14.png - 21 - meh
+15.png - 45 - ok
+16.png - 45 - meh
+17.png - 21 - ok
+18.png - 21
+19.png - 45 - ok
+20.png - 21 - ok
+21.png - 21 - meh
+22.png - 21 - meh
+23.png - 21
+24.png - 21 - ok
+25.png - 21 - meh
+26.png - 21 - ok
+27.png - 21
+28.png - 45
+29.png - 21 - meh
+30.png - 45 - ok
+31.png - 45 - ok
+32.png - 21
+33.png - 21
+34.png - 21

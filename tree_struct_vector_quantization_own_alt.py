@@ -37,10 +37,7 @@ def get_neighborhood(curr_row,curr_col,image,n_size):
 
     half_h = n_h//2
     half_w = n_w//2
-
-    # shifted_row = curr_row+half_h
-    # shifted_col = curr_col+half_w
-
+    
     top_idx = curr_row-half_h
     bot_idx = curr_row+half_h
     left_idx = curr_col-half_w
@@ -91,15 +88,11 @@ def get_central_pixel(neighborhood, n_size):
 
     return neighborhood[:,half_h,half_w]
 
-def tvsq(input_path, output_path,n_size,n_levels):
-    input_texture = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),normalize=False)
-    output_texture = torch.rand(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).detach()
-
-    # input_texture = torch.rand(1,9,9,device=D.DEVICE())
-    # output_texture = torch.rand(1,9,9,device=D.DEVICE())
+def tvsq(input_path, output_path,n_size,n_levels,in_size=D.IMSIZE.get(),out_size=D.IMSIZE.get()):
+    input_texture = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=in_size,normalize=False)
+    output_texture = torch.rand(3,out_size,out_size,device=D.DEVICE()).detach()
     
     neighborhoods = get_neighborhoods(input_texture,n_size)
-    n_neighborhoods = len(neighborhoods)
     neighborhoods = torch.stack(neighborhoods)
 
     if type(n_size) is tuple:
@@ -109,7 +102,7 @@ def tvsq(input_path, output_path,n_size,n_levels):
 
     _,o_h,o_w = output_texture.shape 
     for o_r in range(o_h):
-        print(f'Rows {o_r} of {o_h-1}')
+        print(f'Rows {o_r+1} of {o_h}')
         for o_c in range(o_w):
             N_o = get_neighborhood(o_r,o_c,output_texture,n_size)
             dists = F.pairwise_distance(N_o.reshape(1,-1),neighborhoods.reshape(neighborhoods.shape[0],-1))
@@ -118,22 +111,7 @@ def tvsq(input_path, output_path,n_size,n_levels):
 
             pixel = get_central_pixel(best_match,n_size)
             output_texture[:,o_r,o_c]=pixel
-
-            # half_h = n_h//2
-            # half_w = n_w//2
-
-            # shifted_row = o_r+half_h
-            # shifted_col = o_c+half_w
-
-            # top_idx = shifted_row-half_h
-            # bot_idx = shifted_row+half_h
-            # left_idx = shifted_col-half_w
-            # right_idx= shifted_col+half_w
-            # output_texture[:,top_idx:bot_idx+1,left_idx:right_idx+1]=best_match
-            # Insert best match into output texture
-
     
-    # input_texture_pyramid = build_gaussian_pyramid(input_texture,n_levels=n_levels)
 
 
     return output_texture
@@ -142,11 +120,12 @@ def tvsq(input_path, output_path,n_size,n_levels):
 def main():
 
     start = timer()
-    n_size=48
-    lvls=4
-    output = tvsq('./inputs/style_images/fdf_textures/23.png',None,n_size=n_size,n_levels=lvls)
+    n_size=64
+    n_lvls=4
+    im = './inputs/style_images/fdf_textures/1.png'
+    output = tvsq(im,None,n_size=n_size,n_levels=n_lvls,in_size=128,out_size=128)
     out_im = image_utils.tensor_to_image(output,denorm=False)
-    out_im.save(f'output_{n_size}_alt_{lvls}.png')
+    out_im.save(f'{os.path.basename(im[:-4])}_{n_size}_alt_pyramid_{n_lvls}lvls.png')
     end=timer()
     print(f'Time elapsed: {end-start:.2f}')
     return

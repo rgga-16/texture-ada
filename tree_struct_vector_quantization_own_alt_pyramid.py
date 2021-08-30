@@ -7,6 +7,8 @@ from torchvision.transforms.transforms import ToPILImage
 import torchvision.transforms as T
 
 from defaults import DEFAULTS as D
+from ops import ops
+import args as args_
 
 import helpers.seeder as seeder
 from helpers import image_utils
@@ -14,6 +16,24 @@ import args as args_
 
 import random, numpy as np, os, math
 from timeit import default_timer as timer
+
+def log_dists(path,dists):
+    with open(path,'w') as f:
+        f.writelines('\n'.join(dists))
+    return
+
+def get_wassdist(ref_texture,output_texture):
+
+    style_means,style_covs = ops.get_means_and_covs(ref_texture)
+    output_means,output_covs = ops.get_means_and_covs(output_texture)
+
+    wass_dist = 0
+    for s in D.STYLE_LAYERS.get().values():
+        wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
+        wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
+    wasserstein_distance = torch.mean(wass_dist)
+    
+    return wasserstein_distance.item()
 
 def get_n_h_and_n_w(n_size):
     if type(n_size) is tuple:
@@ -97,7 +117,7 @@ def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_siz
     if level > 0:
         parent_row = curr_row//2
         parent_col = curr_col//2
-        parent_N = get_neighborhood(parent_row,parent_col,pyramid[level-1],n_parent_size,exclude_curr_pixel)
+        parent_N = get_neighborhood(parent_row,parent_col,pyramid[level-1],n_parent_size,False)
 
         N = torch.stack((N,parent_N))
 
@@ -274,8 +294,8 @@ def tvsq(input_path,output_path,n_size,n_levels):
     else:
         parent_size = math.ceil(n_size/2)
     
-    I_a = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get(),normalize=False)
-    I_s = torch.empty(3,D.IMSIZE.get(),D.IMSIZE.get(),device=D.DEVICE()).fill_(-float('inf'))
+    I_a = image_utils.image_to_tensor(image_utils.load_image(input_path,mode='RGB'),image_size=D.IMSIZE.get()//2,normalize=False)
+    I_s = torch.empty(3,D.IMSIZE.get()//2,D.IMSIZE.get()//2,device=D.DEVICE()).fill_(-float('inf'))
 
     random_crop = T.RandomCrop(n_size)
     cropped = random_crop(I_a)
@@ -283,9 +303,9 @@ def tvsq(input_path,output_path,n_size,n_levels):
     
     G_a = build_gaussian_pyramid(I_a,n_levels=n_levels)
     G_s = build_gaussian_pyramid(I_s,n_levels=n_levels)
-    n_sizes = [9,17,33,65]
+    # n_sizes = [5,9,17,33]
     for L in range(n_levels):
-        n_size=n_sizes[L]
+        # n_size=n_sizes[L]
         parent_size=n_size
         neighborhoods_pyr,kD_pixels = get_neighborhood_pyramids(G_a,L,n_size,parent_size,False)
         _,o_h,o_w = G_s[L].shape 
@@ -308,26 +328,56 @@ def tvsq(input_path,output_path,n_size,n_levels):
                 G_s[L][:,o_r,o_c]=best_match
 
                 # Insert best match into output texture
-    showImagesHorizontally(G_s)
-    print()
+    # showImagesHorizontally(G_s)
+    # print()
 
     final_output = G_s[-1]
 
-    out_im = image_utils.tensor_to_image(final_output,denorm=False)
+    out_im = image_utils.tensor_to_image(final_output,image_size=D.IMSIZE.get()//2,denorm=False)
     out_im.save(output_path)
     return final_output
 
 
 def main():
-
-    start = timer()
-    n_size=65
+    args = args_.parse_arguments()
+    # n_size=45
     n_lvls=4
-    input_path = './inputs/style_images/fdf_textures/12.png'
-    # output = tvsq_new(input_path,f'{os.path.basename(input_path[:-4])}_{n_size}_alt_pyramid_{n_lvls}lvls_new.png',None,n_lvls)
-    output = tvsq(input_path,f'{os.path.basename(input_path[:-4])}_{n_size}_alt_pyramid_{n_lvls}lvls.png',n_size=n_size,n_levels=n_lvls)
-    end=timer()
-    print(f'Time elapsed: {end-start:.2f}')
+
+    large_pics = [
+    # '8.png',
+    '2.png',
+    '3.png',
+    '9.png',
+    '12.png',
+    '15.png',
+    '16.png',
+    '19.png',
+    '28.png',
+    '30.png',
+    '31.png',
+    ]
+
+    inputs_dir = './inputs/style_images/fdf_textures'
+    outputs_dir = args.output_dir
+
+    output_dir = os.path.join(outputs_dir,str(seeder.SEED),'tvsq')
+    image_utils.make_dir(output_dir)
+    for im in os.listdir(inputs_dir):
+        start = timer()
+        input_path = os.path.join(inputs_dir,im)
+        if os.path.isdir(input_path): continue
+
+        if im in large_pics:
+            n_size=45
+        else:
+            n_size=64
+
+        # if im == '8.png':
+        output_path = os.path.join(output_dir,f'{im[:-4]}_{n_size}_alt_pyramid_{n_lvls}lvls.png')      
+        tvsq(input_path,output_path,n_size=n_size,n_levels=n_lvls)
+        
+        end=timer()
+        print(f'Time elapsed for {im}: {end-start:.2f}')
     return
 
 
