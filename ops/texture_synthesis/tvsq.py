@@ -1,4 +1,4 @@
-from numpy.core.numeric import False_
+
 import torch
 from torchvision.transforms import GaussianBlur
 import torch.nn.functional as F
@@ -9,15 +9,13 @@ import torchvision.transforms as T
 from defaults import DEFAULTS as D
 from ops import ops
 import args as args_
-
 import helpers.seeder as seeder
 from helpers import image_utils
-import args as args_
 
 import random, numpy as np, os, math
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure, imshow, axis
-from matplotlib.image import imread
+
 from timeit import default_timer as timer
 
 def log_dists(path,dists):
@@ -116,10 +114,6 @@ def get_neighborhood_pyramid(curr_row,curr_col,pyramid,level,n_size,n_parent_siz
 
         N = torch.stack((N,parent_N))
 
-
-
-    
-
     return N
 
 def get_neighborhood_pyramids(pyramid,level,n_size,n_parent_size,exclude_curr_pixel):
@@ -164,7 +158,7 @@ def tvsq(input_path,output_path,n_size,n_levels,in_size=D.IMSIZE.get(),out_size=
     
     G_a = build_gaussian_pyramid(I_a,n_levels=n_levels)
     G_s = build_gaussian_pyramid(I_s,n_levels=n_levels)
-    # parent_size=n_size
+
     for L in range(n_levels):
         neighborhoods_pyr,kD_pixels = get_neighborhood_pyramids(G_a,L,n_size,parent_size,False)
         _,o_h,o_w = G_s[L].shape 
@@ -196,19 +190,6 @@ def main():
     args = args_.parse_arguments()
     n_lvls=4
 
-    large_pics = [
-    '2.png',
-    '3.png',
-    '9.png',
-    '12.png',
-    '15.png',
-    '16.png',
-    '19.png',
-    '28.png',
-    '30.png',
-    '31.png',
-    ]
-
     inputs_dir = './inputs/style_images/fdf_textures'
     outputs_dir = args.output_dir
 
@@ -219,13 +200,8 @@ def main():
         input_path = os.path.join(inputs_dir,im)
         if os.path.isdir(input_path): continue
 
-        # if im in large_pics:
-        #     n_size=64
-        # else:
-        #     n_size=21
         n_size=35
-        # if im == '4.png':
-        # filename = f'{im[:-4]}_{n_size}_alt_pyramid_{n_lvls}lvls.png'
+
         filename = im
         output_path = os.path.join(output_dir,filename)      
         tvsq(input_path,output_path,n_size=n_size,n_levels=n_lvls,in_size=256,out_size=256)
@@ -236,16 +212,29 @@ def main():
 
 
 if __name__ == "__main__":   
-    main()
-    # i_path = './inputs/style_images/fdf_textures/0.png'
-    # o_path = './outputs/output_images/TVSQ Run 1/32/tvsq/0_21_alt_pyramid_4lvls.png'
-    # o_path_64 = './outputs/output_images/TVSQ Run 1 - 128px/32/tvsq/0_21_alt_pyramid_4lvls.png'
-    # input_128 = image_utils.image_to_tensor(image_utils.load_image(i_path,'RGB'),image_size=D.IMSIZE.get()//2).unsqueeze(0)
-    # input_256 = image_utils.image_to_tensor(image_utils.load_image(i_path,'RGB'),image_size=D.IMSIZE.get()).unsqueeze(0)
-    # output_128 = image_utils.image_to_tensor(image_utils.load_image(o_path_64,'RGB'),image_size=D.IMSIZE.get()//2).unsqueeze(0)
-    # output_256 = image_utils.image_to_tensor(image_utils.load_image(o_path,'RGB'),image_size=D.IMSIZE.get()).unsqueeze(0)
+    # main()
 
-    # dist_128 = get_wassdist(input_128,output_128)
-    # dist_256 = get_wassdist(input_256,output_256)
-    # print(f'FID at 128px size: {dist_128}')
-    # print(f'FID at 256px size: {dist_256}')
+    fids = []
+    log = []
+    inputs_dir = './inputs/style_images/fdf_textures'
+    outputs_dir = './TVSQ Run 3/32/tvsq'
+    for im in os.listdir(inputs_dir):
+        in_im = os.path.join(inputs_dir,im)
+        # if im not in image_names:
+        #     continue
+        if os.path.isdir(in_im): continue
+        out_im = os.path.join(outputs_dir,im)
+
+        ref_txture = image_utils.image_to_tensor(image_utils.load_image(in_im,'RGB'),normalize=False).unsqueeze(0)
+        output_txture = image_utils.image_to_tensor(image_utils.load_image(out_im,'RGB'),normalize=False).unsqueeze(0)
+        fid = get_wassdist(ref_txture,output_txture)
+        fids.append(fid)
+        logged_dist=f'{im} : {fid:.20f}'
+        print(logged_dist)
+        log.append(logged_dist)
+
+    mean_dist = np.mean(np.array(fids))
+    mean_log = f'TVSQ - Average FID: {mean_dist:.20f}'
+    print(mean_log)
+    log.append(mean_log)
+    log_dists(os.path.join(outputs_dir,'dists.txt'),log)
