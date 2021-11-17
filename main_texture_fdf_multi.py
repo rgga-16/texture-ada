@@ -4,16 +4,15 @@ from torch.utils.data import DataLoader,random_split
 
 import args as args_
 
-import seeder
-from seeder import SEED, init_fn
-from dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD, Styles_Dataset
+import helpers.seeder
+from helpers.seeder import SEED, init_fn
+from data.dataset import UV_Style_Paired_Dataset, Describable_Textures_Dataset as DTD, Styles_Dataset
 from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
-from models.networks.texturenet import Pyramid2D_adain2
-import style_transfer as st
-from trainer import train_texture
-from tester import predict_texture, evaluate_texture
+from models.networks.texturenet import Pyramid2D_adain2,Pyramid2D_adain
+from train import train_texture
+from evaluate import predict_texture, evaluate_texture
 import numpy as np
 import multiprocessing
 
@@ -40,7 +39,7 @@ def main():
     fil_testloader = DataLoader(fil_dataset,batch_size=bs,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
 
-    models = [ProposedModel()]
+    models = [ProposedModel(net=Pyramid2D_adain2(3,64,3))]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
@@ -71,7 +70,7 @@ def main():
         for j in range(0,fil_dataset.__len__()):
             texture = fil_dataset.__getitem__(j)
             filename = os.path.splitext(os.path.basename(fil_dataset.style_files[j]))[0]
-            predict_texture(model,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
+            predict_texture(model,texture,os.path.join(output_folder,f'{filename}.png'))
 
         #######################################
 
@@ -82,7 +81,7 @@ def main():
         logger.log_args(os.path.join(output_folder,log_file),
                         Train_Time='{:.2f}s'.format(time_elapsed),
                         Avg_Test_Time=f'{avg_testtime:.2f}s',
-                        Model_Name=model.__class__.__name__,
+                        Model_Name=model.net.__class__.__name__,
                         Seed = SEED,
                         Average_CovMatrix_TestLoss = avg_tloss_fdf,
                         Average_WassDist=avg_twdists_fdf,
