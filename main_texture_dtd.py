@@ -10,8 +10,8 @@ from defaults import DEFAULTS as D
 from helpers import logger, image_utils 
 from models.texture_transfer_models import FeedForward,TextureNet,AdaIN_Autoencoder,ProposedModel
 from models.networks.texturenet import Pyramid2D_adain2
-from trainer import train_texture
-from tester import predict_texture,evaluate_texture
+from train import train_texture
+from evaluate import predict_texture,evaluate_texture
 import numpy as np
 import multiprocessing
 
@@ -35,20 +35,20 @@ def main():
     test_set = DTD('test')
     ####################
 
-    train_loader = DataLoader(train_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    val_loader = DataLoader(val_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
-    test_loader = DataLoader(test_set,batch_size=32,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    train_loader = DataLoader(train_set,batch_size=24,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    val_loader = DataLoader(val_set,batch_size=24,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    test_loader = DataLoader(test_set,batch_size=24,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
     
     
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/filipino_designer_furniture_textures',
+    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/fdf_textures',
                                 style_size=round(args.style_size),
                                 set='test')
     fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
   
 
-    models = [ProposedModel()]
+    models = [ProposedModel(net=Pyramid2D_adain2(3,64,3))]
     for model in models:
 
         # Create output folder
@@ -79,7 +79,7 @@ def main():
         for j,texture in enumerate(fil_dataloader):
             filename = fil_dataset.style_files[j]
             filename = os.path.splitext(os.path.basename(filename))[0]
-            test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'FDF_{filename}.png'))
+            test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'{filename}.png'))
             tlosses+=test_loss
             twdists+=test_wdist
         avg_tloss = tlosses / fil_dataloader.dataset.__len__()
@@ -91,7 +91,7 @@ def main():
         
         logger.log_args(os.path.join(output_folder,log_file),
                         Train_Time='{:.2f}s'.format(time_elapsed),
-                        Model_Name=model.__class__.__name__,
+                        Model_Name=model.net.__class__.__name__,
                         Seed = torch.seed(),
                         Average_CovMatrix_TestLoss_DTD = avg_tloss_dtd,
                         Average_CovMatrix_TestLoss_FDF = avg_tloss,
