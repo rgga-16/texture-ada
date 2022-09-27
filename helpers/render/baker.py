@@ -14,9 +14,9 @@ if __name__ == '__main__':
                         # './inputs/uv_style_pairs/chair_texture_3.json',
                         # './inputs/uv_style_pairs/chair_texture_4.json',
                         './inputs/uv_style_pairs/table_texture_1.json',
-                        './inputs/uv_style_pairs/table_texture_2.json',
-                        './inputs/uv_style_pairs/table_texture_single.json',
-                        './inputs/uv_style_pairs/table_texture_4.json',
+                        # './inputs/uv_style_pairs/table_texture_2.json',
+                        # './inputs/uv_style_pairs/table_texture_single.json',
+                        # './inputs/uv_style_pairs/table_texture_4.json',
                         ]
     
     renderer = BlenderRenderer()
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             save_path_gif = os.path.join(save_dir,f'{os.path.basename(chair_dir)}_topview.gif')
             save_path_png = os.path.join(save_dir,f'{os.path.basename(chair_dir)}_topview.png')
             renderer.setup_camera((0.0,0.7,1.3),(math.radians(-30),math.radians(0),math.radians(0)))
-            renderer. move_lamp((0.0,0.7,0.0))
+            renderer.move_lamp((0.0,0.7,0.0))
             r.render_image(renderer,rotation_angle=-120,save_path=save_path_png)
             r.render_gif(renderer,save_path=save_path_gif) 
             renderer.clear()

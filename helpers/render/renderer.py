@@ -6,8 +6,6 @@ from PIL import Image
 import math 
 
 def render_image(renderer,rotation=None,save_path='./render.png'):
-
-    
     # if rotation_angle:
     #     rotation=(math.radians(0), math.radians(rotation_angle),math.radians(0))
 

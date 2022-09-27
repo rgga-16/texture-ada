@@ -314,8 +314,6 @@ class BlenderRenderer():
         obj.select_set(False ) 
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
-
-
         return 
 
     # def apply_texture(self,object,unwrap_method_,texture):

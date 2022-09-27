@@ -8,7 +8,6 @@ import math
 if __name__ == '__main__':
 
     
-    
     images = [
     'cobonpue-8-1.png', #red flower
     '35.ch-vito-ale-hi-natwh-1.png', #rectangular basket swing thing

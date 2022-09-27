@@ -130,10 +130,7 @@ class FeedForward(BaseModel):
                 wdist = ops.gaussian_wasserstein_distance(style_means[s],style_covs[s],output_means[s],output_covs[s]).real
                 wass_dist += D.SL_WEIGHTS.get()[s] * wdist 
             self.wasserstein_distance = torch.mean(wass_dist)
-            
             return self.loss.item(),self.wasserstein_distance.item()
-        
-        
         return self.loss.item()
 
     def optimize_parameters(self):
@@ -143,8 +140,6 @@ class FeedForward(BaseModel):
 
 class AdaIN_Autoencoder(BaseModel):
     def __init__(self) -> None:
-        
-
         net = Network_AdaIN()
         self.lr = D.LR()
         optimizer = torch.optim.Adam(net.parameters(),lr=self.lr)
