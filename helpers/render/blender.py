@@ -76,16 +76,12 @@ class BlenderRenderer():
         self.scene = bpy.context.scene
         self.scene.render.resolution_x = 512
         self.scene.render.resolution_y = 512
-
-
         self.scene.render.image_settings.file_format = 'PNG'
         self.scene.render.image_settings.quality = 100
         self.scene.render.image_settings.color_mode = 'RGBA'
-
         self.scene.render.resolution_percentage = 100
         self.scene.render.use_border = False
         # self.scene.render.alpha_mode = 'TRANSPARENT'
-
         bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.delete(use_global=False)
     
@@ -102,8 +98,6 @@ class BlenderRenderer():
     def setup_camera(self,
                     location=(0.0,0.3,1.3),
                     rotation=(math.radians(-15),math.radians(0),math.radians(0))):
-        
-
         bpy.ops.object.camera_add()
         self.camera = bpy.data.objects['Camera']
         self.camera.location=location
@@ -142,8 +136,7 @@ class BlenderRenderer():
         
         obj.select_set(False)
 
-    
-    
+
     def setup_lights(self):
         lamp_data = bpy.data.lights.new(name="New Lamp", type='SUN')
         lamp_data.energy = 5
@@ -164,43 +157,29 @@ class BlenderRenderer():
         bpy.ops.import_mesh.ply(filepath=mesh_path)
         mesh_file = os.path.basename(mesh_path)
         selected = bpy.context.selected_objects
-
         obj = bpy.context.selected_objects.pop()
         obj.location = (0.0,0.0,0.0)
-
-
         obj.rotation_euler = (math.radians(0),
                             math.radians(270),
                             math.radians(0))
-
         self.objects.append(obj)
-
-
         return obj    
     
     def load_object(self,mesh_path):
         bpy.ops.import_scene.obj(filepath=mesh_path)
         mesh_file = os.path.basename(mesh_path)
         selected = bpy.context.selected_objects
-
         obj = bpy.context.selected_objects.pop()
         obj.location = (0.0,0.0,0.0)
-
-
         obj.rotation_euler = (math.radians(0),
                             math.radians(270),
                             math.radians(0))
-
         self.objects.append(obj)
-
-
         return obj
     
     def rotate_object(self,obj,rotation):
         obj.rotation_euler = rotation
         return obj
-    
-   
 
     def save_uv_map(self,obj,unwrap_method_,save_file='//uv_map.png'):
         # Apply Smart uv project from object
@@ -213,7 +192,6 @@ class BlenderRenderer():
         unwrap_method(unwrap_method_)
 
         obj.select_set(False)
-
         bpy.ops.uv.export_layout(filepath=save_file,mode='PNG',size=(512,512),opacity=1.0)
         bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action='DESELECT')
@@ -228,7 +206,6 @@ class BlenderRenderer():
         render_filename = 'render.png'
         save_path = str(p.Path.cwd() / render_filename)
         self.render(save_path=save_path)
-
         return save_path
         
     
@@ -276,14 +253,10 @@ class BlenderRenderer():
         # Select object
         obj.select_set(True)
         bpy.context.view_layer.objects.active=obj
-        
-
         # Get uv map of obj
         bpy.ops.object.mode_set(mode="EDIT")
         obj.select_set(True)
         # bpy.context.view_layer.objects.active = obj
-        
-        
         # if obj.type=='MESH' and 'UV_ao' not in obj.data.uv_layers:
         #     obj.data.uv_layers.new(name='UV_ao')
         unwrap_method(unwrap_method_)
@@ -306,10 +279,8 @@ class BlenderRenderer():
         texture_image.select=True 
         mat.node_tree.nodes.active=texture_image
         # bpy.context.object.data.uv_layers['UVMap'].active = True
-
         # Bake
         bpy.ops.object.bake(type='DIFFUSE',pass_filter={'COLOR'},margin=32)
-
         texture_image.select=False
         obj.select_set(False ) 
         bpy.ops.object.mode_set(mode="OBJECT")
