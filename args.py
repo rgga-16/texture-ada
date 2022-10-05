@@ -47,5 +47,6 @@ def parse_arguments():
                         help='Path to model.')
     parser.add_argument('--tamura_categories', type=str, nargs="*",default=['coarseness','contrast','directionality','linelikeness','regularity','roughness'],
                         help='Tamura categories. for the multi texture transfer categorical')
+    parser.add_argument('--dtd_category', type=str,default=None,help='Describable Textures Dataset category')
 
     return parser.parse_args()

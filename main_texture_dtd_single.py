@@ -28,8 +28,12 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    category='braided'
-    fil_dataset = Styles_Dataset(style_dir=f'./data/images/dtd_mini_categories/{category}',
+    category = args.dtd_category
+    assert category is not None
+    style_dir = args.style_dir 
+
+    cat_dir = os.path.join(style_dir,category)
+    fil_dataset = Styles_Dataset(style_dir=cat_dir,
                                 style_size=round(args.style_size),
                                 set='default')
 
@@ -53,7 +57,7 @@ def main():
             model_ = model.__class__(net=Pyramid2D_adain2(3,64,3))
             texture_file = fil_dataset.style_files[i]
             print(f'Synthesizing from texture {texture_file}')
-            data_path = f'./data/images/dtd_mini_categories/{category}'
+            data_path = cat_dir
             single_dataset = Styles_Dataset(style_dir= data_path,
                                             style_size=round(args.style_size),set='default',
                                             style_files=[os.path.basename(texture_file)])
