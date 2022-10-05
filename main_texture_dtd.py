@@ -42,10 +42,10 @@ def main():
     
     # Filipino furniture
     ####################
-    fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/fdf_textures',
-                                style_size=round(args.style_size),
-                                set='test')
-    fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
+    # fil_dataset = Styles_Dataset(style_dir='./inputs/style_images/fdf_textures',
+    #                             style_size=round(args.style_size),
+    #                             set='test')
+    # fil_dataloader = DataLoader(fil_dataset,batch_size=1,worker_init_fn=init_fn,shuffle=True,num_workers=n_workers)
   
 
     models = [ProposedModel(net=Pyramid2D_adain2(3,64,3))]
@@ -74,16 +74,16 @@ def main():
 
         # Test on all Filipino Designer Furniture textures
         #######################################
-        tlosses=0
-        twdists=0
-        for j,texture in enumerate(fil_dataloader):
-            filename = fil_dataset.style_files[j]
-            filename = os.path.splitext(os.path.basename(filename))[0]
-            test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'{filename}.png'))
-            tlosses+=test_loss
-            twdists+=test_wdist
-        avg_tloss = tlosses / fil_dataloader.dataset.__len__()
-        avg_twdists = twdists / fil_dataloader.dataset.__len__()
+        # tlosses=0
+        # twdists=0
+        # for j,texture in enumerate(fil_dataloader):
+        #     filename = fil_dataset.style_files[j]
+        #     filename = os.path.splitext(os.path.basename(filename))[0]
+        #     test_loss,test_wdist = predict_texture(model,texture,os.path.join(output_folder,f'{filename}.png'))
+        #     tlosses+=test_loss
+        #     twdists+=test_wdist
+        # avg_tloss = tlosses / fil_dataloader.dataset.__len__()
+        # avg_twdists = twdists / fil_dataloader.dataset.__len__()
         #######################################
 
        
@@ -94,9 +94,9 @@ def main():
                         Model_Name=model.net.__class__.__name__,
                         Seed = torch.seed(),
                         Average_CovMatrix_TestLoss_DTD = avg_tloss_dtd,
-                        Average_CovMatrix_TestLoss_FDF = avg_tloss,
-                        Average_WassDist_DTD=avg_twdists_dtd,
-                        Average_WassDist_FDF=avg_twdists)
+                        # Average_CovMatrix_TestLoss_FDF = avg_tloss,
+                        Average_WassDist_DTD=avg_twdists_dtd,)
+                        # Average_WassDist_FDF=avg_twdists)
         print("="*10)
         print("Transfer completed. Outputs saved in {}".format(output_folder))
     
