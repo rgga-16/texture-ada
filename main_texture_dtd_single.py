@@ -28,22 +28,24 @@ def main():
     # Setup dataset for training
     # Filipino furniture
     ####################
-    category = args.dtd_category
-    assert category is not None
+    # category = args.dtd_category
+    # assert category is not None
     style_dir = args.style_dir 
 
-    cat_dir = os.path.join(style_dir,category)
-    fil_dataset = Styles_Dataset(style_dir=cat_dir,
+    # cat_dir = os.path.join(style_dir,category)
+    dtd_dataset = Styles_Dataset(style_dir=style_dir,
                                 style_size=round(args.style_size),
                                 set='default')
 
-    models = [ProposedModel(net=Pyramid2D_adain2(3,64,3))]
+    # models = [ProposedModel(net=Pyramid2D_adain2(3,64,3))]
+    # models = [AdaIN_Autoencoder(),TextureNet(), FeedForward()]
+    models = [AdaIN_Autoencoder()]
     for model in models:
         print(f'Running using model {model.__class__.__name__}')
 
         # Create output folder
         # This will store the model, output images, loss history chart and configurations log
-        output_folder = os.path.join(args.output_dir, f'{model.__class__.__name__}', f'{category}')
+        output_folder = os.path.join(args.output_dir, f'{model.__class__.__name__}', 'dtd_mini')
         try:
             os.makedirs(output_folder)
         except FileExistsError:
@@ -53,11 +55,12 @@ def main():
         avg_test_time=0
         tlosses = {}
         twdists= {}
-        for i in range(0,fil_dataset.__len__()):
-            model_ = model.__class__(net=Pyramid2D_adain2(3,64,3))
-            texture_file = fil_dataset.style_files[i]
+        for i in range(0,dtd_dataset.__len__()):
+            # model_ = model.__class__(net=Pyramid2D_adain2(3,64,3)) #Use this, if using proposed model
+            model_ = model.__class__() # Use this, if using Vanilla AdaIN, Feedforward or Vanilla Texture Nets
+            texture_file = dtd_dataset.style_files[i]
             print(f'Synthesizing from texture {texture_file}')
-            data_path = cat_dir
+            data_path = style_dir
             single_dataset = Styles_Dataset(style_dir= data_path,
                                             style_size=round(args.style_size),set='default',
                                             style_files=[os.path.basename(texture_file)])
@@ -66,7 +69,7 @@ def main():
 
             # Training. Returns path of the generator weights.
             start_train=time.time()
-            gen_path=train_texture(model_,train_loader=single_loader,val_loader=single_loader)
+            gen_path=train_texture(model_,train_loader=single_loader,val_loader=single_loader,texture_name=os.path.splitext(os.path.basename(texture_file))[0])
             avg_train_time += time.time() - start_train 
 
             model_.net.load_state_dict(torch.load(gen_path))
@@ -85,8 +88,8 @@ def main():
                 filename = os.path.splitext(os.path.basename(filename))[0]
                 predict_texture(model_,texture,os.path.join(output_folder,f'{filename}.png'))
             #######################################
-        avg_train_time/=fil_dataset.__len__()
-        avg_test_time/=fil_dataset.__len__()
+        avg_train_time/=dtd_dataset.__len__()
+        avg_test_time/=dtd_dataset.__len__()
 
         tlosses_l = np.array(list(tlosses.values()))
         twdists_l = np.array(list(twdists.values()))

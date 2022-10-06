@@ -150,13 +150,9 @@ class AdaIN_Autoencoder(BaseModel):
     
     def train(self):
         self.net.train()
-        # self.net.decoder.train()
-        # self.net.encoder.eval()
     
     def eval(self):
         self.net.eval()
-        # self.net.encoder.eval()
-        # self.net.decoder.eval()
     
     def set_input(self, style, content=None):
         args = parse_arguments()

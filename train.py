@@ -11,7 +11,7 @@ from helpers import logger
 
 from helpers import image_utils
 
-def train_texture(model,train_loader,val_loader,output_folder=None):
+def train_texture(model,train_loader,val_loader,output_folder=None,texture_name=None):
     args = args_.parse_arguments()
     lr,epochs = args.lr,args.epochs
     start_epoch=0
@@ -120,9 +120,15 @@ def train_texture(model,train_loader,val_loader,output_folder=None):
     
     
     if output_folder is not None:
-        gen_path = os.path.join(output_folder,f'{model.net.__class__.__name__}_final.pth')
+        if texture_name:
+            gen_path = os.path.join(output_folder,f'{model.net.__class__.__name__}_final_{texture_name}.pth')
+        else:
+            gen_path = os.path.join(output_folder,f'{model.net.__class__.__name__}_final.pth')
     else: 
-        gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
+        if texture_name:
+            gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final_{texture_name}.pth')
+        else:
+            gen_path = os.path.join(args.output_dir,f'{model.net.__class__.__name__}_final.pth')
     torch.save(best_model_wts,gen_path)
     print('Final model saved in {}\n'.format(gen_path))
 
